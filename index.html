@@ -3160,9 +3160,7 @@ async function submitPayment(){
         e.target.classList.add('visible');
         if(!cD&&e.target.closest('.stats-bar')){cD=true;document.querySelectorAll('.stat-num[data-target]').forEach(function(el){var t=parseInt(el.dataset.target),sfx='suffix' in el.dataset?el.dataset.suffix:(t===100?'%':t===24?'/7':'+'),t0=performance.now(),dur=1800;function step(n){var p=Math.min((n-t0)/dur,1),ease=1-Math.pow(1-p,3);el.textContent=Math.round(ease*t)+sfx;if(p<1)requestAnimationFrame(step)}requestAnimationFrame(step)})}
         if(!mD&&e.target.closest('.why-visual')){mD=true;setTimeout(function(){document.querySelectorAll('.metric-fill[data-width]').forEach(function(b){b.style.width=b.dataset.width+'%'});document.querySelectorAll('.metric-val[data-metric]').forEach(function(el){var t=parseInt(el.dataset.metric),t0=performance.now(),dur=1600;function step(n){var p=Math.min((n-t0)/dur,1),ease=1-Math.pow(1-p,3);el.textContent=Math.round(ease*t);if(p<1)requestAnimationFrame(step)}requestAnimationFrame(step)})},200)}
-      } else if(!isOnce) {
-        /* re-animate on scroll up for non-counter elements */
-        e.target.classList.remove('visible');
+        io.unobserve(e.target);
       }
     });
   },{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
