@@ -537,6 +537,14 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
 /* Stats — glow on reveal */
 .stat:hover .stat-num{filter:drop-shadow(0 0 14px rgba(34,211,238,.4))}
+.stat-clickable{cursor:pointer;position:relative}
+.stat-click-hint{font-size:.6rem;opacity:.4;transition:opacity .2s}
+.stat-clickable:hover .stat-click-hint{opacity:.8}
+.stat-note{position:absolute;bottom:calc(100% + 14px);left:50%;transform:translateX(-50%) translateY(4px);width:280px;background:rgba(6,6,18,.97);border:1px solid rgba(124,58,237,.28);border-radius:14px;padding:16px 18px 14px;font-size:.78rem;color:var(--muted);line-height:1.7;z-index:200;text-align:left;display:none;backdrop-filter:blur(18px);box-shadow:0 20px 48px rgba(0,0,0,.6),0 0 0 1px rgba(124,58,237,.08)}
+.stat-note.open{display:block;animation:stat-note-in .22s cubic-bezier(.22,1,.36,1)}
+@keyframes stat-note-in{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.stat-note-close{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--dim);cursor:pointer;font-size:1rem;line-height:1;font-family:inherit;padding:2px 6px;transition:color .15s}
+.stat-note-close:hover{color:var(--text)}
 
 /* Stack section header */
 #stack{background:var(--bg)}
@@ -1121,7 +1129,15 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 <div class="stats-bar">
   <div class="stat fade-up"><div class="stat-num" data-target="1">0</div><div class="stat-label">Projects Delivered</div></div>
   <div class="stat fade-up" style="transition-delay:.1s"><div class="stat-num" data-target="100">0</div><div class="stat-label">Client Satisfaction</div></div>
-  <div class="stat fade-up" style="transition-delay:.2s"><div class="stat-num" data-target="1">0</div><div class="stat-label">Years in Business</div></div>
+  <div class="stat fade-up stat-clickable" id="stat-age" style="transition-delay:.2s" onclick="toggleStatNote('age-note')">
+    <div class="stat-num" data-target="4" data-suffix=" days">0</div>
+    <div class="stat-label">In Business <span class="stat-click-hint">↑</span></div>
+    <div class="stat-note" id="age-note">
+      <button class="stat-note-close" onclick="event.stopPropagation();toggleStatNote('age-note')">×</button>
+      <strong style="display:block;margin-bottom:6px;color:var(--text);font-size:.85rem">Just Getting Started.</strong>
+      Precision Workz launched 4 days ago — and we're already building full-stack platforms that agencies charge 5× more for. New doesn't mean less. It means hungrier, faster, and more committed to getting it right.
+    </div>
+  </div>
   <div class="stat fade-up" style="transition-delay:.3s"><div class="stat-num" data-target="24">0</div><div class="stat-label">Hour Support</div></div>
 </div>
 
@@ -3142,7 +3158,7 @@ async function submitPayment(){
       var isOnce=e.target.closest('.stats-bar')||e.target.closest('.why-visual');
       if(e.isIntersecting){
         e.target.classList.add('visible');
-        if(!cD&&e.target.closest('.stats-bar')){cD=true;document.querySelectorAll('.stat-num[data-target]').forEach(function(el){var t=parseInt(el.dataset.target),sfx=t===100?'%':t===24?'/7':'+',t0=performance.now(),dur=1800;function step(n){var p=Math.min((n-t0)/dur,1),ease=1-Math.pow(1-p,3);el.textContent=Math.round(ease*t)+sfx;if(p<1)requestAnimationFrame(step)}requestAnimationFrame(step)})}
+        if(!cD&&e.target.closest('.stats-bar')){cD=true;document.querySelectorAll('.stat-num[data-target]').forEach(function(el){var t=parseInt(el.dataset.target),sfx='suffix' in el.dataset?el.dataset.suffix:(t===100?'%':t===24?'/7':'+'),t0=performance.now(),dur=1800;function step(n){var p=Math.min((n-t0)/dur,1),ease=1-Math.pow(1-p,3);el.textContent=Math.round(ease*t)+sfx;if(p<1)requestAnimationFrame(step)}requestAnimationFrame(step)})}
         if(!mD&&e.target.closest('.why-visual')){mD=true;setTimeout(function(){document.querySelectorAll('.metric-fill[data-width]').forEach(function(b){b.style.width=b.dataset.width+'%'});document.querySelectorAll('.metric-val[data-metric]').forEach(function(el){var t=parseInt(el.dataset.metric),t0=performance.now(),dur=1600;function step(n){var p=Math.min((n-t0)/dur,1),ease=1-Math.pow(1-p,3);el.textContent=Math.round(ease*t);if(p<1)requestAnimationFrame(step)}requestAnimationFrame(step)})},200)}
       } else if(!isOnce) {
         /* re-animate on scroll up for non-counter elements */
@@ -3152,6 +3168,17 @@ async function submitPayment(){
   },{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
   document.querySelectorAll('.fade-up').forEach(function(el){io.observe(el)});
 })();
+
+function toggleStatNote(id){
+  var el=document.getElementById(id);
+  if(!el)return;
+  var isOpen=el.classList.contains('open');
+  document.querySelectorAll('.stat-note.open').forEach(function(n){n.classList.remove('open')});
+  if(!isOpen)el.classList.add('open');
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.stat-clickable'))document.querySelectorAll('.stat-note.open').forEach(function(n){n.classList.remove('open')});
+});
 
 function switchTab(id){
   var ids=['all','design','security','dev','assess'];
