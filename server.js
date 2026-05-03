@@ -7,7 +7,51 @@ const os   = require('os');
 
 // Request telemetry (in-memory, resets on restart)
 let _reqTotal = 0;
-const _reqLog = []; // {ts, path, ms}
+const _reqLog = []; // {ts, path, ms, ip}
+
+// ── IP RATE LIMITER ───────────────────────────────────────
+const _ipTracker = new Map();
+const IP_RESET_MS = 2 * 60 * 60 * 1000; // 2 hours
+
+function getIPRecord(ip) {
+  const now = Date.now();
+  if (!_ipTracker.has(ip)) {
+    _ipTracker.set(ip, { risk:'low', reloads:[], cooldownUntil:0, violations:0, firstSeen:now, lastSeen:now });
+  }
+  const rec = _ipTracker.get(ip);
+  // Auto-reset if inactive for 2 hours and no active cooldown
+  const lastActivity = rec.reloads.length ? rec.reloads[rec.reloads.length-1] : rec.firstSeen;
+  if (now - lastActivity > IP_RESET_MS && rec.cooldownUntil < now) {
+    rec.risk = 'low'; rec.reloads = []; rec.violations = 0; rec.cooldownUntil = 0;
+  }
+  return rec;
+}
+
+function checkAndRecordVisit(ip) {
+  const now = Date.now();
+  const rec = getIPRecord(ip);
+  rec.lastSeen = now;
+  // Active cooldown — don't record reload, return remaining time
+  if (rec.cooldownUntil > now) {
+    return { risk: rec.risk, cooldown: Math.ceil((rec.cooldownUntil - now) / 1000) };
+  }
+  rec.reloads.push(now);
+  // Keep only last 2 minutes of entries
+  rec.reloads = rec.reloads.filter(t => now - t < 120000);
+  // Tier 2: >20 reloads in 60s → 5 min cooldown
+  if (rec.reloads.filter(t => now - t < 60000).length > 20) {
+    rec.violations++; rec.risk = 'medium';
+    rec.cooldownUntil = now + 300000;
+    return { risk: 'medium', cooldown: 300 };
+  }
+  // Tier 1: >10 reloads in 30s → 1 min cooldown
+  if (rec.reloads.filter(t => now - t < 30000).length > 10) {
+    rec.violations++; rec.risk = 'medium';
+    rec.cooldownUntil = now + 60000;
+    return { risk: 'medium', cooldown: 60 };
+  }
+  return { risk: rec.risk, cooldown: 0 };
+}
 
 const PORT = process.env.PORT || 4000;
 const DIR  = __dirname;
@@ -156,6 +200,11 @@ async function handleAPI(req, res, urlPath) {
   // Public routes
   if (urlPath === '/api/pub-key') return json(res, 200, { key: STRIPE_PUB });
   if (urlPath === '/api/config')  return json(res, 200, { stripeKey: STRIPE_PUB, googleClientId: GOOGLE_CLIENT });
+
+  // Security gate check — records visit and returns cooldown status
+  if (urlPath === '/api/gate-check' && req.method === 'POST') {
+    return json(res, 200, checkAndRecordVisit(req.realIP));
+  }
 
   // Public request submission
   if (urlPath === '/api/request' && req.method === 'POST') {
@@ -332,6 +381,16 @@ async function handleAPI(req, res, urlPath) {
     // GET /api/admin/metrics
     if (urlPath === '/api/admin/metrics') {
       const mem = process.memoryUsage();
+      const now = Date.now();
+      const ipList = [];
+      _ipTracker.forEach(function(rec, ip) {
+        ipList.push({
+          ip, risk: rec.risk, reloads: rec.reloads.length, violations: rec.violations,
+          cooldownUntil: rec.cooldownUntil, cooldownLeft: rec.cooldownUntil > now ? Math.ceil((rec.cooldownUntil - now) / 1000) : 0,
+          firstSeen: rec.firstSeen, lastSeen: rec.lastSeen,
+        });
+      });
+      ipList.sort((a, b) => b.lastSeen - a.lastSeen);
       return json(res, 200, {
         uptime:      process.uptime(),
         memory:      { heapUsed: mem.heapUsed, heapTotal: mem.heapTotal, rss: mem.rss },
@@ -343,6 +402,7 @@ async function handleAPI(req, res, urlPath) {
         reqTotal:    _reqTotal,
         reqLog:      _reqLog.slice(-30),
         behindCloudflare: !!req.headers['cf-connecting-ip'],
+        ips:         ipList.slice(0, 100),
       });
     }
 
