@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Precision Workz — Developer Docs</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#04040d;--bg2:#07071a;--bg3:#0d0d22;
+  --purple:#7c3aed;--purple2:#a855f7;--cyan:#06b6d4;--cyan2:#22d3ee;
+  --pink:#ec4899;--gold:#f59e0b;--gold2:#fbbf24;
+  --text:#f1f5f9;--muted:#94a3b8;--dim:#475569;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --card:rgba(255,255,255,0.03);
+}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.7}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--purple);border-radius:3px}
+a{color:var(--cyan2);text-decoration:none}a:hover{text-decoration:underline}
+code{font-family:'Fira Code','Cascadia Code','Consolas',monospace;font-size:.85em;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.25);padding:2px 6px;border-radius:5px;color:var(--purple2)}
+pre{background:#08081e;border:1px solid rgba(124,58,237,.2);border-radius:10px;padding:18px 20px;overflow-x:auto;margin:16px 0}
+pre code{background:none;border:none;padding:0;font-size:.83em;color:#c4b5fd;display:block;white-space:pre}
+h1{font-size:2.8rem;font-weight:800;letter-spacing:-1.5px;line-height:1.1;background:linear-gradient(135deg,#fff 0%,var(--cyan2) 45%,var(--purple2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h2{font-size:1.7rem;font-weight:700;letter-spacing:-.5px;margin:56px 0 18px;padding-top:12px;color:var(--text)}
+h3{font-size:1.1rem;font-weight:700;margin:32px 0 10px;color:var(--cyan2)}
+h4{font-size:.9rem;font-weight:700;margin:20px 0 8px;color:var(--purple2);text-transform:uppercase;letter-spacing:.5px}
+p{margin-bottom:14px;color:var(--muted)}
+li{color:var(--muted);margin-bottom:6px}
+ul,ol{padding-left:22px;margin-bottom:14px}
+
+/* LAYOUT */
+.shell{display:flex;min-height:100vh}
+.sidebar{width:240px;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;background:rgba(7,7,26,.9);border-right:1px solid var(--border);padding:24px 0}
+.sidebar-logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.sidebar-logo span{font-size:.75rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;background:linear-gradient(135deg,var(--gold2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sidebar-logo div{font-size:.7rem;color:var(--dim);margin-top:2px}
+.nav-section{padding:6px 20px 4px;font-size:.63rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-top:10px}
+.nav-link{display:block;padding:6px 20px;font-size:.8rem;color:var(--muted);transition:color .15s,background .15s;border-left:2px solid transparent}
+.nav-link:hover,.nav-link.active{color:var(--text);background:rgba(124,58,237,.08);border-left-color:var(--purple);text-decoration:none}
+.content{margin-left:240px;padding:60px 80px;max-width:900px}
+@media(max-width:900px){.sidebar{display:none}.content{margin-left:0;padding:32px 24px}}
+
+/* COMPONENTS */
+.hero-block{background:linear-gradient(145deg,#0a0a1e,#0e0e26);border:1px solid rgba(124,58,237,.25);border-radius:16px;padding:40px;margin-bottom:48px}
+.badge{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:20px;margin-right:8px;margin-bottom:6px}
+.badge.green{background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.3)}
+.badge.yellow{background:rgba(245,158,11,.12);color:var(--gold2);border:1px solid rgba(245,158,11,.25)}
+.badge.red{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+.badge.purple{background:rgba(124,58,237,.15);color:var(--purple2);border:1px solid rgba(124,58,237,.3)}
+.badge.cyan{background:rgba(6,182,212,.1);color:var(--cyan2);border:1px solid rgba(6,182,212,.2)}
+.badge.gray{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border2)}
+.callout{border-radius:10px;padding:16px 18px;margin:16px 0}
+.callout.warn{background:rgba(245,158,11,.08);border-left:3px solid var(--gold2)}
+.callout.warn p{color:var(--gold2);margin:0}
+.callout.info{background:rgba(6,182,212,.07);border-left:3px solid var(--cyan2)}
+.callout.info p{color:var(--cyan2);margin:0}
+.callout.danger{background:rgba(239,68,68,.08);border-left:3px solid #f87171}
+.callout.danger p{color:#f87171;margin:0}
+.callout.success{background:rgba(16,185,129,.07);border-left:3px solid #34d399}
+.callout.success p{color:#34d399;margin:0}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+@media(max-width:700px){.two-col{grid-template-columns:1fr}}
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px}
+.info-card h4{margin-top:0;margin-bottom:8px}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(124,58,237,.4),transparent);margin:48px 0}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.85rem}
+th{background:rgba(124,58,237,.1);color:var(--purple2);font-weight:700;text-align:left;padding:10px 14px;border-bottom:1px solid rgba(124,58,237,.2);font-size:.72rem;letter-spacing:.5px;text-transform:uppercase}
+td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--muted);vertical-align:top}
+td:first-child{color:var(--text);font-family:'Fira Code',monospace;font-size:.82em}
+tr:last-child td{border-bottom:none}
+.method{display:inline-block;font-size:.7rem;font-weight:800;padding:2px 8px;border-radius:5px;margin-right:6px;letter-spacing:.3px}
+.method.get{background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.3)}
+.method.post{background:rgba(124,58,237,.15);color:var(--purple2);border:1px solid rgba(124,58,237,.3)}
+.flow-step{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start}
+.flow-num{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;flex-shrink:0;margin-top:1px}
+.flow-body{}
+.flow-body strong{color:var(--text);font-size:.92rem}
+.flow-body p{margin:2px 0 0;font-size:.85rem}
+.bug-item{background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.18);border-radius:10px;padding:16px;margin-bottom:12px}
+.bug-item h4{color:#f87171;margin:0 0 6px;font-size:.85rem}
+.bug-item p{margin:0;font-size:.84rem}
+.ui-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:10px}
+.ui-card strong{color:var(--text);display:block;margin-bottom:4px;font-size:.9rem}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span>Precision Workz</span>
+    <div>Developer Documentation</div>
+  </div>
+  <div class="nav-section">Overview</div>
+  <a class="nav-link" href="#overview">Project Overview</a>
+  <a class="nav-link" href="#file-structure">File Structure</a>
+  <a class="nav-link" href="#startup">Starting the Server</a>
+  <div class="nav-section">Systems</div>
+  <a class="nav-link" href="#auth">Login System</a>
+  <a class="nav-link" href="#admin">Admin System</a>
+  <a class="nav-link" href="#payment">Payment System</a>
+  <a class="nav-link" href="#email">Email System</a>
+  <a class="nav-link" href="#requests">Support Requests</a>
+  <div class="nav-section">Frontend</div>
+  <a class="nav-link" href="#ui-components">UI Components</a>
+  <a class="nav-link" href="#animations">Animations & Effects</a>
+  <a class="nav-link" href="#api-routes">API Routes</a>
+  <div class="nav-section">Reference</div>
+  <a class="nav-link" href="#local-storage">localStorage Keys</a>
+  <a class="nav-link" href="#server-files">Server Data Files</a>
+  <a class="nav-link" href="#login-logs">Login Logs</a>
+  <a class="nav-link" href="#bugs">Known Bugs</a>
+</aside>
+
+<!-- CONTENT -->
+<main class="content">
+
+  <!-- HERO -->
+  <div class="hero-block">
+    <h1>Developer Docs</h1>
+    <p style="margin-top:16px;font-size:1rem;color:var(--muted)">Complete reference for the Precision Workz website — how every system works, how data flows, and what still needs to be done.</p>
+    <div style="margin-top:20px">
+      <span class="badge green">Node.js</span>
+      <span class="badge purple">Vanilla JS</span>
+      <span class="badge yellow">Stripe Test Mode</span>
+      <span class="badge cyan">Google OAuth</span>
+      <span class="badge gray">No Framework</span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <h2 id="overview">Project Overview</h2>
+  <p>Precision Workz is a single-page agency website served by a lightweight Node.js HTTP server. There is no framework (no Express, no React). The entire frontend lives in one file: <code>index.html</code>. The backend lives in one file: <code>server.js</code>. All data is stored as flat JSON files on disk.</p>
+
+  <div class="two-col">
+    <div class="info-card">
+      <h4>Frontend</h4>
+      <ul>
+        <li>Single <code>index.html</code> (~3,700 lines)</li>
+        <li>Vanilla CSS — no Tailwind, no Bootstrap</li>
+        <li>Vanilla JS — no jQuery, no bundler</li>
+        <li>Phosphor Icons (CDN)</li>
+        <li>Orbitron + Inter (Google Fonts)</li>
+        <li>Stripe.js v3 (CDN)</li>
+        <li>Google Identity Services (CDN)</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h4>Backend</h4>
+      <ul>
+        <li>Node.js built-in <code>http</code> module</li>
+        <li>No Express — routes handled manually</li>
+        <li>Stripe npm package for checkout</li>
+        <li>Data stored as flat JSON files</li>
+        <li>Runs on port <code>4000</code> (configurable via <code>PORT</code> env)</li>
+        <li>.env parsed manually at startup</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <h2 id="file-structure">File Structure</h2>
+  <pre><code>precision-workz/
+├── server.js          ← HTTP server + all API routes
+├── index.html         ← Entire frontend (HTML + CSS + JS)
+├── .env               ← Secrets (Google Client ID, API key)
+├── package.json       ← npm config (only dependency: stripe)
+├── admins.json        ← List of admin email addresses (auto-created)
+├── clients.json       ← Client database keyed by email (auto-created)
+├── requests.json      ← Support request log (auto-created)
+└── docs.html          ← This file</code></pre>
+
+  <div class="callout warn">
+    <p><strong>Note:</strong> <code>admins.json</code>, <code>clients.json</code>, and <code>requests.json</code> are created automatically the first time data is written. They do not need to be manually created. If they don't exist, the server falls back to safe defaults.</p>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <h2 id="startup">Starting the Server</h2>
+  <pre><code>node server.js
+# or
+npm start</code></pre>
+  <p>The server reads <code>.env</code> at startup. If a key is already set in the environment, the <code>.env</code> value is skipped (no overwrite). It then tries to <code>require('stripe')</code>. If Stripe is not installed, it logs a warning and continues — the site still works, just without checkout.</p>
+
+  <div class="callout danger">
+    <p><strong>Port conflict:</strong> If you see <code>EADDRINUSE: address already in use :::4000</code>, a previous Node process is still running. Kill it: <code>Stop-Process -Name "node" -Force</code> (PowerShell) then restart.</p>
+  </div>
+
+  <h3>Environment Variables (.env)</h3>
+  <table>
+    <thead><tr><th>Variable</th><th>Purpose</th><th>Required</th></tr></thead>
+    <tbody>
+      <tr><td>GOOGLE_CLIENT_ID</td><td>Google OAuth client ID for sign-in</td><td><span class="badge green">Yes</span></td></tr>
+      <tr><td>STRIPE_SECRET</td><td>Stripe secret key (falls back to hardcoded test key)</td><td><span class="badge yellow">Optional</span></td></tr>
+      <tr><td>STRIPE_PUB</td><td>Stripe publishable key (falls back to hardcoded test key)</td><td><span class="badge yellow">Optional</span></td></tr>
+      <tr><td>API_KEY</td><td>Custom API key (currently unused in routing logic)</td><td><span class="badge gray">Unused</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <h2 id="auth">Login System</h2>
+  <p>Authentication is <strong>client-side only</strong>. The server never issues session tokens. The browser stores user data in <code>localStorage</code> as a JSON object under the key <code>pw_user</code>. There are two ways to sign in:</p>
+
+  <h3>Method 1 — Google OAuth (Google Identity Services)</h3>
+  <div class="flow-step"><div class="flow-num">1</div><div class="flow-body"><strong>Page load</strong><p>The frontend fetches <code>/api/config</code> to get the Google Client ID, then calls <code>google.accounts.id.initialize()</code> with <code>handleGoogleCredential</code> as the callback.</p></div></div>
+  <div class="flow-step"><div class="flow-num">2</div><div class="flow-body"><strong>Sign-in modal opens</strong><p><code>openSignIn()</code> shows the modal, then after an 80ms delay (to ensure the container is visible), calls <code>google.accounts.id.renderButton()</code> to inject the real Google button into <code>#google-signin-btn-wrap</code>.</p></div></div>
+  <div class="flow-step"><div class="flow-num">3</div><div class="flow-body"><strong>User picks a Google account</strong><p>Google calls <code>handleGoogleCredential(response)</code>. The function base64-decodes the JWT payload (no signature verification — this is client-side only) and extracts <code>name</code>, <code>email</code>, <code>picture</code>.</p></div></div>
+  <div class="flow-step"><div class="flow-num">4</div><div class="flow-body"><strong>User data saved</strong><p>The decoded user object is stored via <code>setUserData(user)</code> → <code>localStorage.setItem('pw_user', JSON.stringify(user))</code>. <code>updateAuthUI(user)</code> is called to update the nav.</p></div></div>
+
+  <div class="callout info">
+    <p><strong>One-shot render:</strong> The Google button is only rendered once per page load (<code>_gBtnRendered</code> flag). If the modal is closed and reopened before GSI loads, the button may not appear. A page refresh always fixes it.</p>
+  </div>
+
+  <h3>Method 2 — Email Fallback (no password)</h3>
+  <p>If a user doesn't want to use Google, they can type their name + email in the fallback form. <code>emailSignIn()</code> validates the format and stores the same <code>pw_user</code> object in localStorage (with an empty <code>picture</code> field). No server call is made.</p>
+
+  <div class="callout warn">
+    <p><strong>Security note:</strong> The email fallback has no password, no OTP, and no server verification. Anyone who knows your email can sign in as you in the browser. This is intentional for the demo phase — it's gated by the admin panel assigning a <code>packageType</code> before any real access is granted.</p>
+  </div>
+
+  <h3>Session Persistence</h3>
+  <p>On every page load, the init block runs:</p>
+  <pre><code>var user = getUserData(); // reads localStorage
+if (user) {
+  updateAuthUI(user);
+  // background-syncs subscription/packageType from server
+  fetch('/api/client-status?email=' + user.email)...
+}</code></pre>
+  <p>This means a user stays "logged in" indefinitely (until they sign out or clear localStorage). The background sync ensures their subscription tier is always current from the server.</p>
+
+  <h3>Sign Out</h3>
+  <p><code>signOut()</code> calls <code>clearUserData()</code> → <code>localStorage.removeItem('pw_user')</code>, then <code>updateAuthUI(null)</code> to reset the nav.</p>
+
+  <h3>User Object Shape</h3>
+  <pre><code>{
+  name:        "John Smith",
+  email:       "john@example.com",
+  picture:     "https://lh3.googleusercontent.com/...",  // empty string for email login
+  sub:         "gold",        // null | "basic" | "gold"
+  billing:     "monthly",     // "monthly" | "annual"
+  packageType: "titanium"     // null | "starter" | "premium" | "diamond" | "titanium"
+}</code></pre>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <h2 id="admin">Admin System</h2>
+  <p>The admin panel is a full-screen overlay accessible only to verified admin emails. All admin API routes require an <code>adminEmail</code> parameter that is checked server-side against <code>admins.json</code>.</p>
+
+  <h3>Admin Hierarchy</h3>
+  <table>
+    <thead><tr><th>Role</th><th>Email</th><th>Permissions</th></tr></thead>
+    <tbody>
+      <tr><td>Primary Admin</td><td>precisionworkz9@gmail.com</td><td>Everything — including add/remove developers</td></tr>
+      <tr><td>Developer</td><td>Any email added via admin panel</td><td>View/edit clients, view requests — cannot manage other admins</td></tr>
+    </tbody>
+  </table>
+
+  <h3>How the Panel Opens</h3>
+  <div class="flow-step"><div class="flow-num">1</div><div class="flow-body"><strong>Login detected</strong><p>After sign-in, <code>checkAdminBtn(user)</code> calls <code>GET /api/admin/data?adminEmail=</code>. If the response is not an error (200 OK), the Admin button is shown in the nav.</p></div></div>
+  <div class="flow-step"><div class="flow-num">2</div><div class="flow-body"><strong>Panel opened</strong><p><code>openAdmin()</code> adds <code>.open</code> to <code>#admin-overlay</code> and calls <code>adminLoadData()</code>.</p></div></div>
+  <div class="flow-step"><div class="flow-num">3</div><div class="flow-body"><strong>Data loaded</strong><p><code>adminLoadData()</code> fetches <code>/api/admin/data</code> (clients + admins) and <code>adminLoadRequests()</code> fetches <code>/api/admin/requests</code> in sequence.</p></div></div>
+
+  <h3>Admin Panel Sections</h3>
+  <div class="ui-card"><strong>Stats Bar</strong> — Total clients · Basic count · Gold count · Active packages (has packageType) · Open support requests</div>
+  <div class="ui-card"><strong>Add / Update Client</strong> — Form to set email, name, subscription tier, billing cycle, package, and internal notes. Calls <code>POST /api/admin/set-client</code>. Also used to edit existing clients (click "Edit" in the table to pre-fill the form).</div>
+  <div class="ui-card"><strong>Developer Access</strong> — Lists all admin emails. Primary admin sees a Remove button next to each developer. Primary admin also sees the Add Developer input. Calls <code>POST /api/admin/add-admin</code> / <code>POST /api/admin/remove-admin</code>.</div>
+  <div class="ui-card"><strong>All Clients Table</strong> — Searchable table of all entries in <code>clients.json</code>. Columns: email, name, subscription pill, billing, package pill, notes, date added, Edit/Remove actions.</div>
+  <div class="ui-card"><strong>Support Requests</strong> — All entries from <code>requests.json</code>, filterable by status (All / Open / Resolved). Each card shows: status, type, date, customer name + email, request details, Reply button (opens mailto), and Mark Resolved / Reopen button.</div>
+
+  <h3>clients.json — Client Record Shape</h3>
+  <pre><code>{
+  "john@example.com": {
+    "name":        "John Smith",
+    "email":       "john@example.com",
+    "sub":         "gold",        // null | "basic" | "gold"
+    "billing":     "monthly",     // "monthly" | "annual"
+    "packageType": "diamond",     // null | "starter" | "premium" | "diamond" | "titanium"
+    "notes":       "Invoice #2104",
+    "addedAt":     "2026-05-01T12:00:00.000Z",
+    "updatedAt":   "2026-05-01T12:18:29.897Z"
+  }
+}</code></pre>
+
+  <div class="callout warn">
+    <p><strong>Security model:</strong> Admin verification is email-only with no cryptographic token. The server trusts whatever email the client sends. For a private internal tool this is fine, but do not expose admin routes to the public internet without adding token-based auth.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <h2 id="payment">Payment System (Stripe)</h2>
+
+  <div class="callout warn">
+    <p><strong>Currently in TEST MODE.</strong> No real charges occur. Stripe products/prices have not been created yet — checkout returns a 402 until price IDs are added to the <code>PRICES</code> object in <code>server.js</code>.</p>
+  </div>
+
+  <h3>Subscription Plans</h3>
+  <table>
+    <thead><tr><th>Plan Key</th><th>Display Name</th><th>Monthly</th><th>Annual/mo</th><th>server.js key</th></tr></thead>
+    <tbody>
+      <tr><td>basic-monthly</td><td>Basic Managed</td><td>$49</td><td>—</td><td>PRICES['basic-monthly']</td></tr>
+      <tr><td>basic-annual</td><td>Basic Managed</td><td>—</td><td>$39</td><td>PRICES['basic-annual']</td></tr>
+      <tr><td>gold-monthly</td><td>Gold Managed</td><td>$89</td><td>—</td><td>PRICES['gold-monthly']</td></tr>
+      <tr><td>gold-annual</td><td>Gold Managed</td><td>—</td><td>$69</td><td>PRICES['gold-annual']</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Checkout Flow (Gated)</h3>
+  <div class="flow-step"><div class="flow-num">1</div><div class="flow-body"><strong>Subscribe button clicked</strong><p><code>openPayModal(plan, name, price)</code> is called. First checks: is the user signed in? If not → opens sign-in modal, stores pending plan in <code>window._pendingPayPlan</code>.</p></div></div>
+  <div class="flow-step"><div class="flow-num">2</div><div class="flow-body"><strong>Customer check</strong><p>If user is signed in but <code>user.packageType</code> is null (not a paying customer yet) → shows a toast: "You need an active package before subscribing." The subscribe flow stops here.</p></div></div>
+  <div class="flow-step"><div class="flow-num">3</div><div class="flow-body"><strong>Step 1 — Confirm info</strong><p>Pre-fills the user's name and email. User confirms or edits, then clicks Next. <code>payStep1Next()</code> validates fields, saves any edits back to localStorage, and advances to Step 2.</p></div></div>
+  <div class="flow-step"><div class="flow-num">4</div><div class="flow-body"><strong>Step 2 — Stripe card</strong><p><code>initStripe()</code> mounts a Stripe Card Element into <code>#stripe-card-element</code>. The Stripe dark theme is applied via the Appearance API.</p></div></div>
+  <div class="flow-step"><div class="flow-num">5</div><div class="flow-body"><strong>Submit</strong><p><code>submitPayment()</code> calls <code>POST /api/create-checkout</code> with the plan key and user email. The server creates a Stripe Checkout Session and returns <code>{url}</code>. The browser redirects to Stripe's hosted checkout page.</p></div></div>
+  <div class="flow-step"><div class="flow-num">6</div><div class="flow-body"><strong>Return</strong><p>On success: redirected to <code>/?checkout=success</code> → site shows a green toast "Subscription active — welcome aboard!". On cancel: <code>/?checkout=cancel</code> → purple toast "Checkout cancelled."</p></div></div>
+
+  <h3>Completing Stripe Setup</h3>
+  <ol>
+    <li>Go to <a href="https://dashboard.stripe.com/test/products" target="_blank">dashboard.stripe.com/test/products</a></li>
+    <li>Create 4 subscription products matching the plans above</li>
+    <li>Copy each <code>price_xxx</code> ID from the dashboard</li>
+    <li>Paste into <code>server.js</code> in the <code>PRICES</code> object:</li>
+  </ol>
+  <pre><code>const PRICES = {
+  'basic-monthly': 'price_xxx',
+  'basic-annual':  'price_xxx',
+  'gold-monthly':  'price_xxx',
+  'gold-annual':   'price_xxx',
+};</code></pre>
+
+  <div class="callout info">
+    <p><strong>Pending pay plan:</strong> If a user clicks Subscribe, gets routed to sign-in, and then signs in — the pending plan is stored in <code>window._pendingPayPlan</code>. After sign-in completes, <code>_resumePendingPay()</code> automatically reopens the payment modal with the original plan.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <h2 id="email">Email System</h2>
+  <p>There is <strong>no email server</strong>. All email functionality uses <code>mailto:</code> links that open the user's default email client. This means:</p>
+  <ul>
+    <li>No emails are sent automatically from the server</li>
+    <li>The user has to click Send in their own email client</li>
+    <li>No email confirmation, no auto-reply, no delivery guarantee</li>
+  </ul>
+
+  <h3>Contact Form (<code>submitContact()</code>)</h3>
+  <p>Collects: first name, last name, email, package selection (custom dropdown), message, optional promo code. Builds a <code>mailto:precizionworkz@gmail.com</code> link with subject and body pre-filled, then navigates to it. The promo code (if entered and validated via "Apply") is included in the email body.</p>
+
+  <h3>Support Request Reply (Admin Panel)</h3>
+  <p>Each support request card in the admin panel has a <strong>Reply</strong> button. It opens a <code>mailto:</code> link pre-addressed to the customer's email with a subject line of <code>[Precision Workz] Re: {request type}</code> and a starter greeting in the body.</p>
+
+  <h3>Future: Real Email</h3>
+  <p>To send emails automatically (e.g., on new request submission), you would add <code>nodemailer</code> or use a service like SendGrid/Resend. The server already has the request data and owner email constant <code>OWNER_EMAIL = 'precizionworkz@gmail.com'</code> ready to wire up.</p>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <h2 id="requests">Support Requests</h2>
+  <p>Customers with an active subscription can submit support requests through their dashboard. Requests are stored in <code>requests.json</code> on the server.</p>
+
+  <h3>Request Types</h3>
+  <table>
+    <thead><tr><th>Key</th><th>Label</th><th>Who Can Submit</th></tr></thead>
+    <tbody>
+      <tr><td>bug-fix</td><td>Bug Fix Request</td><td>Basic + Gold</td></tr>
+      <tr><td>security-issue</td><td>Security Issue Report</td><td>Basic + Gold</td></tr>
+      <tr><td>feature-request</td><td>Feature Request</td><td>Basic + Gold</td></tr>
+      <tr><td>maintenance</td><td>Maintenance Check</td><td>Basic + Gold</td></tr>
+      <tr><td>emergency</td><td>Emergency Repair</td><td>Gold only</td></tr>
+      <tr><td>security-audit</td><td>Full Security Audit</td><td>Gold only</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Request Flow</h3>
+  <div class="flow-step"><div class="flow-num">1</div><div class="flow-body"><strong>Customer opens dashboard</strong><p>Clicks a request type button (e.g., "🔧 Maintenance Check"). The dashboard closes, the request modal opens.</p></div></div>
+  <div class="flow-step"><div class="flow-num">2</div><div class="flow-body"><strong>Customer describes the issue</strong><p>Fills in the textarea and clicks Submit Request.</p></div></div>
+  <div class="flow-step"><div class="flow-num">3</div><div class="flow-body"><strong>POST /api/request</strong><p>Server validates that <code>email</code> and <code>details</code> are present, generates a unique ID (<code>Date.now().toString(36) + random</code>), prepends to <code>requests.json</code> array with <code>status: 'open'</code>.</p></div></div>
+  <div class="flow-step"><div class="flow-num">4</div><div class="flow-body"><strong>Admin reviews</strong><p>Admin panel → Support Requests section. Can filter by Open/Resolved. Can click Reply (mailto) or Mark Resolved (<code>POST /api/admin/update-request</code>).</p></div></div>
+
+  <h3>Request Record Shape</h3>
+  <pre><code>{
+  "id":        "lz4k2af8b1",       // unique ID (base36 timestamp + random)
+  "email":     "john@example.com",
+  "name":      "John Smith",
+  "type":      "maintenance",
+  "details":   "The contact form seems to be broken on mobile...",
+  "sub":       "gold",             // subscription at time of request
+  "status":    "open",            // "open" | "resolved"
+  "createdAt": "2026-05-01T12:00:00.000Z",
+  "updatedAt": "2026-05-01T13:30:00.000Z"  // added when status changes
+}</code></pre>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <h2 id="api-routes">API Routes</h2>
+  <p>All routes are handled in <code>server.js</code> via the <code>handleAPI()</code> function. No Express — paths are matched with simple <code>if</code> statements.</p>
+
+  <table>
+    <thead><tr><th>Method + Path</th><th>Auth</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="method get">GET</span>/api/config</td>
+        <td>Public</td>
+        <td>Returns <code>{stripeKey, googleClientId}</code> — used by the frontend on load</td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span>/api/pub-key</td>
+        <td>Public</td>
+        <td>Returns <code>{key: STRIPE_PUB}</code> — legacy alias</td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span>/api/client-status</td>
+        <td>Public</td>
+        <td>Query param: <code>?email=</code>. Returns the client record from <code>clients.json</code> or <code>null</code></td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span>/api/request</td>
+        <td>Public</td>
+        <td>Submit a support request. Body: <code>{email, name, type, details, sub}</code>. Saves to <code>requests.json</code></td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span>/api/create-checkout</td>
+        <td>Public</td>
+        <td>Body: <code>{plan, email}</code>. Creates Stripe Checkout Session, returns <code>{url}</code></td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span>/api/demo</td>
+        <td>Public</td>
+        <td>Logs a demo booking request to console. Body is any JSON</td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span>/api/admin/data</td>
+        <td>Admin email</td>
+        <td>Query: <code>?adminEmail=</code>. Returns <code>{clients, admins, primaryAdmin}</code></td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span>/api/admin/requests</td>
+        <td>Admin email</td>
+        <td>Query: <code>?adminEmail=</code>. Returns <code>{requests, ownerEmail}</code></td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span>/api/admin/set-client</td>
+        <td>Admin email</td>
+        <td>Add or update a client record. Body includes all client fields</td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span>/api/admin/remove-client</td>
+        <td>Admin email</td>
+        <td>Delete a client. Body: <code>{adminEmail, targetEmail}</code></td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span>/api/admin/update-request</td>
+        <td>Admin email</td>
+        <td>Change a request's status. Body: <code>{adminEmail, id, status}</code></td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span>/api/admin/add-admin</td>
+        <td>Primary admin only</td>
+        <td>Grant admin access to a new email. Body: <code>{adminEmail, newEmail}</code></td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span>/api/admin/remove-admin</td>
+        <td>Primary admin only</td>
+        <td>Revoke developer access. Body: <code>{adminEmail, targetEmail}</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>All non-API paths fall through to static file serving. If the file doesn't exist, the server returns <code>index.html</code> (SPA-style fallback).</p>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <h2 id="ui-components">UI Components</h2>
+  <p>Every interactive piece of UI in the site:</p>
+
+  <h3>Modals & Overlays</h3>
+  <div class="ui-card"><strong>Sign-In Modal</strong> — <code>#signin-overlay</code>. Opens via <code>openSignIn()</code>. Contains Google button wrapper (<code>#google-signin-btn-wrap</code>) + email fallback fields. Closes via <code>closeSignIn()</code> or clicking the backdrop.</div>
+  <div class="ui-card"><strong>Account Dashboard (Drawer)</strong> — <code>#acct-drawer</code> slides in from the right. Opens via avatar pill → <code>openDashboard()</code>. Fetches client status from server, then calls <code>renderDashboard(user)</code> to build the HTML dynamically. Shows subscription card + request buttons based on plan.</div>
+  <div class="ui-card"><strong>Payment Modal</strong> — <code>#pay-overlay</code>. Multi-step (2 steps). Step 1: confirm name/email. Step 2: Stripe card element. Gated behind sign-in AND customer status (must have <code>packageType</code>).</div>
+  <div class="ui-card"><strong>Request Submit Modal</strong> — <code>#req-overlay</code>. Opened from the dashboard. Title, eyebrow, and description text are set dynamically from <code>REQ_CFG[type]</code>. Emergency requests get a red border. Submits to <code>POST /api/request</code>.</div>
+  <div class="ui-card"><strong>Admin Panel</strong> — <code>#admin-overlay</code> (full-screen). Contains stats bar, Add/Update Client form, Developer Access section, All Clients table, Support Requests list. Only visible after admin verification.</div>
+  <div class="ui-card"><strong>Return Visitor Promo</strong> — <code>#promo-overlay</code>. Appears automatically if the user was first seen 7+ days ago and hasn't seen the popup yet (<code>pw_promo_shown</code> key). Shows 5% off at 7 days, 10% off at 30 days.</div>
+  <div class="ui-card"><strong>Legal Modals</strong> — <code>#legal-privacy</code>, <code>#legal-terms</code>, <code>#legal-cookies</code>. Opened via <code>openLegal(id)</code>. Full-page scrollable modals with policy text.</div>
+
+  <h3>Fixed / Floating Elements</h3>
+  <div class="ui-card"><strong>Music Widget</strong> — Fixed bottom-left. A 44px green circle icon button. Click reveals a small popup with a Spotify iframe embed (playlist player). Click the ✕ in the popup header to close. Appears after the splash screen clears (~2.4s delay). Managed by <code>toggleMusicPlayer()</code>.</div>
+  <div class="ui-card"><strong>Cookie Consent Banner</strong> — Fixed bottom. Appears 2 seconds after page load if <code>pw_cookie_v2</code> is not set in localStorage. Two buttons: Accept All and Reject. Sets <code>pw_cookie_v2</code> to "accepted" or "rejected".</div>
+  <div class="ui-card"><strong>Splash Screen</strong> — <code>#splash</code>. Full-screen overlay shown on first visit for ~2.3 seconds with the animated PW logo and loading bar. Fades out and is then removed from DOM.</div>
+  <div class="ui-card"><strong>Cursor Glow</strong> — <code>#cursor-glow</code>. Fixed 400×400px radial gradient div that follows the mouse. Gives a subtle purple aura effect around the cursor.</div>
+
+  <h3>Inline Components</h3>
+  <div class="ui-card"><strong>Custom Dropdown (Contact Form)</strong> — Replaces native <code>&lt;select&gt;</code> to enable full CSS control over grouped options. <code>csToggle(e, id)</code> opens/closes it. <code>csSelect(e, id, value)</code> selects an option and writes the cleaned value to the hidden <code>#cfService</code> input. Clicking outside any open dropdown closes it.</div>
+  <div class="ui-card"><strong>Tech Pill Tooltips</strong> — Each <code>.marquee-pill-m</code> in the "What We Master" marquee section is clickable. A fixed-position tooltip card is created/repositioned on click, showing a short definition of that technology. Clicking elsewhere closes it.</div>
+  <div class="ui-card"><strong>Promo Code Field (Contact Form)</strong> — Text input + Apply button below the message textarea. <code>applyContactPromo()</code> validates the code against known codes (RETURN25 = 25%, RETURN5 = 5%, LOYAL10 = 10%, LAUNCH20 = 20%). The code is included in the mailto body when the form is submitted.</div>
+  <div class="ui-card"><strong>Pricing Tabs</strong> — Five tabs (All-Inclusive, Web Design, Security, Dev, Assessment). <code>switchTab(id)</code> swaps active panel and re-triggers fade-up animations on the newly shown content.</div>
+  <div class="ui-card"><strong>FAQ Accordion</strong> — <code>toggleFaq(btn)</code>. One item open at a time. Closes all others before opening the clicked one.</div>
+  <div class="ui-card"><strong>Mobile Nav</strong> — Slide-in overlay. <code>openMobileNav()</code> / <code>closeMobileNav()</code>.</div>
+
+  <h3>Dynamic CTA Banner</h3>
+  <p>The pre-footer "Let's Build Something Great" section updates based on user status:</p>
+  <ul>
+    <li><strong>Visitor / no package:</strong> "Let's Build Something Great" — "Start a Project" button</li>
+    <li><strong>Customer (has packageType):</strong> "Welcome back, [Name]" / "Ready to Build Another?" — shows RETURN25 promo code — "Start Another Project" button</li>
+  </ul>
+  <p>Managed by <code>_updateCtaBanner(user)</code> called from <code>updateAuthUI()</code>. The nav "Start a Project" button also changes text to "Start Another Project" for customers.</p>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <h2 id="animations">Animations & Effects</h2>
+
+  <table>
+    <thead><tr><th>Effect</th><th>How it works</th></tr></thead>
+    <tbody>
+      <tr><td>Fade-up on scroll</td><td><code>IntersectionObserver</code> watches all <code>.fade-up</code> elements. When 15% visible, adds <code>.visible</code> class (opacity 0→1, translateY 30px→0)</td></tr>
+      <tr><td>Stat number counter</td><td>On first intersection of <code>.stats-bar</code>, each <code>.stat-num[data-target]</code> counts from 0 using <code>requestAnimationFrame</code> with cubic ease-out over 1.8s</td></tr>
+      <tr><td>Why Us metrics</td><td>Same pattern — triggered on first intersection of <code>.why-visual</code>. Fills <code>.metric-fill</code> bars to their <code>data-width</code> value</td></tr>
+      <tr><td>Floating orbs</td><td>3 large blurred divs in the hero, each running a <code>drift</code> CSS animation (translate keyframes, 15–22s ease-in-out infinite)</td></tr>
+      <tr><td>Hero grid</td><td>CSS background-image grid with a radial mask gradient, purely decorative</td></tr>
+      <tr><td>Scroll marquee</td><td>Two rows of pills inside a container with <code>overflow:hidden</code>, rows animated with CSS <code>marquee-left</code> / <code>marquee-right</code> keyframes. Pauses on hover via <code>animation-play-state:paused</code></td></tr>
+      <tr><td>Logo hover</td><td>PW shield logo uses filter glow + scale on hover via CSS transitions</td></tr>
+      <tr><td>Button hover glow</td><td>Primary buttons use <code>box-shadow</code> transitions for the neon glow effect</td></tr>
+      <tr><td>Splash screen</td><td>JS-timed sequence: progress bar fill → logo scale → fade-out. Removed from DOM after animation completes</td></tr>
+      <tr><td>Titan shimmer</td><td>Titanium package heading uses <code>background-position</code> animation to create a moving shimmer across the gradient text</td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <h2 id="local-storage">localStorage Keys</h2>
+  <table>
+    <thead><tr><th>Key</th><th>Value</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>pw_user</td><td>JSON string</td><td>Logged-in user object (name, email, picture, sub, billing, packageType)</td></tr>
+      <tr><td>pw_cookie_v2</td><td>"accepted" | "rejected"</td><td>Cookie consent — if absent, banner shows after 2s</td></tr>
+      <tr><td>pw_first_visit</td><td>Unix timestamp ms</td><td>Date of first page visit — used to calculate return visitor promo timing</td></tr>
+      <tr><td>pw_promo_shown</td><td>"1"</td><td>Set after the return visitor popup has been shown — prevents showing it again</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout info">
+    <p><strong>Clearing localStorage</strong> resets all of these. The cookie banner will reappear, the promo popup will show again on the next qualifying return visit, and the user will be signed out.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <h2 id="server-files">Server Data Files</h2>
+
+  <h3>admins.json</h3>
+  <pre><code>["precisionworkz9@gmail.com", "dev@example.com"]</code></pre>
+  <p>A simple array of email strings. If the file doesn't exist, <code>readAdmins()</code> falls back to <code>[PRIMARY_ADMIN]</code>. The primary admin email is always <code>precisionworkz9@gmail.com</code> regardless of what's in this file.</p>
+
+  <h3>clients.json</h3>
+  <p>An object keyed by lowercase email address. See the shape in the Admin System section above.</p>
+
+  <h3>requests.json</h3>
+  <p>An array of request objects, newest first (prepended via <code>reqs.unshift(newReq)</code>). See the Request Record Shape in the Support Requests section.</p>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <h2 id="login-logs">Login Logs</h2>
+
+  <div class="callout danger">
+    <p><strong>Login logs are not yet implemented.</strong> The server does not record when a user signs in, what IP they connected from, or what email was used. All auth happens client-side (localStorage only).</p>
+  </div>
+
+  <h3>What Exists Today</h3>
+  <ul>
+    <li>Server logs to console: <code>[Request submitted] {type} from {email}</code> when a support request is saved</li>
+    <li>Server logs to console: <code>[Demo Request] {data}</code> when a demo is booked</li>
+    <li>No sign-in events are logged anywhere</li>
+  </ul>
+
+  <h3>How to Add Login Logging (Future Work)</h3>
+  <p>Create an <code>auth-log.json</code> file and a <code>POST /api/auth-log</code> endpoint. Call it from <code>handleGoogleCredential()</code> and <code>emailSignIn()</code> in <code>index.html</code> after a successful sign-in:</p>
+  <pre><code>// In handleGoogleCredential / emailSignIn, after setUserData():
+fetch('/api/auth-log', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    email: user.email,
+    method: 'google',  // or 'email'
+    timestamp: new Date().toISOString(),
+    ua: navigator.userAgent
+  })
+});</code></pre>
+  <p>On the server, append to an array in <code>auth-log.json</code>. This gives you a timestamped record of who signed in and how. Adding <code>req.socket.remoteAddress</code> on the server side gives you the IP.</p>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <h2 id="bugs">Known Bugs & Incomplete Features</h2>
+
+  <div class="bug-item">
+    <h4>🔴 Stripe Checkout Always Returns 402</h4>
+    <p>The <code>PRICES</code> object in <code>server.js</code> has <code>null</code> for all four plan keys. Stripe products and prices have not been created in the dashboard yet. Clicking Subscribe hits <code>POST /api/create-checkout</code>, the server finds no price ID, and returns a 402 "setup_required" error. Fix: create 4 subscription products in the Stripe test dashboard and paste the <code>price_xxx</code> IDs into <code>PRICES</code>.</p>
+  </div>
+
+  <div class="bug-item">
+    <h4>🔴 No Real Email Sending</h4>
+    <p>The contact form and admin Reply button both use <code>mailto:</code> links. If the user's default email client is not set up, nothing happens. No automatic notification is sent when a support request comes in. Fix: add <code>nodemailer</code> or a transactional email API (SendGrid, Resend, etc.) and wire it into <code>POST /api/request</code>.</p>
+  </div>
+
+  <div class="bug-item">
+    <h4>🟡 Google Button One-Shot Render</h4>
+    <p>The Google sign-in button is rendered once per page load (<code>_gBtnRendered</code> flag). If the sign-in modal is opened before Google Identity Services has finished loading, the button won't appear. Closing the modal and reopening it won't retry (flag is already true). Fix: remove the flag or check if the button container is actually populated before setting the flag.</p>
+  </div>
+
+  <div class="bug-item">
+    <h4>🟡 Subscription Status Only Syncs on Dashboard Open</h4>
+    <p>The background sync on page load calls <code>/api/client-status</code> and updates the CTA banner. But if the admin changes a client's package while that client's tab is open, the client won't see the change until they close and reopen their dashboard or refresh the page.</p>
+  </div>
+
+  <div class="bug-item">
+    <h4>🟡 No Login Logs</h4>
+    <p>Sign-in events are not recorded anywhere on the server. There is no audit trail of who has accessed the admin panel. See the Login Logs section above for how to implement this.</p>
+  </div>
+
+  <div class="bug-item">
+    <h4>🟡 Admin Auth Is Email-Only (No Token)</h4>
+    <p>The server trusts whatever <code>adminEmail</code> value the client sends. Anyone who knows an admin email address can make admin API calls directly (e.g., via curl or Postman). The UI prevents this for normal users, but there is no cryptographic guarantee. Fix: issue a signed token (JWT with server secret) on admin login, verify it on each admin request.</p>
+  </div>
+
+  <div class="bug-item">
+    <h4>🟡 Port Conflict on Restart</h4>
+    <p>If the server is stopped with Ctrl+C but the Node process doesn't fully terminate (happens sometimes on Windows), restarting gives <code>EADDRINUSE :::4000</code>. Fix: <code>Stop-Process -Name "node" -Force</code> in PowerShell before restarting, or use <code>nodemon</code> for development.</p>
+  </div>
+
+  <div class="bug-item">
+    <h4>🟢 "Start Another Project" Only Shows After Dashboard Open</h4>
+    <p>On page load, the background client-status fetch updates the user's <code>packageType</code>, which should trigger the CTA banner + nav button update. However, if the server is slow, the nav CTA may briefly show "Start a Project" before switching. Not a functional bug — just a brief flash.</p>
+  </div>
+
+  <div class="bug-item">
+    <h4>🟢 Spotify Embed Requires Internet</h4>
+    <p>The Spotify iframe embed only works when connected to the internet and when Spotify's CDN is reachable. On localhost without internet, it will show a blank area. Not fixable — by design.</p>
+  </div>
+
+  <div style="margin-top:80px;padding-top:32px;border-top:1px solid var(--border);text-align:center">
+    <p style="color:var(--dim);font-size:.8rem">Precision Workz Developer Docs · Last updated May 2026 · Internal use only</p>
+  </div>
+
+</main>
+</div>
+
+<script>
+/* Highlight active nav link on scroll */
+var links=document.querySelectorAll('.nav-link');
+var sections=[];
+links.forEach(function(a){
+  var id=a.getAttribute('href').slice(1);
+  var el=document.getElementById(id);
+  if(el)sections.push({el:el,a:a});
+});
+window.addEventListener('scroll',function(){
+  var y=window.scrollY+100;
+  var active=null;
+  sections.forEach(function(s){if(s.el.offsetTop<=y)active=s});
+  links.forEach(function(a){a.classList.remove('active')});
+  if(active)active.a.classList.add('active');
+},{passive:true});
+</script>
+</body>
+</html>
