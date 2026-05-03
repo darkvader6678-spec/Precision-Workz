@@ -823,23 +823,49 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .pay-step-panel.active{display:block;animation:modal-slide-in .28s cubic-bezier(.22,1,.36,1)}
 
 /* ─── REPORT PROBLEM MODAL ───────────────────────────── */
-#report-overlay{display:none;position:fixed;inset:0;z-index:9996;background:rgba(4,4,13,.92);backdrop-filter:blur(16px);align-items:center;justify-content:center;padding:20px}
-#report-overlay.open{display:flex;animation:overlay-in .25s ease}
-.rp-box{background:linear-gradient(145deg,#0c0c22,#101028);border:1px solid rgba(239,68,68,.3);border-radius:22px;padding:36px 32px;max-width:480px;width:100%;position:relative;box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 50px rgba(239,68,68,.07);animation:modal-slide-in .3s cubic-bezier(.22,1,.36,1)}
-.rp-close{position:absolute;top:16px;right:18px;background:none;border:none;color:var(--dim);font-size:1.2rem;cursor:pointer;line-height:1}
-.rp-close:hover{color:var(--text)}
-.rp-title{font-size:1.15rem;font-weight:800;margin-bottom:4px}
-.rp-sub{font-size:.8rem;color:var(--dim);margin-bottom:22px;line-height:1.5}
-.rp-label{font-size:.72rem;font-weight:700;letter-spacing:.5px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;display:block}
-.rp-select,.rp-input,.rp-textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--text);padding:10px 13px;font-size:.88rem;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:14px;transition:border-color .18s}
-.rp-select:focus,.rp-input:focus,.rp-textarea:focus{border-color:rgba(239,68,68,.5)}
-.rp-textarea{resize:vertical;min-height:110px;line-height:1.55}
-.rp-charcount{font-size:.7rem;color:var(--dim);text-align:right;margin-top:-10px;margin-bottom:14px}
+#report-overlay{display:none;position:fixed;inset:0;z-index:9996;background:rgba(2,2,10,.88);backdrop-filter:blur(18px);align-items:center;justify-content:center;padding:20px}
+#report-overlay.open{display:flex;animation:overlay-in .22s ease}
+.rp-box{background:#09091e;border:1px solid rgba(239,68,68,.2);border-radius:24px;max-width:500px;width:100%;position:relative;box-shadow:0 48px 120px rgba(0,0,0,.75),0 0 0 1px rgba(255,255,255,.04) inset,0 0 70px rgba(239,68,68,.05);animation:modal-slide-in .32s cubic-bezier(.22,1,.36,1);overflow:hidden}
+.rp-header{padding:28px 30px 22px;border-bottom:1px solid rgba(255,255,255,.05)}
+.rp-icon-badge{width:42px;height:42px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;margin-bottom:14px}
+.rp-title{font-size:1.18rem;font-weight:800;color:#f1f5f9;letter-spacing:-.3px;margin-bottom:4px}
+.rp-sub{font-size:.8rem;color:rgba(255,255,255,.35);line-height:1.6}
+.rp-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.4);width:30px;height:30px;border-radius:9px;font-size:.8rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;line-height:1}
+.rp-close:hover{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.35);color:#f87171}
+.rp-body{padding:22px 30px;display:flex;flex-direction:column;gap:16px}
+.rp-field{display:flex;flex-direction:column;gap:7px}
+.rp-label{font-size:.68rem;font-weight:700;letter-spacing:.9px;color:rgba(255,255,255,.4);text-transform:uppercase}
+.rp-opt{font-weight:400;letter-spacing:0;text-transform:none;color:rgba(255,255,255,.22);margin-left:5px}
+/* custom category picker */
+.rp-cat-wrap{position:relative}
+.rp-cat-trigger{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:12px;color:#f1f5f9;padding:11px 14px;font-size:.88rem;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;transition:border-color .18s,background .18s;user-select:none;box-sizing:border-box}
+.rp-cat-trigger.empty{color:rgba(255,255,255,.28)}
+.rp-cat-trigger:hover,.rp-cat-trigger.open{border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.04)}
+.rp-cat-arrow{font-size:.6rem;opacity:.45;flex-shrink:0;transition:transform .2s}
+.rp-cat-trigger.open .rp-cat-arrow{transform:rotate(180deg)}
+.rp-cat-drop{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#111128;border:1px solid rgba(239,68,68,.22);border-radius:13px;overflow:hidden;z-index:50;box-shadow:0 18px 50px rgba(0,0,0,.6);animation:rp-drop .16s ease}
+@keyframes rp-drop{from{opacity:0;transform:translateY(-8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.rp-cat-opt{padding:10px 15px;font-size:.87rem;color:rgba(255,255,255,.65);cursor:pointer;transition:background .12s,color .12s;display:flex;align-items:center;gap:10px}
+.rp-cat-opt:not(:last-child){border-bottom:1px solid rgba(255,255,255,.04)}
+.rp-cat-opt:hover{background:rgba(239,68,68,.1);color:#fca5a5}
+.rp-cat-opt.sel{background:rgba(239,68,68,.12);color:#f87171;font-weight:700}
+.rp-cat-opt-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.15);flex-shrink:0;transition:background .12s}
+.rp-cat-opt.sel .rp-cat-opt-dot,.rp-cat-opt:hover .rp-cat-opt-dot{background:#ef4444}
+/* inputs */
+.rp-textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:12px;color:#f1f5f9;padding:12px 14px;font-size:.88rem;font-family:inherit;outline:none;box-sizing:border-box;resize:vertical;min-height:115px;line-height:1.62;transition:border-color .18s,background .18s}
+.rp-textarea::placeholder{color:rgba(255,255,255,.2)}
+.rp-textarea:focus{border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.03)}
+.rp-input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:12px;color:#f1f5f9;padding:11px 14px;font-size:.88rem;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .18s,background .18s}
+.rp-input::placeholder{color:rgba(255,255,255,.2)}
+.rp-input:focus{border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.03)}
+.rp-charrow{display:flex;align-items:center;justify-content:space-between;margin-top:-8px}
+.rp-charcount{font-size:.7rem;color:rgba(255,255,255,.25);transition:color .2s}
 .rp-charcount.ok{color:#4ade80}
-.rp-submit{width:100%;padding:13px;border-radius:12px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-weight:700;font-size:.92rem;border:none;cursor:pointer;font-family:inherit;transition:opacity .2s}
-.rp-submit:hover{opacity:.88}
-.rp-submit:disabled{opacity:.4;cursor:not-allowed}
-.rp-msg{margin-top:12px;font-size:.83rem;text-align:center}
+.rp-footer{padding:0 30px 26px;display:flex;flex-direction:column;gap:10px}
+.rp-submit{width:100%;padding:14px;border-radius:13px;background:linear-gradient(135deg,#ef4444 0%,#b91c1c 100%);color:#fff;font-weight:800;font-size:.92rem;letter-spacing:.2px;border:none;cursor:pointer;font-family:inherit;transition:box-shadow .2s,opacity .2s;box-shadow:0 6px 24px rgba(239,68,68,.28)}
+.rp-submit:hover:not(:disabled){box-shadow:0 8px 32px rgba(239,68,68,.45);opacity:.93}
+.rp-submit:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
+.rp-msg{font-size:.82rem;text-align:center;min-height:18px;color:rgba(255,255,255,.4)}
 
 /* ─── ADMIN REPORTS TABLE ─────────────────────────────── */
 .adm-report-row{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:12px;padding:16px 18px;margin-bottom:10px}
@@ -2840,31 +2866,39 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 <!-- REPORT A PROBLEM MODAL -->
 <div id="report-overlay" onclick="if(event.target===this)closeReportModal()">
   <div class="rp-box">
-    <button class="rp-close" onclick="closeReportModal()">✕</button>
-    <div class="rp-title">Report a Problem</div>
-    <div class="rp-sub">Tell us what's wrong and we'll get back to you as soon as possible.</div>
-
-    <label class="rp-label">Category</label>
-    <select class="rp-select" id="rp-cat">
-      <option value="">— Select a category —</option>
-      <option value="Bug / Error">Bug / Error</option>
-      <option value="Payment Issue">Payment Issue</option>
-      <option value="Account Problem">Account Problem</option>
-      <option value="Site Performance">Site Performance</option>
-      <option value="Security Concern">Security Concern</option>
-      <option value="Feature Request">Feature Request</option>
-      <option value="Other">Other</option>
-    </select>
-
-    <label class="rp-label">Description <span style="font-weight:400;text-transform:none;color:var(--dim)">(min 20 characters)</span></label>
-    <textarea class="rp-textarea" id="rp-desc" placeholder="Describe the problem in detail…" oninput="rpCharCount()"></textarea>
-    <div class="rp-charcount" id="rp-charcount">0 / 20 minimum</div>
-
-    <label class="rp-label">Your Email <span style="font-weight:400;text-transform:none;color:var(--dim)">(optional — for us to reply)</span></label>
-    <input class="rp-input" id="rp-email" type="email" placeholder="you@example.com">
-
-    <button class="rp-submit" id="rp-submit" onclick="submitReport()">Submit Report</button>
-    <div class="rp-msg" id="rp-msg"></div>
+    <div class="rp-header">
+      <button class="rp-close" onclick="closeReportModal()">✕</button>
+      <div class="rp-icon-badge">⚑</div>
+      <div class="rp-title">Report a Problem</div>
+      <div class="rp-sub">Tell us what went wrong and we'll look into it right away.</div>
+    </div>
+    <div class="rp-body">
+      <div class="rp-field">
+        <label class="rp-label">Category</label>
+        <div class="rp-cat-wrap" id="rp-cat-wrap">
+          <div class="rp-cat-trigger empty" id="rp-cat-trigger" onclick="rpToggleCat()">
+            <span id="rp-cat-label">Select a category…</span>
+            <span class="rp-cat-arrow">▼</span>
+          </div>
+        </div>
+      </div>
+      <div class="rp-field">
+        <label class="rp-label">Description <span class="rp-opt">(min 20 characters)</span></label>
+        <textarea class="rp-textarea" id="rp-desc" placeholder="Describe the problem in detail…" oninput="rpCharCount()"></textarea>
+        <div class="rp-charrow">
+          <span></span>
+          <span class="rp-charcount" id="rp-charcount">0 / 20 min</span>
+        </div>
+      </div>
+      <div class="rp-field">
+        <label class="rp-label">Reply Email <span class="rp-opt">(optional — so we can respond)</span></label>
+        <input class="rp-input" id="rp-email" type="email" placeholder="you@example.com">
+      </div>
+    </div>
+    <div class="rp-footer">
+      <button class="rp-submit" id="rp-submit" onclick="submitReport()">Send Report</button>
+      <div class="rp-msg" id="rp-msg"></div>
+    </div>
   </div>
 </div>
 
@@ -4671,10 +4705,27 @@ function monIPReset(ip) {
 }
 
 /* ── REPORT MODAL ─────────────────────────────────────── */
+var _rpCatVal = '';
+var _rpCatOpen = false;
+var _rpCategories = [
+  { icon: '🐛', label: 'Bug / Error' },
+  { icon: '💳', label: 'Payment Issue' },
+  { icon: '🔑', label: 'Account Problem' },
+  { icon: '⚡', label: 'Site Performance' },
+  { icon: '🔒', label: 'Security Concern' },
+  { icon: '✨', label: 'Feature Request' },
+  { icon: '💬', label: 'Other' }
+];
+
 function openReportModal() {
   var overlay = document.getElementById('report-overlay');
   if (!overlay) return;
-  document.getElementById('rp-cat').value = '';
+  _rpCatVal = '';
+  rpCloseCat();
+  var trigger = document.getElementById('rp-cat-trigger');
+  var label   = document.getElementById('rp-cat-label');
+  if (trigger) { trigger.className = 'rp-cat-trigger empty'; }
+  if (label)   label.textContent = 'Select a category…';
   document.getElementById('rp-desc').value = '';
   document.getElementById('rp-email').value = '';
   document.getElementById('rp-msg').textContent = '';
@@ -4684,35 +4735,78 @@ function openReportModal() {
   document.body.style.overflow = 'hidden';
 }
 function closeReportModal() {
+  rpCloseCat();
   var overlay = document.getElementById('report-overlay');
   if (overlay) overlay.classList.remove('open');
   document.body.style.overflow = '';
 }
+function rpToggleCat() {
+  _rpCatOpen ? rpCloseCat() : rpOpenCat();
+}
+function rpOpenCat() {
+  _rpCatOpen = true;
+  var trigger = document.getElementById('rp-cat-trigger');
+  if (trigger) trigger.classList.add('open');
+  var wrap = document.getElementById('rp-cat-wrap');
+  if (!wrap) return;
+  var dd = document.createElement('div');
+  dd.className = 'rp-cat-drop';
+  dd.id = 'rp-cat-drop';
+  dd.innerHTML = _rpCategories.map(function(c) {
+    var sel = c.label === _rpCatVal ? ' sel' : '';
+    return '<div class="rp-cat-opt' + sel + '" onclick="rpSelectCat(\'' + c.label.replace(/'/g,"\\'") + '\')">'
+      + '<span class="rp-cat-opt-dot"></span>'
+      + '<span style="font-size:.95rem;flex-shrink:0">' + c.icon + '</span>'
+      + '<span>' + c.label + '</span>'
+      + '</div>';
+  }).join('');
+  wrap.appendChild(dd);
+  setTimeout(function() { document.addEventListener('click', rpOutside); }, 0);
+}
+function rpCloseCat() {
+  _rpCatOpen = false;
+  var trigger = document.getElementById('rp-cat-trigger');
+  if (trigger) trigger.classList.remove('open');
+  var dd = document.getElementById('rp-cat-drop');
+  if (dd) dd.remove();
+  document.removeEventListener('click', rpOutside);
+}
+function rpOutside(e) {
+  var wrap = document.getElementById('rp-cat-wrap');
+  if (wrap && !wrap.contains(e.target)) rpCloseCat();
+}
+function rpSelectCat(val) {
+  _rpCatVal = val;
+  var trigger = document.getElementById('rp-cat-trigger');
+  var label   = document.getElementById('rp-cat-label');
+  if (label) label.textContent = val;
+  if (trigger) trigger.className = 'rp-cat-trigger';
+  rpCloseCat();
+}
 function rpCharCount() {
   var val = (document.getElementById('rp-desc').value || '').trim();
-  var el = document.getElementById('rp-charcount');
+  var el  = document.getElementById('rp-charcount');
   if (!el) return;
-  el.textContent = val.length + ' / 20 minimum';
+  el.textContent = val.length + ' / 20 min';
   el.className = 'rp-charcount' + (val.length >= 20 ? ' ok' : '');
 }
 function submitReport() {
-  var cat  = document.getElementById('rp-cat').value;
-  var desc = (document.getElementById('rp-desc').value || '').trim();
+  var desc  = (document.getElementById('rp-desc').value || '').trim();
   var email = (document.getElementById('rp-email').value || '').trim();
-  var msg = document.getElementById('rp-msg');
-  if (!cat) { msg.style.color = '#f87171'; msg.textContent = 'Please select a category.'; return; }
+  var msg   = document.getElementById('rp-msg');
+  var btn   = document.getElementById('rp-submit');
+  if (!_rpCatVal) { msg.style.color = '#f87171'; msg.textContent = 'Please select a category.'; return; }
   if (desc.length < 20) { msg.style.color = '#f87171'; msg.textContent = 'Description must be at least 20 characters.'; return; }
-  var btn = document.getElementById('rp-submit');
   btn.disabled = true;
-  msg.style.color = 'var(--dim)'; msg.textContent = 'Submitting…';
+  msg.style.color = 'rgba(255,255,255,.4)'; msg.textContent = 'Submitting…';
   fetch('/api/report', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ category: cat, description: desc, replyEmail: email || null })
+    body: JSON.stringify({ category: _rpCatVal, description: desc, replyEmail: email || null })
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.error) { msg.style.color = '#f87171'; msg.textContent = d.error; btn.disabled = false; return; }
-    msg.style.color = '#4ade80'; msg.textContent = '✓ Report submitted. Thank you!';
-    setTimeout(closeReportModal, 2000);
+    msg.style.color = '#4ade80'; msg.textContent = '✓ Report submitted — thank you!';
+    setTimeout(closeReportModal, 2200);
   }).catch(function() { msg.style.color = '#f87171'; msg.textContent = 'Network error. Please try again.'; btn.disabled = false; });
 }
 
