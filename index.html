@@ -762,6 +762,11 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .email-fallback-form input::placeholder{color:var(--dim)}
 .email-signin-btn{width:100%;padding:12px;border-radius:9px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.35);color:var(--purple2);font-weight:700;font-size:.9rem;cursor:pointer;font-family:inherit;transition:all .2s}
 .email-signin-btn:hover{background:rgba(124,58,237,.25);border-color:var(--purple2)}
+.ef-tabs{display:flex;margin-bottom:14px;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.ef-tab{flex:1;padding:9px;font-size:.82rem;font-weight:700;font-family:inherit;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all .2s}
+.ef-tab.active{background:rgba(124,58,237,.15);color:var(--purple2)}
+.ef-msg{font-size:.8rem;margin-top:8px;text-align:center;min-height:18px}
+.ef-msg.ok{color:#4ade80}.ef-msg.err{color:#f87171}
 
 /* ─── MULTI-STEP PAYMENT ─────────────────────────────── */
 .pay-steps-bar{display:flex;gap:6px;margin-bottom:24px}
@@ -1065,7 +1070,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <div class="term-body">
         <div class="t-row"><span class="t-ico t-ok">✓</span><span class="t-txt">SSL Certificate</span><span class="t-val t-ok">Grade A+</span></div>
         <div class="t-row"><span class="t-ico t-ok">✓</span><span class="t-txt">Rate Limiter</span><span class="t-val t-ok">Armed</span></div>
-        <div class="t-row"><span class="t-ico t-warn">⚡</span><span class="t-txt">Active Sessions</span><span class="t-val t-blu">247</span></div>
+        <div class="t-row"><span class="t-ico t-warn">⚡</span><span class="t-txt">Active Sessions</span><span class="t-val t-blu">1</span></div>
         <div class="t-row"><span class="t-ico t-bad">⛔</span><span class="t-txt">Threats Blocked Today</span><span class="t-val t-bad">18</span></div>
         <div class="t-row"><span class="t-ico t-ok">✓</span><span class="t-txt">Sentinel System</span><span class="t-val t-ok">ACTIVE</span></div>
         <div class="t-row" style="margin-top:4px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06)"><span class="t-ico t-blu">›_</span><span class="t-txt t-blu" style="font-size:.72rem;color:var(--dim)">Monitoring 24 / 7</span><span class="t-blink"></span></div>
@@ -1077,9 +1082,9 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
 <!-- STATS -->
 <div class="stats-bar">
-  <div class="stat fade-up"><div class="stat-num" data-target="50">0</div><div class="stat-label">Projects Delivered</div></div>
+  <div class="stat fade-up"><div class="stat-num" data-target="1">0</div><div class="stat-label">Projects Delivered</div></div>
   <div class="stat fade-up" style="transition-delay:.1s"><div class="stat-num" data-target="100">0</div><div class="stat-label">Client Satisfaction</div></div>
-  <div class="stat fade-up" style="transition-delay:.2s"><div class="stat-num" data-target="3">0</div><div class="stat-label">Years in Business</div></div>
+  <div class="stat fade-up" style="transition-delay:.2s"><div class="stat-num" data-target="1">0</div><div class="stat-label">Years in Business</div></div>
   <div class="stat fade-up" style="transition-delay:.3s"><div class="stat-num" data-target="24">0</div><div class="stat-label">Hour Support</div></div>
 </div>
 
@@ -2516,13 +2521,23 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       Continue with Google
     </button>
     <div class="signin-or">or</div>
-    <!-- Email fallback -->
-    <div class="email-fallback-form">
-      <div class="form-group"><label>Name</label><input type="text" id="ef-name" placeholder="John Smith"></div>
-      <div class="form-group"><label>Email</label><input type="email" id="ef-email" placeholder="you@company.com"></div>
-      <button class="email-signin-btn" onclick="emailSignIn()">Continue with Email →</button>
+    <!-- Email Auth -->
+    <div class="ef-tabs">
+      <button class="ef-tab active" id="ef-tab-login" onclick="efSwitch('login')">Log In</button>
+      <button class="ef-tab" id="ef-tab-register" onclick="efSwitch('register')">Register</button>
     </div>
-    <p style="font-size:.72rem;color:var(--dim);margin-top:14px;line-height:1.6">By signing in you agree to our <a onclick="closeLegal();openLegal('privacy')" style="color:var(--cyan2);cursor:pointer">Privacy Policy</a>. No password required.</p>
+    <div class="email-fallback-form" id="ef-login-form">
+      <div class="form-group"><label>Email</label><input type="email" id="ef-email-login" placeholder="you@company.com" autocomplete="email"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="ef-password-login" placeholder="Your password" autocomplete="current-password"></div>
+      <button class="email-signin-btn" onclick="emailLogin()">Log In →</button>
+      <div class="ef-msg" id="ef-login-msg"></div>
+    </div>
+    <div class="email-fallback-form" id="ef-register-form" style="display:none">
+      <div class="form-group"><label>Email</label><input type="email" id="ef-email-register" placeholder="you@company.com" autocomplete="email"></div>
+      <button class="email-signin-btn" onclick="emailRegister()">Send Verification Email →</button>
+      <div class="ef-msg" id="ef-register-msg"></div>
+    </div>
+    <p style="font-size:.72rem;color:var(--dim);margin-top:14px;line-height:1.6">By signing in you agree to our <a onclick="closeLegal();openLegal('privacy')" style="color:var(--cyan2);cursor:pointer">Privacy Policy</a>.</p>
   </div>
 </div>
 
@@ -3188,19 +3203,41 @@ function handleGoogleCredential(response){
   }catch(e){console.warn('Google credential decode failed:',e)}
 }
 
-/* ── EMAIL FALLBACK SIGN-IN ──────────────────────────────── */
-function emailSignIn(){
-  var name=(document.getElementById('ef-name').value||'').trim();
-  var email=(document.getElementById('ef-email').value||'').trim();
-  if(!name){alert('Please enter your name.');return}
-  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){alert('Please enter a valid email address.');return}
-  var user=getUserData()||{};
-  user.name=name;user.email=email;user.picture='';
-  if(!user.sub)user.sub=null;
-  setUserData(user);
-  updateAuthUI(user);
-  closeSignIn();
-  _resumePendingPay();
+/* ── EMAIL AUTH ──────────────────────────────────────────── */
+function efSwitch(tab){
+  document.getElementById('ef-login-form').style.display=tab==='login'?'':'none';
+  document.getElementById('ef-register-form').style.display=tab==='register'?'':'none';
+  document.getElementById('ef-tab-login').classList.toggle('active',tab==='login');
+  document.getElementById('ef-tab-register').classList.toggle('active',tab==='register');
+}
+async function emailLogin(){
+  var email=(document.getElementById('ef-email-login').value||'').trim();
+  var password=document.getElementById('ef-password-login').value;
+  var msg=document.getElementById('ef-login-msg');
+  if(!email||!password){msg.className='ef-msg err';msg.textContent='Enter your email and password.';return}
+  msg.className='ef-msg';msg.textContent='Logging in...';
+  try{
+    var r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+    var d=await r.json();
+    if(d.ok){
+      var user=getUserData()||{};
+      user.name=d.user.name;user.email=d.user.email;user.picture=user.picture||'';
+      if(!user.sub)user.sub=null;
+      setUserData(user);updateAuthUI(user);closeSignIn();_resumePendingPay();
+    }else{msg.className='ef-msg err';msg.textContent=d.error||'Login failed.';}
+  }catch(e){msg.className='ef-msg err';msg.textContent='Connection error.';}
+}
+async function emailRegister(){
+  var email=(document.getElementById('ef-email-register').value||'').trim();
+  var msg=document.getElementById('ef-register-msg');
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){msg.className='ef-msg err';msg.textContent='Enter a valid email address.';return}
+  msg.className='ef-msg';msg.textContent='Sending verification email...';
+  try{
+    var r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    var d=await r.json();
+    if(d.ok){msg.className='ef-msg ok';msg.textContent='✓ Check your inbox — verification email sent!';document.getElementById('ef-email-register').value='';}
+    else{msg.className='ef-msg err';msg.textContent=d.error||'Something went wrong.';}
+  }catch(e){msg.className='ef-msg err';msg.textContent='Connection error.';}
 }
 
 function _resumePendingPay(){

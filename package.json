@@ -6,6 +6,7 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "nodemailer": "^6.10.1",
     "stripe": "^14.25.0"
   }
 }

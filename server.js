@@ -1,4 +1,5 @@
 'use strict';
+const crypto = require('crypto');
 const http = require('http');
 const fs   = require('fs');
 const path = require('path');
@@ -26,6 +27,13 @@ const PRIMARY_ADMIN = 'precisionworkz9@gmail.com';
 
 try { stripe = require('stripe')(STRIPE_SECRET); }
 catch(e) { console.warn('stripe module not found — run: npm install stripe'); }
+
+// Nodemailer setup
+let nodemailer;
+try { nodemailer = require('nodemailer'); } catch(e) { console.warn('nodemailer not found — npm install nodemailer'); }
+const GMAIL_USER = process.env.GMAIL_USER || '';
+const GMAIL_PASS = process.env.GMAIL_PASS || '';
+const SITE_URL   = process.env.SITE_URL   || 'http://localhost:4000';
 
 const MIME = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript',
@@ -65,6 +73,53 @@ function readRequests() {
   catch(e) { return []; }
 }
 function writeRequests(data) { fs.writeFileSync(REQUESTS_PATH, JSON.stringify(data, null, 2)); }
+
+// ── USER AUTH ───────────────────────────────────────────────
+const USERS_PATH = path.join(DIR, 'users.json');
+function readUsers() {
+  try { return JSON.parse(fs.readFileSync(USERS_PATH, 'utf8')); }
+  catch(e) { return {}; }
+}
+function writeUsers(data) { fs.writeFileSync(USERS_PATH, JSON.stringify(data, null, 2)); }
+
+function hashPassword(password) {
+  return new Promise((resolve, reject) => {
+    const salt = crypto.randomBytes(16).toString('hex');
+    crypto.scrypt(password, salt, 64, (err, key) => {
+      if (err) reject(err);
+      else resolve(salt + ':' + key.toString('hex'));
+    });
+  });
+}
+function verifyPassword(password, stored) {
+  return new Promise((resolve, reject) => {
+    const [salt, key] = stored.split(':');
+    crypto.scrypt(password, salt, 64, (err, derivedKey) => {
+      if (err) reject(err);
+      else resolve(crypto.timingSafeEqual(Buffer.from(key, 'hex'), derivedKey));
+    });
+  });
+}
+
+function sendVerificationEmail(toEmail, token) {
+  if (!nodemailer || !GMAIL_USER || !GMAIL_PASS) {
+    console.warn('[Email] GMAIL_USER/GMAIL_PASS not set — cannot send verification email');
+    return Promise.resolve();
+  }
+  const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: GMAIL_USER, pass: GMAIL_PASS } });
+  const link = SITE_URL + '/verify-email?token=' + token;
+  return transporter.sendMail({
+    from: '"Precision Workz" <' + GMAIL_USER + '>',
+    to: toEmail,
+    subject: 'Verify your Precision Workz account',
+    html: '<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#04040d;color:#f1f5f9;border-radius:16px"><h2 style="font-size:1.5rem;font-weight:800;margin-bottom:12px">Verify your email</h2><p style="color:#94a3b8;line-height:1.7;margin-bottom:24px">Click the button below to verify your email and set your password. This link expires in 24 hours.</p><a href="' + link + '" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#7c3aed,#06b6d4);color:#fff;font-weight:700;border-radius:10px;text-decoration:none">Verify Email & Set Password →</a><p style="color:#475569;font-size:.8rem;margin-top:24px">If you did not request this, ignore this email.</p></div>'
+  });
+}
+
+function serveVerifyPage(res, token, user) {
+  res.writeHead(200, { 'Content-Type': 'text/html' });
+  res.end('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Set Password — Precision Workz</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,system-ui,sans-serif;background:#04040d;color:#f1f5f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}.box{background:linear-gradient(145deg,#0d0d26,#121232);border:1px solid rgba(124,58,237,.35);border-radius:24px;padding:40px 36px;max-width:420px;width:100%}h2{font-size:1.6rem;font-weight:800;margin-bottom:8px}p{color:#94a3b8;font-size:.88rem;line-height:1.7;margin-bottom:24px}label{display:block;font-size:.78rem;font-weight:600;color:#94a3b8;margin-bottom:6px}input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#f1f5f9;padding:12px 14px;font-size:.9rem;outline:none;margin-bottom:16px;font-family:inherit}input:focus{border-color:rgba(124,58,237,.5)}button{width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#06b6d4);color:#fff;font-weight:700;font-size:.95rem;border:none;cursor:pointer;font-family:inherit}.msg{margin-top:12px;font-size:.85rem;text-align:center}.ok{color:#4ade80}.err{color:#f87171}</style></head><body><div class="box"><h2>Set Your Password</h2><p>Creating account for <strong style="color:#22d3ee">' + user.email + '</strong></p><label>Password</label><input type="password" id="pw1" placeholder="At least 8 characters"><label>Confirm Password</label><input type="password" id="pw2" placeholder="Repeat password"><button onclick="go()">Create Account →</button><div class="msg" id="m"></div></div><script>async function go(){var p1=document.getElementById("pw1").value,p2=document.getElementById("pw2").value,m=document.getElementById("m");if(p1.length<8){m.className="msg err";m.textContent="Password must be at least 8 characters.";return}if(p1!==p2){m.className="msg err";m.textContent="Passwords do not match.";return}m.className="msg";m.textContent="Setting up...";var r=await fetch("/api/set-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:"' + token + '",password:p1})});var d=await r.json();if(d.ok){m.className="msg ok";m.textContent="Account created! Redirecting...";setTimeout(function(){window.location="/"},1800);}else{m.className="msg err";m.textContent=d.error||"Something went wrong.";}}</script></body></html>');
+}
 
 function isAdmin(email) {
   if (!email) return false;
@@ -306,6 +361,57 @@ async function handleAPI(req, res, urlPath) {
     return;
   }
 
+  // POST /api/register
+  if (urlPath === '/api/register' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { email } = body;
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json(res, 400, { error: 'Valid email required' });
+      const key = email.toLowerCase().trim();
+      const users = readUsers();
+      const token = crypto.randomBytes(32).toString('hex');
+      users[key] = Object.assign(users[key] || {}, { email: key, verified: false, verifyToken: token, tokenExpiry: Date.now() + 86400000, createdAt: (users[key] || {}).createdAt || new Date().toISOString() });
+      writeUsers(users);
+      await sendVerificationEmail(key, token);
+      return json(res, 200, { ok: true });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  // POST /api/set-password
+  if (urlPath === '/api/set-password' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { token, password } = body;
+      if (!token || !password || password.length < 8) return json(res, 400, { error: 'Invalid request' });
+      const users = readUsers();
+      const key = Object.keys(users).find(k => users[k].verifyToken === token);
+      if (!key) return json(res, 400, { error: 'Invalid or expired link' });
+      if (Date.now() > users[key].tokenExpiry) return json(res, 400, { error: 'Link expired — please register again' });
+      users[key].password = await hashPassword(password);
+      users[key].verified = true;
+      users[key].verifyToken = null;
+      users[key].tokenExpiry = null;
+      writeUsers(users);
+      return json(res, 200, { ok: true });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  // POST /api/login
+  if (urlPath === '/api/login' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { email, password } = body;
+      if (!email || !password) return json(res, 400, { error: 'Email and password required' });
+      const key = email.toLowerCase().trim();
+      const users = readUsers();
+      const user = users[key];
+      if (!user || !user.verified || !user.password) return json(res, 401, { error: 'Invalid email or password' });
+      const ok = await verifyPassword(password, user.password);
+      if (!ok) return json(res, 401, { error: 'Invalid email or password' });
+      return json(res, 200, { ok: true, user: { email: key, name: key.split('@')[0] } });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
   return json(res, 404, { error: 'not found' });
 }
 
@@ -313,6 +419,19 @@ async function handleAPI(req, res, urlPath) {
 http.createServer(function(req, res) {
   let urlPath = req.url.split('?')[0];
   if (urlPath.startsWith('/api/')) { handleAPI(req, res, urlPath); return; }
+  if (urlPath === '/verify-email') {
+    const qs = new URLSearchParams(req.url.split('?')[1] || '');
+    const token = qs.get('token') || '';
+    const users = readUsers();
+    const user = Object.values(users).find(u => u.verifyToken === token);
+    if (!user || !token || Date.now() > (user.tokenExpiry || 0)) {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end('<!DOCTYPE html><html><head><title>Precision Workz</title></head><body style="font-family:sans-serif;background:#04040d;color:#f1f5f9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0"><div style="text-align:center"><h2 style="margin-bottom:16px">Invalid or expired link.</h2><a href="/" style="color:#22d3ee">← Back to site</a></div></body></html>');
+      return;
+    }
+    serveVerifyPage(res, token, user);
+    return;
+  }
   if (urlPath === '/' || urlPath === '') urlPath = '/index.html';
   const filePath = path.join(DIR, urlPath);
   const mime = MIME[path.extname(filePath)] || 'text/plain';
