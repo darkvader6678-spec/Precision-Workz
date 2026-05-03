@@ -1098,6 +1098,9 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 @keyframes sg-dot-pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
 .sg-footer-note{font-size:.68rem;color:rgba(255,255,255,.2);display:flex;align-items:center;gap:8px;margin-top:6px}
 .sg-footer-note span{opacity:.5}
+#sg-enter-btn{display:block;width:100%;margin-top:16px;padding:13px 20px;background:linear-gradient(135deg,#7c3aed,#06b6d4);color:#fff;font-weight:800;font-size:.92rem;border:none;border-radius:12px;cursor:pointer;font-family:inherit;letter-spacing:.3px;box-shadow:0 0 20px rgba(124,58,237,.35);opacity:0;pointer-events:none;transform:translateY(6px);transition:opacity .45s ease,transform .45s ease}
+#sg-enter-btn.sg-btn-ready{opacity:1;pointer-events:auto;transform:translateY(0)}
+#sg-enter-btn:hover{box-shadow:0 0 32px rgba(124,58,237,.6)}
 </style>
 </head>
 <body>
@@ -1139,6 +1142,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <div class="sg-scan-status" id="sg-status">Initializing…</div>
       <div class="sg-bar-track"><div class="sg-bar-fill" id="sg-bar"></div></div>
       <div class="sg-dots"><span class="sg-dot"></span><span class="sg-dot"></span><span class="sg-dot"></span></div>
+      <button id="sg-enter-btn" onclick="sgVerified()">Enter Site →</button>
     </div>
     <div class="sg-footer-note">Protected by Google reCAPTCHA <span>·</span> Precision Workz Security</div>
   </div>
@@ -3341,7 +3345,6 @@ async function submitPayment(){
 })();
 
 function sgVerified(){
-  sessionStorage.setItem('sg_passed','1');
   var g=document.getElementById('security-gate');
   g.classList.add('sg-exit');
   setTimeout(function(){g.style.display='none'},700);
@@ -3349,34 +3352,51 @@ function sgVerified(){
 (function(){
   var g=document.getElementById('security-gate');
   if(!g)return;
-  if(sessionStorage.getItem('sg_passed')){g.style.display='none';return;}
   var statusEl=document.getElementById('sg-status');
   var barEl=document.getElementById('sg-bar');
+  var enterBtn=document.getElementById('sg-enter-btn');
+  var recaptchaDone=false;
+  var timerDone=false;
+
+  // Smooth bar fill: animate to 92% over exactly 3 seconds
+  requestAnimationFrame(function(){
+    barEl.style.transition='width 3s linear';
+    barEl.style.width='92%';
+  });
+
+  // Status messages timed to the 3-second window
   var steps=[
-    {t:'Initializing security scan…',w:18,delay:350},
-    {t:'Analyzing request signature…',w:42,delay:750},
-    {t:'Checking behavior patterns…',w:66,delay:1200},
-    {t:'Verifying with reCAPTCHA…',w:85,delay:1750}
+    {t:'Initializing security scan…',  delay:0},
+    {t:'Analyzing request signature…', delay:700},
+    {t:'Checking behavior patterns…',  delay:1500},
+    {t:'Verifying with reCAPTCHA…',    delay:2200}
   ];
-  var verified=false;
   steps.forEach(function(s){
     setTimeout(function(){
-      if(!verified){statusEl.textContent=s.t;barEl.style.width=s.w+'%';}
+      if(!timerDone) statusEl.textContent=s.t;
     },s.delay);
   });
-  function onVerified(){
-    verified=true;
-    statusEl.textContent='✓ Access Granted';
-    statusEl.style.color='#4ade80';
+
+  function tryUnlock(){
+    if(!recaptchaDone||!timerDone)return;
+    // Complete the bar
+    barEl.style.transition='width .4s ease';
     barEl.style.width='100%';
     barEl.style.background='linear-gradient(90deg,#059669,#4ade80)';
     barEl.style.boxShadow='0 0 10px rgba(74,222,128,.5)';
-    setTimeout(sgVerified,650);
+    statusEl.textContent='✓ Verification Complete — Click to Enter';
+    statusEl.style.color='#4ade80';
+    enterBtn.classList.add('sg-btn-ready');
   }
+
+  // 3-second hard minimum
+  setTimeout(function(){timerDone=true;tryUnlock();},3000);
+
+  // reCAPTCHA v3 — runs silently in background
   grecaptcha.ready(function(){
     grecaptcha.execute('6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h',{action:'visit'})
-      .then(function(){setTimeout(onVerified,2100)})
-      .catch(function(){setTimeout(onVerified,2100)});
+      .then(function(){recaptchaDone=true;tryUnlock();})
+      .catch(function(){recaptchaDone=true;tryUnlock();});
   });
 })();
 
