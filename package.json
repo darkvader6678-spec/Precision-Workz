@@ -4,5 +4,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
+  },
+  "dependencies": {
+    "stripe": "^14.25.0"
   }
 }
