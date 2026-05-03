@@ -415,8 +415,8 @@ async function handleAPI(req, res, urlPath) {
   return json(res, 404, { error: 'not found' });
 }
 
-// ── HTTP SERVER ────────────────────────────────────────────
-http.createServer(function(req, res) {
+// ── REQUEST HANDLER ────────────────────────────────────────
+function handler(req, res) {
   let urlPath = req.url.split('?')[0];
   if (urlPath.startsWith('/api/')) { handleAPI(req, res, urlPath); return; }
   if (urlPath === '/verify-email') {
@@ -445,6 +445,13 @@ http.createServer(function(req, res) {
     }
     res.writeHead(200, { 'Content-Type': mime }); res.end(data);
   });
-}).listen(PORT, function() {
-  console.log('Precision Workz running on http://localhost:' + PORT);
-});
+}
+
+// Run as standalone server locally; export handler for Vercel
+if (require.main === module) {
+  http.createServer(handler).listen(PORT, function() {
+    console.log('Precision Workz running on http://localhost:' + PORT);
+  });
+}
+
+module.exports = handler;

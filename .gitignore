@@ -6,3 +6,4 @@ requests.json
 admins.json
 users.json
 .cache_ggshield
+.vercel
