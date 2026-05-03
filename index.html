@@ -1115,6 +1115,12 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .mon-ip-tbl tr:hover td{background:rgba(255,255,255,.02)}
 .mon-ip-addr{font-family:monospace;color:var(--text);font-size:.8rem}
 .mon-cooldown-badge{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.3);border-radius:999px;padding:2px 8px;font-size:.62rem;font-weight:800;white-space:nowrap}
+.mon-risk-high{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.3);border-radius:999px;padding:2px 8px;font-size:.62rem;font-weight:800;letter-spacing:.5px;white-space:nowrap}
+.mon-bypass-badge{background:rgba(6,182,212,.1);color:#22d3ee;border:1px solid rgba(6,182,212,.25);border-radius:999px;padding:2px 8px;font-size:.62rem;font-weight:800;white-space:nowrap}
+.mon-ip-act-btn{background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--dim);border-radius:5px;padding:3px 8px;font-size:.65rem;cursor:pointer;font-family:inherit;transition:border-color .18s,color .18s}
+.mon-ip-act-btn:hover{border-color:rgba(255,255,255,.28);color:var(--text)}
+.mon-ip-act-btn.danger:hover{border-color:rgba(239,68,68,.5);color:#ef4444}
+.mon-ip-act-select{background:#0d0d0d;border:1px solid rgba(255,255,255,.1);color:var(--dim);border-radius:5px;padding:3px 6px;font-size:.65rem;cursor:pointer;font-family:inherit}
 </style>
 </head>
 <body>
@@ -3029,15 +3035,18 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <div class="mon-card" style="margin-top:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
           <div class="mon-card-title">Visitor IPs</div>
-          <div id="mon-ip-count" style="font-size:.7rem;color:var(--dim)">0 tracked</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div id="mon-ip-count" style="font-size:.7rem;color:var(--dim)">0 tracked</div>
+            <button class="admin-btn ghost" style="padding:4px 10px;font-size:.7rem" onclick="monRefreshIPs()">↻ Refresh IPs</button>
+          </div>
         </div>
         <div class="mon-ip-table-wrap">
           <table class="mon-ip-tbl">
             <thead><tr>
-              <th>IP Address</th><th>Risk</th><th>Reloads</th><th>Violations</th><th>Cooldown</th><th>Last Seen</th>
+              <th>IP Address</th><th>Risk</th><th>Reloads</th><th>Violations</th><th>Cooldown</th><th>Last Seen</th><th>Actions</th>
             </tr></thead>
             <tbody id="mon-ip-body">
-              <tr><td colspan="6" style="color:var(--dim);text-align:center;padding:16px">Loading…</td></tr>
+              <tr><td colspan="7" style="color:var(--dim);text-align:center;padding:16px">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -4108,7 +4117,7 @@ function adminLoadData() {
       if (d.error) { console.warn('Admin load error:', d.error); return; }
       _adminData = d;
       adminRenderStats(d.clients);
-      adminRenderDevs(d.admins, d.primaryAdmin);
+      adminRenderDevs(d.admins, d.primaryAdmin, d.coOwner);
       adminRenderTable(d.clients);
       adminLoadRequests();
     })
@@ -4126,7 +4135,7 @@ function adminRenderStats(clients) {
   document.getElementById('adm-stat-pkgs').textContent  = pkgs;
 }
 
-function adminRenderDevs(admins, primary) {
+function adminRenderDevs(admins, primary, coOwner) {
   var list = document.getElementById('adm-devs-list');
   var myEmail = adminGetEmail();
   var isPrimary = myEmail.toLowerCase() === (primary || '').toLowerCase();
@@ -4135,12 +4144,18 @@ function adminRenderDevs(admins, primary) {
 
   list.innerHTML = admins.map(function(email) {
     var isP = email.toLowerCase() === (primary || '').toLowerCase();
-    var removeBtn = (!isP && isPrimary)
+    var isCO = coOwner && email.toLowerCase() === coOwner.toLowerCase();
+    var removeBtn = (!isP && !isCO && isPrimary)
       ? '<button class="admin-btn danger" style="padding:5px 12px;font-size:.75rem" onclick="adminRemoveDev(\''+email+'\')">Remove</button>'
       : '';
+    var badge = isP
+      ? '<span class="admin-primary-badge">Primary</span>'
+      : isCO
+        ? '<span class="admin-primary-badge" style="background:rgba(6,182,212,.15);color:#22d3ee;border-color:rgba(6,182,212,.3)">Co-Owner</span>'
+        : '<span style="font-size:.72rem;color:var(--dim)">Developer</span>';
     return '<div class="admin-dev-row">'
       + '<span class="admin-dev-email">' + email + '</span>'
-      + (isP ? '<span class="admin-primary-badge">Primary</span>' : '<span style="font-size:.72rem;color:var(--dim)">Developer</span>')
+      + badge
       + removeBtn
       + '</div>';
   }).join('');
@@ -4502,17 +4517,33 @@ function monRender(d) {
   if (ipBody && d.ips) {
     if (ipCount) ipCount.textContent = d.ips.length + ' tracked';
     if (!d.ips.length) {
-      ipBody.innerHTML = '<tr><td colspan="6" style="color:var(--dim);text-align:center;padding:16px">No visitors yet this session</td></tr>';
+      ipBody.innerHTML = '<tr><td colspan="7" style="color:var(--dim);text-align:center;padding:16px">No visitors yet this session</td></tr>';
     } else {
       ipBody.innerHTML = d.ips.map(function(ip) {
-        var riskBadge = ip.risk === 'medium'
-          ? '<span class="mon-risk-medium">MEDIUM</span>'
-          : '<span class="mon-risk-low">LOW</span>';
+        var safeIP = ip.ip.replace(/'/g, "\\'");
+        var riskBadge = ip.bypass
+          ? '<span class="mon-bypass-badge">BYPASS</span>'
+          : ip.risk === 'high'
+            ? '<span class="mon-risk-high">HIGH</span>'
+            : ip.risk === 'medium'
+              ? '<span class="mon-risk-medium">MEDIUM</span>'
+              : '<span class="mon-risk-low">LOW</span>';
+        if (ip.forcedRisk && !ip.bypass) riskBadge += ' <span style="font-size:.58rem;color:var(--dim)">(forced)</span>';
         var cdCell = ip.cooldownLeft > 0
           ? '<span class="mon-cooldown-badge">' + ip.cooldownLeft + 's left</span>'
           : '<span style="color:var(--dim);font-size:.72rem">—</span>';
         var ago = Math.floor((Date.now() - ip.lastSeen) / 1000);
         var agoStr = ago < 60 ? ago + 's ago' : Math.floor(ago/60) + 'm ago';
+        var curForce = ip.forcedRisk || '';
+        var forceSelect = '<select class="mon-ip-act-select" onchange="monIPForce(\'' + safeIP + '\',this.value)">'
+          + '<option value="" ' + (!curForce ? 'selected' : '') + '>Auto</option>'
+          + '<option value="low" ' + (curForce==='low' ? 'selected' : '') + '>Low</option>'
+          + '<option value="medium" ' + (curForce==='medium' ? 'selected' : '') + '>Medium</option>'
+          + '<option value="high" ' + (curForce==='high' ? 'selected' : '') + '>High</option>'
+          + '</select>';
+        var bypassBtn = '<button class="mon-ip-act-btn" onclick="monIPBypass(\'' + safeIP + '\',' + (!ip.bypass) + ')">'
+          + (ip.bypass ? 'Unbypass' : 'Bypass') + '</button>';
+        var resetBtn = '<button class="mon-ip-act-btn danger" onclick="monIPReset(\'' + safeIP + '\')">Reset</button>';
         return '<tr>' +
           '<td><span class="mon-ip-addr">' + ip.ip + '</span></td>' +
           '<td>' + riskBadge + '</td>' +
@@ -4520,6 +4551,7 @@ function monRender(d) {
           '<td style="color:' + (ip.violations > 0 ? '#fb923c' : 'var(--dim)') + '">' + ip.violations + '</td>' +
           '<td>' + cdCell + '</td>' +
           '<td style="color:var(--dim);font-size:.72rem">' + agoStr + '</td>' +
+          '<td style="display:flex;gap:5px;align-items:center">' + forceSelect + bypassBtn + resetBtn + '</td>' +
           '</tr>';
       }).join('');
     }
@@ -4528,6 +4560,39 @@ function monRender(d) {
   // Last refresh time
   el = document.getElementById('mon-last-refresh');
   if (el) el.textContent = 'Last refresh: ' + new Date().toLocaleTimeString();
+}
+
+function monRefreshIPs() {
+  var email = adminGetEmail();
+  if (!email) return;
+  fetch('/api/admin/metrics?adminEmail=' + encodeURIComponent(email))
+    .then(function(r) { return r.json(); })
+    .then(monRender)
+    .catch(function() {});
+}
+
+function monIPBypass(ip, bypass) {
+  var email = adminGetEmail();
+  if (!email) return;
+  fetch('/api/admin/ip-bypass', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminEmail:email, targetIP:ip, bypass:bypass }) })
+    .then(function() { monRefreshIPs(); })
+    .catch(function() {});
+}
+
+function monIPForce(ip, risk) {
+  var email = adminGetEmail();
+  if (!email) return;
+  fetch('/api/admin/ip-force', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminEmail:email, targetIP:ip, risk:risk }) })
+    .then(function() { monRefreshIPs(); })
+    .catch(function() {});
+}
+
+function monIPReset(ip) {
+  var email = adminGetEmail();
+  if (!email) return;
+  fetch('/api/admin/ip-reset', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminEmail:email, targetIP:ip }) })
+    .then(function() { monRefreshIPs(); })
+    .catch(function() {});
 }
 
 /* Check admin status — shows/hides Admin nav button */
