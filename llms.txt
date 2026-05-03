@@ -1,0 +1,38 @@
+# Precision Workz
+
+> Custom web design, security infrastructure, and full-stack development agency based in Tucson, Arizona. Zero templates — every site is built from scratch specifically for the client.
+
+## Main Pages
+- [Home](https://precisonworkz.net): Full portfolio, service packages, and contact
+
+## Key Facts
+- Based in Tucson, Arizona, USA
+- Serves clients exclusively in the United States
+- Specializes in custom web design, security hardening, and full-stack development
+- Zero templates — every project is built from the ground up
+- Security-first approach on every build
+- Live client work: The Hidden Jewel luxury vacation rental platform (hiddenjeweltucson.com)
+
+## Services
+- Web Design — custom only, no templates
+- Full-Stack Development — Node.js, custom booking engines, real-time systems, admin panels
+- Security Infrastructure — hardening, sentinel monitoring, IP-layer blocking, audit trails
+- Security Assessments — vulnerability scanning, penetration testing, security scoring
+- Titanium Package — complete custom platform, multi-panel admin architecture (by request only)
+
+## Service Packages
+- All-Inclusive Starter: $750+
+- All-Inclusive Premium: $2,000+
+- All-Inclusive Diamond: $4,500+
+- Titanium: By request only
+- Web Design: $300–$1,400+
+- Security: $175–$1,000+
+- Development: $450–$3,000+
+- Security Assessment: $75–$400
+
+## Location
+Tucson, Arizona, United States
+
+## Contact
+- Email: precisionworkz9@gmail.com
+- Website: https://precisonworkz.net

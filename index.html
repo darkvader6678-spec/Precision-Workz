@@ -3,11 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Precision Workz — Web Design · Security & Development</title>
+<title>Precision Workz — Web Design, Security & Development | Tucson, AZ</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CclipPath id='cl'%3E%3Cpolygon points='16,2 4,9 4,21 16,30'/%3E%3C/clipPath%3E%3CclipPath id='cr'%3E%3Cpolygon points='16,2 28,9 28,21 16,30'/%3E%3C/clipPath%3E%3C/defs%3E%3Cpath d='M16,2 L28,9 L28,21 L16,30 L4,21 L4,9 Z' fill='%230a0a1e'/%3E%3Cpath d='M16,2 L28,9 L28,21 L16,30 L4,21 L4,9 Z' fill='%23d97706' clip-path='url(%23cl)'/%3E%3Cpath d='M16,2 L28,9 L28,21 L16,30 L4,21 L4,9 Z' fill='%232563eb' clip-path='url(%23cr)'/%3E%3Cpath d='M16,2 L28,9 L28,21 L16,30 L4,21 L4,9 Z' fill='none' stroke='rgba(255,255,255,0.18)' stroke-width='1'/%3E%3C/svg%3E">
-<meta name="description" content="Precision Workz delivers elite web design, security infrastructure, and custom development. Built to perform. Built to protect.">
+<meta name="description" content="Precision Workz delivers custom web design, security infrastructure, and full-stack development for businesses in Tucson, AZ. Zero templates. Built to perform. Built to protect.">
+<meta name="keywords" content="web design Tucson AZ, web development Tucson Arizona, custom website Tucson, security infrastructure Tucson, Precision Workz">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://precisonworkz.net/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://precisonworkz.net/">
+<meta property="og:site_name" content="Precision Workz">
+<meta property="og:title" content="Precision Workz — Web Design, Security & Development | Tucson, AZ">
+<meta property="og:description" content="Custom web design, security infrastructure, and full-stack development for businesses in Tucson, AZ. Zero templates. Built to perform. Built to protect.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Precision Workz — Web Design & Development | Tucson, AZ">
+<meta name="twitter:description" content="Custom web design, security infrastructure, and full-stack development. Zero templates. Tucson, AZ.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LocalBusiness","name":"Precision Workz","description":"Custom web design, security infrastructure, and full-stack development for businesses in Tucson, Arizona. Zero templates — every site built from scratch.","url":"https://precisonworkz.net","email":"precisionworkz9@gmail.com","areaServed":[{"@type":"City","name":"Tucson","addressRegion":"AZ","addressCountry":"US"},{"@type":"Country","name":"United States"}],"address":{"@type":"PostalAddress","addressLocality":"Tucson","addressRegion":"AZ","addressCountry":"US"},"serviceType":["Web Design","Web Development","Security Infrastructure","Custom Development","Security Assessment"],"priceRange":"$300 - $10000+"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Precision Workz","url":"https://precisonworkz.net"}</script>
 <script src="https://js.stripe.com/v3/"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -2501,6 +2515,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         <button class="promo-apply-btn" type="button" onclick="applyContactPromo()">Apply</button>
       </div>
       <div class="promo-status" id="cfPromoStatus"></div>
+      <div class="g-recaptcha" data-sitekey="6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h" data-theme="dark" style="margin-bottom:16px;transform:scale(0.93);transform-origin:left"></div>
       <button class="form-submit" onclick="submitContact()">Send Message →</button>
       <div class="form-msg" id="cfMsg2"></div>
     </div>
@@ -3212,6 +3227,7 @@ function submitContact(){
   var name=(document.getElementById('cfName').value||'').trim(),last=(document.getElementById('cfLast').value||'').trim(),email=(document.getElementById('cfEmail').value||'').trim(),service=(document.getElementById('cfService').value||'').trim(),msg=(document.getElementById('cfMsg').value||'').trim(),out=document.getElementById('cfMsg2');
   if(!name||!email||!msg){out.style.color='#f87171';out.textContent='Please fill in your name, email, and message.';return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){out.style.color='#f87171';out.textContent='Please enter a valid email address.';return}
+  if(typeof grecaptcha!=='undefined'&&!grecaptcha.getResponse()){out.style.color='#f87171';out.textContent='Please complete the reCAPTCHA verification.';return}
   var btn=document.querySelector('.form-submit');btn.disabled=true;btn.textContent='Sending…';
   var promoCode=(document.getElementById('cfPromo').value||'').trim().toUpperCase();
   var promoLine=promoCode?'\nPromo Code: '+promoCode:'';
