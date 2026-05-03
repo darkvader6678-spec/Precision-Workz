@@ -21,7 +21,7 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Precision Workz","url":"https://precisonworkz.net"}</script>
 <script src="https://js.stripe.com/v3/"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script src="https://www.google.com/recaptcha/api.js?render=6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -1051,8 +1051,18 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .sg-subtitle{font-size:.78rem;color:rgba(255,255,255,.28);letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-top:-6px}
 .sg-desc{font-size:.88rem;color:rgba(255,255,255,.42);line-height:1.75;max-width:360px}
 .sg-desc strong{color:rgba(255,255,255,.7);font-weight:700}
-.sg-captcha-wrap{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;align-items:center;gap:12px}
-.sg-captcha-label{font-size:.6rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.25)}
+.sg-scan-box{width:300px;background:rgba(255,255,255,.025);border:1px solid rgba(124,58,237,.22);border-radius:14px;padding:22px 24px;position:relative;overflow:hidden}
+.sg-scan-sweep{position:absolute;top:-2px;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(124,58,237,.08),rgba(34,211,238,.06),transparent);animation:sg-sweep-h 2.2s ease-in-out infinite}
+@keyframes sg-sweep-h{0%{left:-60%}100%{left:110%}}
+.sg-scan-label{font-size:.55rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-bottom:10px}
+.sg-scan-status{font-size:.8rem;color:rgba(255,255,255,.6);font-weight:600;margin-bottom:14px;min-height:20px;transition:color .3s}
+.sg-bar-track{height:4px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;margin-bottom:14px}
+.sg-bar-fill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#7c3aed,#22d3ee);transition:width .6s cubic-bezier(.25,.46,.45,.94);box-shadow:0 0 8px rgba(124,58,237,.5)}
+.sg-dots{display:flex;gap:5px;align-items:center}
+.sg-dot{width:5px;height:5px;border-radius:50%;background:rgba(124,58,237,.5);animation:sg-dot-pulse 1.2s ease-in-out infinite}
+.sg-dot:nth-child(2){animation-delay:.2s;background:rgba(100,180,220,.5)}
+.sg-dot:nth-child(3){animation-delay:.4s;background:rgba(34,211,238,.5)}
+@keyframes sg-dot-pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
 .sg-footer-note{font-size:.68rem;color:rgba(255,255,255,.2);display:flex;align-items:center;gap:8px;margin-top:6px}
 .sg-footer-note span{opacity:.5}
 </style>
@@ -1090,9 +1100,12 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <div class="sg-title">Security Checkpoint</div>
     <div class="sg-subtitle">Verification Required</div>
     <p class="sg-desc">This site is protected against <strong>automated bots</strong> and <strong>DDoS attacks</strong>. Complete the verification below to continue.</p>
-    <div class="sg-captcha-wrap">
-      <div class="sg-captcha-label">Human Verification</div>
-      <div class="g-recaptcha" data-sitekey="6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h" data-theme="dark" data-callback="sgVerified"></div>
+    <div class="sg-scan-box">
+      <div class="sg-scan-sweep"></div>
+      <div class="sg-scan-label">Security Scan</div>
+      <div class="sg-scan-status" id="sg-status">Initializing…</div>
+      <div class="sg-bar-track"><div class="sg-bar-fill" id="sg-bar"></div></div>
+      <div class="sg-dots"><span class="sg-dot"></span><span class="sg-dot"></span><span class="sg-dot"></span></div>
     </div>
     <div class="sg-footer-note">Protected by Google reCAPTCHA <span>·</span> Precision Workz Security</div>
   </div>
@@ -3237,10 +3250,37 @@ function sgVerified(){
   setTimeout(function(){g.style.display='none'},700);
 }
 (function(){
-  if(sessionStorage.getItem('sg_passed')){
-    var g=document.getElementById('security-gate');
-    if(g)g.style.display='none';
+  var g=document.getElementById('security-gate');
+  if(!g)return;
+  if(sessionStorage.getItem('sg_passed')){g.style.display='none';return;}
+  var statusEl=document.getElementById('sg-status');
+  var barEl=document.getElementById('sg-bar');
+  var steps=[
+    {t:'Initializing security scan…',w:18,delay:350},
+    {t:'Analyzing request signature…',w:42,delay:750},
+    {t:'Checking behavior patterns…',w:66,delay:1200},
+    {t:'Verifying with reCAPTCHA…',w:85,delay:1750}
+  ];
+  var verified=false;
+  steps.forEach(function(s){
+    setTimeout(function(){
+      if(!verified){statusEl.textContent=s.t;barEl.style.width=s.w+'%';}
+    },s.delay);
+  });
+  function onVerified(){
+    verified=true;
+    statusEl.textContent='✓ Access Granted';
+    statusEl.style.color='#4ade80';
+    barEl.style.width='100%';
+    barEl.style.background='linear-gradient(90deg,#059669,#4ade80)';
+    barEl.style.boxShadow='0 0 10px rgba(74,222,128,.5)';
+    setTimeout(sgVerified,650);
   }
+  grecaptcha.ready(function(){
+    grecaptcha.execute('6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h',{action:'visit'})
+      .then(function(){setTimeout(onVerified,2100)})
+      .catch(function(){setTimeout(onVerified,2100)});
+  });
 })();
 
 function toggleStatNote(id){
