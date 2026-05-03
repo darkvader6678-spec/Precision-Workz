@@ -884,19 +884,31 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 @media(max-width:900px){.admin-stats-row{grid-template-columns:1fr 1fr}.admin-form-grid{grid-template-columns:1fr 1fr}}
 
 /* ── WORK VISUAL CUSTOM SCENES ─────────────────────────── */
-.wv-titan-scene{position:relative;z-index:2;width:240px;max-width:90%;padding:24px 0}
-.wv-prop-card{background:rgba(8,8,20,.9);border:1px solid rgba(192,192,192,.2);border-radius:12px;padding:14px;backdrop-filter:blur(12px)}
-.wv-prop-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.wv-live-badge{font-size:.45rem;font-weight:700;letter-spacing:1px;color:#4ade80;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.2);border-radius:999px;padding:2px 7px}
-.wv-prop-price{font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,#c0c0c0,#f0f0f0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
-.wv-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:10px}
-.wv-cal-day{height:18px;border-radius:3px}
-.wv-booked{background:rgba(192,192,192,.12);border:1px solid rgba(192,192,192,.15)}
-.wv-available{background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.2)}
-.wv-prop-stat-row{display:flex;gap:6px;flex-wrap:wrap}
-.wv-stat-chip{font-size:.48rem;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.25);color:var(--purple2)}
-.wv-admin-float{position:absolute;top:-18px;right:-12px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:7px;padding:4px 10px;backdrop-filter:blur(8px)}
-.wv-sentinel-float{position:absolute;bottom:-18px;right:-8px;display:flex;align-items:center;gap:4px;background:rgba(4,4,13,.85);border:1px solid rgba(74,222,128,.2);border-radius:7px;padding:4px 10px;backdrop-filter:blur(8px)}
+.wv-titan-scene{position:relative;z-index:2;width:272px;max-width:92%;padding:28px 0}
+.wv-prop-card{background:rgba(7,7,18,.97);border:1px solid rgba(192,192,192,.16);border-radius:20px;overflow:hidden;box-shadow:0 32px 64px rgba(0,0,0,.6),0 0 0 1px rgba(192,192,192,.04),0 0 60px rgba(192,192,192,.04)}
+.wv-prop-photo{height:118px;background:linear-gradient(145deg,#0c0818,#151028,#0a1422,#0d1018);position:relative;display:flex;align-items:flex-start;justify-content:flex-end;padding:12px;overflow:hidden}
+.wv-prop-photo::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 28% 65%,rgba(192,192,192,.11),transparent 52%),radial-gradient(ellipse at 78% 22%,rgba(124,58,237,.22),transparent 48%),radial-gradient(ellipse at 52% 80%,rgba(6,182,212,.07),transparent 45%)}
+.wv-prop-photo::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50px;background:linear-gradient(to top,rgba(7,7,18,.97),transparent)}
+.wv-prop-photo-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-56%);font-size:2.4rem;opacity:.22;pointer-events:none}
+.wv-live-badge{font-size:.5rem;font-weight:700;letter-spacing:1px;color:#4ade80;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.25);border-radius:999px;padding:3px 9px;position:relative;z-index:1;backdrop-filter:blur(8px)}
+.wv-prop-body{padding:14px 16px 16px}
+.wv-prop-loc{font-size:.5rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(192,192,192,.42);margin-bottom:3px}
+.wv-prop-name{font-size:.98rem;font-weight:800;letter-spacing:-.4px;line-height:1.15;background:linear-gradient(135deg,#c8c8c8,#f4f4f4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:5px}
+.wv-prop-rating{font-size:.55rem;color:#fbbf24;letter-spacing:.2px;margin-bottom:11px}
+.wv-prop-rating span{color:rgba(255,255,255,.3);font-weight:400}
+.wv-prop-sep{height:1px;background:linear-gradient(90deg,rgba(192,192,192,.12),rgba(192,192,192,.04));margin-bottom:11px}
+.wv-prop-book-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.wv-prop-price-wrap{display:flex;align-items:baseline;gap:2px}
+.wv-prop-price{font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,#c0c0c0,#f0f0f0);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.wv-prop-night{font-size:.52rem;color:rgba(192,192,192,.38);font-weight:400}
+.wv-book-btn{font-size:.6rem;font-weight:800;padding:7px 15px;border-radius:9px;background:linear-gradient(135deg,#888,#d8d8d8,#a0a0a0);background-size:200% auto;color:#07071a;animation:titan-shimmer 3s linear infinite;letter-spacing:.3px;cursor:pointer}
+.wv-cal-label{font-size:.46rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(192,192,192,.35);margin-bottom:6px}
+.wv-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.wv-cal-day{height:13px;border-radius:3px}
+.wv-booked{background:rgba(192,192,192,.09);border:1px solid rgba(192,192,192,.11)}
+.wv-available{background:rgba(74,222,128,.13);border:1px solid rgba(74,222,128,.2)}
+.wv-admin-float{position:absolute;top:4px;right:-8px;background:rgba(124,58,237,.18);border:1px solid rgba(124,58,237,.35);border-radius:8px;padding:5px 11px;backdrop-filter:blur(10px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.wv-sentinel-float{position:absolute;bottom:4px;right:-6px;display:flex;align-items:center;gap:5px;background:rgba(4,4,13,.9);border:1px solid rgba(74,222,128,.22);border-radius:8px;padding:5px 11px;backdrop-filter:blur(10px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
 /* Security scene */
 .wv-sec-scene{position:relative;z-index:2;width:260px;max-width:92%;background:rgba(2,4,8,.92);border:1px solid rgba(6,182,212,.15);border-radius:10px;overflow:hidden;font-family:'SF Mono','Fira Code',monospace;backdrop-filter:blur(12px)}
 .wv-sec-bar{display:flex;align-items:center;gap:5px;padding:8px 10px;background:rgba(6,182,212,.05);border-bottom:1px solid rgba(6,182,212,.12)}
@@ -1224,21 +1236,28 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
           <div class="wv-titan-scene">
             <div class="wv-admin-float"><span style="font-size:.5rem;color:rgba(124,58,237,.9);letter-spacing:.5px;font-weight:700">ADMIN · 12 PANELS</span></div>
             <div class="wv-prop-card">
-              <div class="wv-prop-header">
-                <span style="font-size:.52rem;letter-spacing:.8px;text-transform:uppercase;color:rgba(192,192,192,.55);font-weight:600">Hidden Jewel · Tucson AZ</span>
+              <div class="wv-prop-photo">
+                <div class="wv-prop-photo-icon">🏡</div>
                 <span class="wv-live-badge">● LIVE</span>
               </div>
-              <div class="wv-prop-price">$289<span style="font-size:.62rem;color:rgba(192,192,192,.45)">/night</span></div>
-              <div class="wv-cal-grid">
-                <div class="wv-cal-day wv-booked"></div><div class="wv-cal-day wv-booked"></div>
-                <div class="wv-cal-day wv-available"></div><div class="wv-cal-day wv-available"></div>
-                <div class="wv-cal-day wv-booked"></div><div class="wv-cal-day wv-available"></div>
-                <div class="wv-cal-day wv-available"></div>
-              </div>
-              <div class="wv-prop-stat-row">
-                <span class="wv-stat-chip">99.8% uptime</span>
-                <span class="wv-stat-chip">3-tier auth</span>
-                <span class="wv-stat-chip">sentinel ✓</span>
+              <div class="wv-prop-body">
+                <div class="wv-prop-loc">Tucson, Arizona</div>
+                <div class="wv-prop-name">Hidden Jewel</div>
+                <div class="wv-prop-rating">★★★★★ <span style="font-size:.48rem;color:rgba(192,192,192,.4);font-weight:500">4.97 · 214 reviews</span></div>
+                <div class="wv-prop-sep"></div>
+                <div class="wv-prop-book-row">
+                  <div class="wv-prop-price-wrap">
+                    <span style="font-size:.95rem;font-weight:700;color:#e8e8e8">$289</span><span style="font-size:.5rem;color:rgba(192,192,192,.45)">/night</span>
+                  </div>
+                  <button class="wv-book-btn">Reserve</button>
+                </div>
+                <div class="wv-cal-label">Availability</div>
+                <div class="wv-cal-grid">
+                  <div class="wv-cal-day wv-booked"></div><div class="wv-cal-day wv-booked"></div>
+                  <div class="wv-cal-day wv-available"></div><div class="wv-cal-day wv-available"></div>
+                  <div class="wv-cal-day wv-booked"></div><div class="wv-cal-day wv-available"></div>
+                  <div class="wv-cal-day wv-available"></div>
+                </div>
               </div>
             </div>
             <div class="wv-sentinel-float"><span>🛡️</span><span style="font-size:.48rem;color:#4ade80;font-weight:700;letter-spacing:.5px">SENTINEL ACTIVE</span></div>
