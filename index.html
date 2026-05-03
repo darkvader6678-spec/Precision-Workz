@@ -907,8 +907,10 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .wv-cal-day{height:13px;border-radius:3px}
 .wv-booked{background:rgba(192,192,192,.09);border:1px solid rgba(192,192,192,.11)}
 .wv-available{background:rgba(74,222,128,.13);border:1px solid rgba(74,222,128,.2)}
-.wv-admin-float{position:absolute;top:4px;right:-8px;background:rgba(124,58,237,.18);border:1px solid rgba(124,58,237,.35);border-radius:8px;padding:5px 11px;backdrop-filter:blur(10px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
-.wv-sentinel-float{position:absolute;bottom:4px;right:-6px;display:flex;align-items:center;gap:5px;background:rgba(4,4,13,.9);border:1px solid rgba(74,222,128,.22);border-radius:8px;padding:5px 11px;backdrop-filter:blur(10px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.wv-feature-pill{font-size:.44rem;font-weight:700;letter-spacing:.4px;padding:3px 8px;border-radius:999px}
+.wv-pill-admin{background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);color:rgba(167,139,250,.9)}
+.wv-pill-sentinel{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.22);color:rgba(74,222,128,.9)}
+.wv-pill-live{background:rgba(192,192,192,.06);border:1px solid rgba(192,192,192,.15);color:rgba(192,192,192,.5)}
 /* Security scene */
 .wv-sec-scene{position:relative;z-index:2;width:260px;max-width:92%;background:rgba(2,4,8,.92);border:1px solid rgba(6,182,212,.15);border-radius:10px;overflow:hidden;font-family:'SF Mono','Fira Code',monospace;backdrop-filter:blur(12px)}
 .wv-sec-bar{display:flex;align-items:center;gap:5px;padding:8px 10px;background:rgba(6,182,212,.05);border-bottom:1px solid rgba(6,182,212,.12)}
@@ -1234,7 +1236,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         <div class="work-visual-inner" style="background:linear-gradient(145deg,#050510,#0a0a1e,#0d0d24)">
           <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,rgba(192,192,192,.1),transparent 55%),radial-gradient(circle at 80% 80%,rgba(124,58,237,.1),transparent 50%)"></div>
           <div class="wv-titan-scene">
-            <div class="wv-admin-float"><span style="font-size:.5rem;color:rgba(124,58,237,.9);letter-spacing:.5px;font-weight:700">ADMIN · 12 PANELS</span></div>
             <div class="wv-prop-card">
               <div class="wv-prop-photo">
                 <div class="wv-prop-photo-icon">🏡</div>
@@ -1258,9 +1259,14 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
                   <div class="wv-cal-day wv-booked"></div><div class="wv-cal-day wv-available"></div>
                   <div class="wv-cal-day wv-available"></div>
                 </div>
+                <div class="wv-prop-sep" style="margin-top:10px"></div>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <span class="wv-feature-pill wv-pill-admin">⚙ Admin</span>
+                  <span class="wv-feature-pill wv-pill-sentinel">🛡 Sentinel</span>
+                  <span class="wv-feature-pill wv-pill-live">● 99.8% up</span>
+                </div>
               </div>
             </div>
-            <div class="wv-sentinel-float"><span>🛡️</span><span style="font-size:.48rem;color:#4ade80;font-weight:700;letter-spacing:.5px">SENTINEL ACTIVE</span></div>
           </div>
         </div>
       </div>
