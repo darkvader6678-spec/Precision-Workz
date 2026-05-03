@@ -1029,6 +1029,32 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .adm-reply-inp::placeholder{color:var(--dim)}
 .adm-reply-send{padding:8px 14px;border-radius:8px;background:linear-gradient(135deg,var(--cyan),var(--purple));color:#fff;font-size:.78rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:opacity .2s;align-self:flex-end;white-space:nowrap}
 .adm-reply-send:hover{opacity:.85}
+/* ── SECURITY GATE ─────────────────────────────────────── */
+#security-gate{position:fixed;inset:0;z-index:999999;background:#04040d;display:flex;align-items:center;justify-content:center;transition:opacity .65s cubic-bezier(.22,1,.36,1)}
+#security-gate.sg-exit{opacity:0;pointer-events:none}
+#security-gate::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 28% 55%,rgba(124,58,237,.14),transparent 52%),radial-gradient(ellipse at 72% 45%,rgba(6,182,212,.09),transparent 52%);pointer-events:none}
+.sg-topbar{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,#7c3aed 35%,#22d3ee 65%,transparent 100%);animation:sg-sweep 4s ease-in-out infinite}
+@keyframes sg-sweep{0%,100%{opacity:.5;background-position:0% 50%}50%{opacity:1;background-position:100% 50%}}
+.sg-corner{position:absolute;width:18px;height:18px;opacity:.35}
+.sg-corner.tl{top:20px;left:20px;border-top:1.5px solid var(--cyan2);border-left:1.5px solid var(--cyan2)}
+.sg-corner.tr{top:20px;right:20px;border-top:1.5px solid var(--cyan2);border-right:1.5px solid var(--cyan2)}
+.sg-corner.bl{bottom:20px;left:20px;border-bottom:1.5px solid var(--cyan2);border-left:1.5px solid var(--cyan2)}
+.sg-corner.br{bottom:20px;right:20px;border-bottom:1.5px solid var(--cyan2);border-right:1.5px solid var(--cyan2)}
+.sg-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:18px;padding:48px 32px;text-align:center}
+.sg-ring-wrap{position:relative;width:88px;height:88px;display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.sg-ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(124,58,237,.45);animation:sg-ring-pulse 2.4s ease-in-out infinite}
+.sg-ring2{position:absolute;inset:-10px;border-radius:50%;border:1px solid rgba(6,182,212,.18);animation:sg-ring-pulse 2.4s ease-in-out infinite .6s}
+@keyframes sg-ring-pulse{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.1);opacity:.9}}
+.sg-icon{font-size:2.8rem;filter:drop-shadow(0 0 18px rgba(124,58,237,.6))}
+.sg-brand-tag{font-size:.58rem;font-weight:800;letter-spacing:3.5px;text-transform:uppercase;color:rgba(255,255,255,.28)}
+.sg-title{font-size:1.85rem;font-weight:900;letter-spacing:-.5px;background:linear-gradient(135deg,#b8b8b8,#f2f2f2,#a0a0a0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.15}
+.sg-subtitle{font-size:.78rem;color:rgba(255,255,255,.28);letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-top:-6px}
+.sg-desc{font-size:.88rem;color:rgba(255,255,255,.42);line-height:1.75;max-width:360px}
+.sg-desc strong{color:rgba(255,255,255,.7);font-weight:700}
+.sg-captcha-wrap{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.sg-captcha-label{font-size:.6rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.25)}
+.sg-footer-note{font-size:.68rem;color:rgba(255,255,255,.2);display:flex;align-items:center;gap:8px;margin-top:6px}
+.sg-footer-note span{opacity:.5}
 </style>
 </head>
 <body>
@@ -1048,6 +1074,29 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 <div id="scroll-progress"></div>
 
 <div id="cursor-glow"></div>
+
+<!-- SECURITY GATE -->
+<div id="security-gate">
+  <div class="sg-topbar"></div>
+  <div class="sg-corner tl"></div><div class="sg-corner tr"></div>
+  <div class="sg-corner bl"></div><div class="sg-corner br"></div>
+  <div class="sg-inner">
+    <div class="sg-ring-wrap">
+      <div class="sg-ring"></div>
+      <div class="sg-ring2"></div>
+      <div class="sg-icon">🛡️</div>
+    </div>
+    <div class="sg-brand-tag">Precision Workz</div>
+    <div class="sg-title">Security Checkpoint</div>
+    <div class="sg-subtitle">Verification Required</div>
+    <p class="sg-desc">This site is protected against <strong>automated bots</strong> and <strong>DDoS attacks</strong>. Complete the verification below to continue.</p>
+    <div class="sg-captcha-wrap">
+      <div class="sg-captcha-label">Human Verification</div>
+      <div class="g-recaptcha" data-sitekey="6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h" data-theme="dark" data-callback="sgVerified"></div>
+    </div>
+    <div class="sg-footer-note">Protected by Google reCAPTCHA <span>·</span> Precision Workz Security</div>
+  </div>
+</div>
 
 <!-- PW LOGO — self-contained SVGs injected by pwLogo() below, one per use site -->
 
@@ -2515,7 +2564,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         <button class="promo-apply-btn" type="button" onclick="applyContactPromo()">Apply</button>
       </div>
       <div class="promo-status" id="cfPromoStatus"></div>
-      <div class="g-recaptcha" data-sitekey="6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h" data-theme="dark" style="margin-bottom:16px;transform:scale(0.93);transform-origin:left"></div>
       <button class="form-submit" onclick="submitContact()">Send Message →</button>
       <div class="form-msg" id="cfMsg2"></div>
     </div>
@@ -3182,6 +3230,19 @@ async function submitPayment(){
   document.querySelectorAll('.fade-up').forEach(function(el){io.observe(el)});
 })();
 
+function sgVerified(){
+  sessionStorage.setItem('sg_passed','1');
+  var g=document.getElementById('security-gate');
+  g.classList.add('sg-exit');
+  setTimeout(function(){g.style.display='none'},700);
+}
+(function(){
+  if(sessionStorage.getItem('sg_passed')){
+    var g=document.getElementById('security-gate');
+    if(g)g.style.display='none';
+  }
+})();
+
 function toggleStatNote(id){
   var el=document.getElementById(id);
   if(!el)return;
@@ -3227,7 +3288,6 @@ function submitContact(){
   var name=(document.getElementById('cfName').value||'').trim(),last=(document.getElementById('cfLast').value||'').trim(),email=(document.getElementById('cfEmail').value||'').trim(),service=(document.getElementById('cfService').value||'').trim(),msg=(document.getElementById('cfMsg').value||'').trim(),out=document.getElementById('cfMsg2');
   if(!name||!email||!msg){out.style.color='#f87171';out.textContent='Please fill in your name, email, and message.';return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){out.style.color='#f87171';out.textContent='Please enter a valid email address.';return}
-  if(typeof grecaptcha!=='undefined'&&!grecaptcha.getResponse()){out.style.color='#f87171';out.textContent='Please complete the reCAPTCHA verification.';return}
   var btn=document.querySelector('.form-submit');btn.disabled=true;btn.textContent='Sending…';
   var promoCode=(document.getElementById('cfPromo').value||'').trim().toUpperCase();
   var promoLine=promoCode?'\nPromo Code: '+promoCode:'';
