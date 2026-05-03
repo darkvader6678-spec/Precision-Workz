@@ -822,6 +822,32 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .pay-step-panel{display:none}
 .pay-step-panel.active{display:block;animation:modal-slide-in .28s cubic-bezier(.22,1,.36,1)}
 
+/* ─── REPORT PROBLEM MODAL ───────────────────────────── */
+#report-overlay{display:none;position:fixed;inset:0;z-index:9996;background:rgba(4,4,13,.92);backdrop-filter:blur(16px);align-items:center;justify-content:center;padding:20px}
+#report-overlay.open{display:flex;animation:overlay-in .25s ease}
+.rp-box{background:linear-gradient(145deg,#0c0c22,#101028);border:1px solid rgba(239,68,68,.3);border-radius:22px;padding:36px 32px;max-width:480px;width:100%;position:relative;box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 50px rgba(239,68,68,.07);animation:modal-slide-in .3s cubic-bezier(.22,1,.36,1)}
+.rp-close{position:absolute;top:16px;right:18px;background:none;border:none;color:var(--dim);font-size:1.2rem;cursor:pointer;line-height:1}
+.rp-close:hover{color:var(--text)}
+.rp-title{font-size:1.15rem;font-weight:800;margin-bottom:4px}
+.rp-sub{font-size:.8rem;color:var(--dim);margin-bottom:22px;line-height:1.5}
+.rp-label{font-size:.72rem;font-weight:700;letter-spacing:.5px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;display:block}
+.rp-select,.rp-input,.rp-textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--text);padding:10px 13px;font-size:.88rem;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:14px;transition:border-color .18s}
+.rp-select:focus,.rp-input:focus,.rp-textarea:focus{border-color:rgba(239,68,68,.5)}
+.rp-textarea{resize:vertical;min-height:110px;line-height:1.55}
+.rp-charcount{font-size:.7rem;color:var(--dim);text-align:right;margin-top:-10px;margin-bottom:14px}
+.rp-charcount.ok{color:#4ade80}
+.rp-submit{width:100%;padding:13px;border-radius:12px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-weight:700;font-size:.92rem;border:none;cursor:pointer;font-family:inherit;transition:opacity .2s}
+.rp-submit:hover{opacity:.88}
+.rp-submit:disabled{opacity:.4;cursor:not-allowed}
+.rp-msg{margin-top:12px;font-size:.83rem;text-align:center}
+
+/* ─── ADMIN REPORTS TABLE ─────────────────────────────── */
+.adm-report-row{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:12px;padding:16px 18px;margin-bottom:10px}
+.adm-report-row.unread{border-color:rgba(239,68,68,.25);background:rgba(239,68,68,.04)}
+.adm-report-cat{display:inline-block;background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25);border-radius:999px;padding:2px 10px;font-size:.65rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px}
+.adm-report-desc{font-size:.85rem;color:var(--text);line-height:1.6;margin-bottom:8px}
+.adm-report-meta{font-size:.72rem;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+
 /* ─── REQUEST SUBMIT MODAL ───────────────────────────── */
 .req-overlay{display:none;position:fixed;inset:0;z-index:9995;background:rgba(4,4,13,.9);backdrop-filter:blur(14px);align-items:center;justify-content:center;padding:20px}
 .req-overlay.open{display:flex;animation:overlay-in .25s ease}
@@ -2672,7 +2698,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <span class="footer-sep">·</span>
     <a onclick="openLegal('cookies')">Cookie Policy</a>
     <span class="footer-sep">·</span>
-    <a href="mailto:precizionworkz@gmail.com?subject=Problem%20Report%20—%20Precision%20Workz">Report a Problem</a>
+    <a href="#" onclick="event.preventDefault();openReportModal()">Report a Problem</a>
   </div>
   <div class="footer-copy">© 2026 Precision Workz · Arizona · Web Design · Security & Development</div>
 </footer>
@@ -2811,6 +2837,37 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
 </div>
 
+<!-- REPORT A PROBLEM MODAL -->
+<div id="report-overlay" onclick="if(event.target===this)closeReportModal()">
+  <div class="rp-box">
+    <button class="rp-close" onclick="closeReportModal()">✕</button>
+    <div class="rp-title">Report a Problem</div>
+    <div class="rp-sub">Tell us what's wrong and we'll get back to you as soon as possible.</div>
+
+    <label class="rp-label">Category</label>
+    <select class="rp-select" id="rp-cat">
+      <option value="">— Select a category —</option>
+      <option value="Bug / Error">Bug / Error</option>
+      <option value="Payment Issue">Payment Issue</option>
+      <option value="Account Problem">Account Problem</option>
+      <option value="Site Performance">Site Performance</option>
+      <option value="Security Concern">Security Concern</option>
+      <option value="Feature Request">Feature Request</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <label class="rp-label">Description <span style="font-weight:400;text-transform:none;color:var(--dim)">(min 20 characters)</span></label>
+    <textarea class="rp-textarea" id="rp-desc" placeholder="Describe the problem in detail…" oninput="rpCharCount()"></textarea>
+    <div class="rp-charcount" id="rp-charcount">0 / 20 minimum</div>
+
+    <label class="rp-label">Your Email <span style="font-weight:400;text-transform:none;color:var(--dim)">(optional — for us to reply)</span></label>
+    <input class="rp-input" id="rp-email" type="email" placeholder="you@example.com">
+
+    <button class="rp-submit" id="rp-submit" onclick="submitReport()">Submit Report</button>
+    <div class="rp-msg" id="rp-msg"></div>
+  </div>
+</div>
+
 <!-- REQUEST SUBMIT MODAL -->
 <div class="req-overlay" id="req-overlay" onclick="if(event.target===this)closeReqModal()">
   <div class="req-box" id="req-box">
@@ -2868,6 +2925,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   <div class="admin-body">
     <div class="admin-tabs-row">
       <button class="admin-tab-btn active" id="atab-clients" onclick="adminTab('clients')">Clients</button>
+      <button class="admin-tab-btn" id="atab-reports" onclick="adminTab('reports')">Reports <span id="atab-reports-badge" style="display:none;background:rgba(239,68,68,.18);color:#f87171;border-radius:999px;padding:1px 7px;font-size:.65rem;margin-left:4px">0</span></button>
       <button class="admin-tab-btn" id="atab-monitor" onclick="adminTab('monitor')">Monitor</button>
     </div>
     <div id="adm-clients-view">
@@ -2979,6 +3037,19 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     </div>
 
     </div><!-- /adm-clients-view -->
+
+    <!-- Reports View -->
+    <div id="adm-reports-view" style="display:none;padding-top:20px">
+      <div class="admin-section">
+        <div class="admin-section-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Problem Reports</span>
+          <button class="admin-btn ghost" onclick="adminLoadReports()" style="white-space:nowrap">↻ Refresh</button>
+        </div>
+        <div id="adm-reports-list" style="margin-top:14px">
+          <p style="color:var(--dim);font-size:.85rem">Loading…</p>
+        </div>
+      </div>
+    </div>
 
     <!-- Monitor View -->
     <div id="adm-monitor-view" style="display:none">
@@ -3104,7 +3175,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <div class="legal-footer-links">
         <a onclick="closeLegal('privacy');openLegal('terms')">Terms of Service</a>
         <a onclick="closeLegal('privacy');openLegal('cookies')">Cookie Policy</a>
-        <a href="mailto:precizionworkz@gmail.com?subject=Problem%20Report%20—%20Precision%20Workz">Report a Problem</a>
+        <a href="#" onclick="event.preventDefault();openReportModal()">Report a Problem</a>
       </div>
     </div>
   </div>
@@ -3138,7 +3209,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <div class="legal-footer-links">
         <a onclick="closeLegal('terms');openLegal('privacy')">Privacy Policy</a>
         <a onclick="closeLegal('terms');openLegal('cookies')">Cookie Policy</a>
-        <a href="mailto:precizionworkz@gmail.com?subject=Problem%20Report%20—%20Precision%20Workz">Report a Problem</a>
+        <a href="#" onclick="event.preventDefault();openReportModal()">Report a Problem</a>
       </div>
     </div>
   </div>
@@ -3164,7 +3235,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <div class="legal-footer-links">
         <a onclick="closeLegal('cookies');openLegal('privacy')">Privacy Policy</a>
         <a onclick="closeLegal('cookies');openLegal('terms')">Terms of Service</a>
-        <a href="mailto:precizionworkz@gmail.com?subject=Problem%20Report%20—%20Precision%20Workz">Report a Problem</a>
+        <a href="#" onclick="event.preventDefault();openReportModal()">Report a Problem</a>
       </div>
     </div>
   </div>
@@ -4120,6 +4191,7 @@ function adminLoadData() {
       adminRenderDevs(d.admins, d.primaryAdmin, d.coOwner);
       adminRenderTable(d.clients);
       adminLoadRequests();
+      adminLoadReports();
     })
     .catch(function(e) { console.warn('Admin fetch failed:', e); });
 }
@@ -4398,13 +4470,15 @@ function adminResolveRequest(id) {
 var _monTimer = null;
 
 function adminTab(tab) {
-  ['clients','monitor'].forEach(function(t) {
+  ['clients','reports','monitor'].forEach(function(t) {
     var btn = document.getElementById('atab-' + t);
     if (btn) btn.classList.toggle('active', t === tab);
   });
   var cv = document.getElementById('adm-clients-view');
+  var rv = document.getElementById('adm-reports-view');
   var mv = document.getElementById('adm-monitor-view');
   if (cv) cv.style.display = tab === 'clients' ? '' : 'none';
+  if (rv) rv.style.display = tab === 'reports' ? '' : 'none';
   if (mv) mv.style.display = tab === 'monitor' ? '' : 'none';
   if (tab === 'monitor') {
     monRefresh();
@@ -4412,6 +4486,7 @@ function adminTab(tab) {
   } else {
     if (_monTimer) { clearInterval(_monTimer); _monTimer = null; }
   }
+  if (tab === 'reports') adminLoadReports();
 }
 
 function monFmtBytes(b) {
@@ -4593,6 +4668,107 @@ function monIPReset(ip) {
   fetch('/api/admin/ip-reset', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminEmail:email, targetIP:ip }) })
     .then(function() { monRefreshIPs(); })
     .catch(function() {});
+}
+
+/* ── REPORT MODAL ─────────────────────────────────────── */
+function openReportModal() {
+  var overlay = document.getElementById('report-overlay');
+  if (!overlay) return;
+  document.getElementById('rp-cat').value = '';
+  document.getElementById('rp-desc').value = '';
+  document.getElementById('rp-email').value = '';
+  document.getElementById('rp-msg').textContent = '';
+  document.getElementById('rp-submit').disabled = false;
+  rpCharCount();
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeReportModal() {
+  var overlay = document.getElementById('report-overlay');
+  if (overlay) overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+function rpCharCount() {
+  var val = (document.getElementById('rp-desc').value || '').trim();
+  var el = document.getElementById('rp-charcount');
+  if (!el) return;
+  el.textContent = val.length + ' / 20 minimum';
+  el.className = 'rp-charcount' + (val.length >= 20 ? ' ok' : '');
+}
+function submitReport() {
+  var cat  = document.getElementById('rp-cat').value;
+  var desc = (document.getElementById('rp-desc').value || '').trim();
+  var email = (document.getElementById('rp-email').value || '').trim();
+  var msg = document.getElementById('rp-msg');
+  if (!cat) { msg.style.color = '#f87171'; msg.textContent = 'Please select a category.'; return; }
+  if (desc.length < 20) { msg.style.color = '#f87171'; msg.textContent = 'Description must be at least 20 characters.'; return; }
+  var btn = document.getElementById('rp-submit');
+  btn.disabled = true;
+  msg.style.color = 'var(--dim)'; msg.textContent = 'Submitting…';
+  fetch('/api/report', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ category: cat, description: desc, replyEmail: email || null })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.error) { msg.style.color = '#f87171'; msg.textContent = d.error; btn.disabled = false; return; }
+    msg.style.color = '#4ade80'; msg.textContent = '✓ Report submitted. Thank you!';
+    setTimeout(closeReportModal, 2000);
+  }).catch(function() { msg.style.color = '#f87171'; msg.textContent = 'Network error. Please try again.'; btn.disabled = false; });
+}
+
+/* ── ADMIN REPORTS ─────────────────────────────────────── */
+var _adminReports = [];
+function adminLoadReports() {
+  var email = adminGetEmail();
+  if (!email) return;
+  fetch('/api/admin/reports?adminEmail=' + encodeURIComponent(email))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      _adminReports = d.reports || [];
+      adminRenderReports();
+      var unread = _adminReports.filter(function(r) { return !r.read; }).length;
+      var badge = document.getElementById('atab-reports-badge');
+      if (badge) { badge.style.display = unread ? 'inline' : 'none'; badge.textContent = unread; }
+    })
+    .catch(function() {});
+}
+function adminRenderReports() {
+  var el = document.getElementById('adm-reports-list');
+  if (!el) return;
+  if (!_adminReports.length) {
+    el.innerHTML = '<p style="color:var(--dim);font-size:.85rem">No reports yet.</p>';
+    return;
+  }
+  el.innerHTML = _adminReports.map(function(r) {
+    var dt = new Date(r.createdAt).toLocaleString();
+    var replyHtml = r.replyEmail
+      ? '<span>Reply: <a href="mailto:' + r.replyEmail + '" style="color:var(--cyan2)">' + r.replyEmail + '</a></span>'
+      : '<span style="color:var(--dim)">No reply email</span>';
+    return '<div class="adm-report-row' + (r.read ? '' : ' unread') + '">'
+      + '<div class="adm-report-cat">' + r.category + '</div>'
+      + '<div class="adm-report-desc">' + r.description.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'
+      + '<div class="adm-report-meta">'
+        + replyHtml
+        + '<span>IP: <span style="font-family:monospace">' + (r.ip || '—') + '</span></span>'
+        + '<span>' + dt + '</span>'
+        + (r.read ? '' : '<button class="admin-btn ghost" style="padding:3px 10px;font-size:.72rem;margin-left:auto" onclick="adminMarkReportRead(\'' + r.id + '\')">Mark Read</button>')
+        + '<button class="admin-btn danger" style="padding:3px 10px;font-size:.72rem' + (r.read ? ';margin-left:auto' : '') + '" onclick="adminDeleteReport(\'' + r.id + '\')">Delete</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+function adminMarkReportRead(id) {
+  var email = adminGetEmail();
+  if (!email) return;
+  fetch('/api/admin/report-read', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminEmail:email, id:id }) })
+    .then(function() { adminLoadReports(); });
+}
+function adminDeleteReport(id) {
+  if (!confirm('Delete this report?')) return;
+  var email = adminGetEmail();
+  if (!email) return;
+  fetch('/api/admin/report-delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminEmail:email, id:id }) })
+    .then(function() { adminLoadReports(); });
 }
 
 /* Check admin status — shows/hides Admin nav button */

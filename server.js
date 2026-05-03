@@ -10,42 +10,76 @@ let _reqTotal = 0;
 const _reqLog = []; // {ts, path, ms, ip}
 
 // ── IP RATE LIMITER ───────────────────────────────────────
+// risk levels: low | medium | high
+// bypass: true = skip all rate limiting
+// forcedRisk: 'low'|'medium'|'high'|null = admin override
 const _ipTracker = new Map();
-const IP_RESET_MS = 2 * 60 * 60 * 1000;
+const IP_RESET_MS = 2 * 60 * 60 * 1000; // 2 hours
+let _ipKVLoaded = false;
+
+async function ensureIPKVLoaded() {
+  if (_ipKVLoaded) return;
+  _ipKVLoaded = true;
+  try {
+    const stored = await kvRead('ip_tracker', {});
+    for (const [ip, rec] of Object.entries(stored)) {
+      if (!_ipTracker.has(ip)) _ipTracker.set(ip, { ...rec, reloads: [] });
+    }
+  } catch(e) {}
+}
+
+function persistIPTracker() {
+  const obj = {};
+  const now = Date.now();
+  _ipTracker.forEach((rec, ip) => {
+    // Drop entries inactive for 2h+ with no active cooldown, bypass, or forcedRisk
+    if (!rec.bypass && !rec.forcedRisk && rec.cooldownUntil < now && (now - rec.lastSeen) > IP_RESET_MS) return;
+    obj[ip] = { risk: rec.risk, violations: rec.violations, cooldownUntil: rec.cooldownUntil, firstSeen: rec.firstSeen, lastSeen: rec.lastSeen, bypass: rec.bypass || false, forcedRisk: rec.forcedRisk || null };
+  });
+  kvWrite('ip_tracker', obj).catch(e => console.error('[IP persist]', e.message));
+}
 
 function getIPRecord(ip) {
   const now = Date.now();
   if (!_ipTracker.has(ip)) {
-    _ipTracker.set(ip, { risk:'low', reloads:[], cooldownUntil:0, violations:0, firstSeen:now, lastSeen:now });
+    _ipTracker.set(ip, { risk:'low', reloads:[], cooldownUntil:0, violations:0, firstSeen:now, lastSeen:now, bypass:false, forcedRisk:null });
   }
   const rec = _ipTracker.get(ip);
-  const lastActivity = rec.reloads.length ? rec.reloads[rec.reloads.length-1] : rec.firstSeen;
-  if (now - lastActivity > IP_RESET_MS && rec.cooldownUntil < now) {
-    rec.risk = 'low'; rec.reloads = []; rec.violations = 0; rec.cooldownUntil = 0;
+  // Auto-reset if 2h inactive, no cooldown, bypass, or forced risk
+  if (!rec.bypass && !rec.forcedRisk && rec.cooldownUntil < now && (now - rec.lastSeen) > IP_RESET_MS) {
+    rec.risk = 'low'; rec.reloads = []; rec.violations = 0;
   }
   return rec;
 }
 
-function checkAndRecordVisit(ip) {
+async function checkAndRecordVisit(ip) {
+  await ensureIPKVLoaded();
   const now = Date.now();
   const rec = getIPRecord(ip);
   rec.lastSeen = now;
+  // Bypassed IPs skip all rate limiting
+  if (rec.bypass) return { risk: 'bypass', cooldown: 0 };
+  // Active cooldown
   if (rec.cooldownUntil > now) {
-    return { risk: rec.risk, cooldown: Math.ceil((rec.cooldownUntil - now) / 1000) };
+    return { risk: rec.forcedRisk || rec.risk, cooldown: Math.ceil((rec.cooldownUntil - now) / 1000) };
   }
   rec.reloads.push(now);
   rec.reloads = rec.reloads.filter(t => now - t < 120000);
+  // High: >20 reloads in 60s → 5 min cooldown
   if (rec.reloads.filter(t => now - t < 60000).length > 20) {
-    rec.violations++; rec.risk = 'medium';
+    rec.violations++; rec.risk = 'high';
     rec.cooldownUntil = now + 300000;
-    return { risk: 'medium', cooldown: 300 };
+    persistIPTracker();
+    return { risk: rec.forcedRisk || 'high', cooldown: 300 };
   }
+  // Medium: >10 reloads in 30s → 1 min cooldown
   if (rec.reloads.filter(t => now - t < 30000).length > 10) {
     rec.violations++; rec.risk = 'medium';
     rec.cooldownUntil = now + 60000;
-    return { risk: 'medium', cooldown: 60 };
+    persistIPTracker();
+    return { risk: rec.forcedRisk || 'medium', cooldown: 60 };
   }
-  return { risk: rec.risk, cooldown: 0 };
+  return { risk: rec.forcedRisk || rec.risk, cooldown: 0 };
 }
 
 const PORT = process.env.PORT || 4000;
@@ -68,6 +102,8 @@ const STRIPE_SECRET = process.env.STRIPE_SECRET || '';
 const STRIPE_PUB    = process.env.STRIPE_PUB    || '';
 const GOOGLE_CLIENT = process.env.GOOGLE_CLIENT_ID || '';
 const PRIMARY_ADMIN = 'precisionworkz9@gmail.com';
+// CO_OWNER_EMAIL is set via Vercel env var — never hardcoded here
+const CO_OWNER_EMAIL = (process.env.CO_OWNER_EMAIL || '').toLowerCase().trim();
 
 try { stripe = require('stripe')(STRIPE_SECRET); }
 catch(e) { console.warn('stripe module not found — run: npm install stripe'); }
@@ -125,23 +161,29 @@ async function kvWrite(key, value) {
     } catch(e) { console.error('[KV write]', key, e.message); }
     return;
   }
-  // Local file fallback for dev
-  fs.writeFileSync(path.join(DIR, key + '.json'), JSON.stringify(value, null, 2));
+  // Local file fallback for dev (Vercel filesystem is read-only; skip silently)
+  try { fs.writeFileSync(path.join(DIR, key + '.json'), JSON.stringify(value, null, 2)); }
+  catch(e) { console.warn('[KV fallback write] skipped —', e.code || e.message); }
 }
 
 const readAdmins   = () => kvRead('admins',   [PRIMARY_ADMIN]);
 const readClients  = () => kvRead('clients',  {});
 const readRequests = () => kvRead('requests', []);
+const readReports  = () => kvRead('reports',  []);
 const readUsers    = () => kvRead('users',    {});
 const writeAdmins   = (v) => kvWrite('admins',   v);
 const writeClients  = (v) => kvWrite('clients',  v);
 const writeRequests = (v) => kvWrite('requests', v);
+const writeReports  = (v) => kvWrite('reports',  v);
 const writeUsers    = (v) => kvWrite('users',    v);
 
 async function isAdmin(email) {
   if (!email) return false;
+  const e = email.toLowerCase().trim();
+  if (e === PRIMARY_ADMIN.toLowerCase()) return true;
+  if (CO_OWNER_EMAIL && e === CO_OWNER_EMAIL) return true;
   const admins = await readAdmins();
-  return admins.map(e => e.toLowerCase()).includes(email.toLowerCase().trim());
+  return admins.map(a => a.toLowerCase()).includes(e);
 }
 
 function hashPassword(password) {
@@ -208,7 +250,29 @@ async function handleAPI(req, res, urlPath) {
   if (urlPath === '/api/config')  return json(res, 200, { stripeKey: STRIPE_PUB, googleClientId: GOOGLE_CLIENT });
 
   if (urlPath === '/api/gate-check' && req.method === 'POST') {
-    return json(res, 200, checkAndRecordVisit(req.realIP));
+    return json(res, 200, await checkAndRecordVisit(req.realIP));
+  }
+
+  if (urlPath === '/api/report' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { category, description, replyEmail } = body;
+      if (!category || !description || description.trim().length < 20) {
+        return json(res, 400, { error: 'Category and a description of at least 20 characters are required.' });
+      }
+      const report = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        category, description: description.trim(),
+        replyEmail: (replyEmail || '').trim() || null,
+        ip: req.realIP, createdAt: new Date().toISOString(), read: false,
+      };
+      const reports = await readReports();
+      reports.unshift(report);
+      if (reports.length > 500) reports.length = 500;
+      await writeReports(reports);
+      console.log('[Report submitted]', report.category, 'from', report.replyEmail || report.ip);
+      return json(res, 200, { ok: true });
+    } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
   if (urlPath === '/api/request' && req.method === 'POST') {
@@ -288,11 +352,32 @@ async function handleAPI(req, res, urlPath) {
 
     if (urlPath === '/api/admin/data') {
       const [clients, admins] = await Promise.all([readClients(), readAdmins()]);
-      return json(res, 200, { clients, admins, primaryAdmin: PRIMARY_ADMIN });
+      // Build full admin list including permanent co-owner (never removable via UI)
+      const allAdmins = [...new Set([PRIMARY_ADMIN, ...(CO_OWNER_EMAIL ? [CO_OWNER_EMAIL] : []), ...admins.filter(a => a.toLowerCase() !== PRIMARY_ADMIN.toLowerCase() && a.toLowerCase() !== CO_OWNER_EMAIL)])];
+      return json(res, 200, { clients, admins: allAdmins, primaryAdmin: PRIMARY_ADMIN, coOwner: CO_OWNER_EMAIL || null });
     }
 
     if (urlPath === '/api/admin/requests') {
       return json(res, 200, { requests: await readRequests(), ownerEmail: OWNER_EMAIL });
+    }
+
+    if (urlPath === '/api/admin/reports') {
+      return json(res, 200, { reports: await readReports() });
+    }
+
+    if (urlPath === '/api/admin/report-read' && req.method === 'POST') {
+      const { id } = body;
+      const reports = await readReports();
+      const idx = reports.findIndex(r => r.id === id);
+      if (idx >= 0) { reports[idx].read = true; await writeReports(reports); }
+      return json(res, 200, { ok: true });
+    }
+
+    if (urlPath === '/api/admin/report-delete' && req.method === 'POST') {
+      const { id } = body;
+      const reports = (await readReports()).filter(r => r.id !== id);
+      await writeReports(reports);
+      return json(res, 200, { ok: true });
     }
 
     if (urlPath === '/api/admin/update-request' && req.method === 'POST') {
@@ -371,15 +456,51 @@ async function handleAPI(req, res, urlPath) {
       return json(res, 200, { ok: true, admins });
     }
 
+    // IP management endpoints
+    if (urlPath === '/api/admin/ip-bypass' && req.method === 'POST') {
+      const { targetIP, bypass } = body;
+      if (!targetIP) return json(res, 400, { error: 'targetIP required' });
+      await ensureIPKVLoaded();
+      const rec = getIPRecord(targetIP);
+      rec.bypass = !!bypass;
+      persistIPTracker();
+      return json(res, 200, { ok: true });
+    }
+
+    if (urlPath === '/api/admin/ip-force' && req.method === 'POST') {
+      const { targetIP, risk } = body;
+      if (!targetIP) return json(res, 400, { error: 'targetIP required' });
+      await ensureIPKVLoaded();
+      const rec = getIPRecord(targetIP);
+      rec.forcedRisk = ['low','medium','high'].includes(risk) ? risk : null;
+      if (rec.forcedRisk) rec.risk = rec.forcedRisk;
+      persistIPTracker();
+      return json(res, 200, { ok: true });
+    }
+
+    if (urlPath === '/api/admin/ip-reset' && req.method === 'POST') {
+      const { targetIP } = body;
+      if (!targetIP) return json(res, 400, { error: 'targetIP required' });
+      await ensureIPKVLoaded();
+      const rec = getIPRecord(targetIP);
+      rec.risk = 'low'; rec.reloads = []; rec.violations = 0;
+      rec.cooldownUntil = 0; rec.bypass = false; rec.forcedRisk = null;
+      persistIPTracker();
+      return json(res, 200, { ok: true });
+    }
+
     if (urlPath === '/api/admin/metrics') {
+      await ensureIPKVLoaded();
       const mem = process.memoryUsage();
       const now = Date.now();
       const ipList = [];
       _ipTracker.forEach(function(rec, ip) {
         ipList.push({
-          ip, risk: rec.risk, reloads: rec.reloads.length, violations: rec.violations,
+          ip, risk: rec.forcedRisk || rec.risk,
+          reloads: rec.reloads.length, violations: rec.violations,
           cooldownLeft: rec.cooldownUntil > now ? Math.ceil((rec.cooldownUntil - now) / 1000) : 0,
           firstSeen: rec.firstSeen, lastSeen: rec.lastSeen,
+          bypass: rec.bypass || false, forcedRisk: rec.forcedRisk || null,
         });
       });
       ipList.sort((a, b) => b.lastSeen - a.lastSeen);
@@ -503,7 +624,13 @@ async function handler(req, res) {
   };
 
   let urlPath = req.url.split('?')[0];
-  if (urlPath.startsWith('/api/')) { handleAPI(req, res, urlPath); return; }
+  if (urlPath.startsWith('/api/')) {
+    handleAPI(req, res, urlPath).catch(e => {
+      console.error('[API error]', urlPath, e.message);
+      if (!res.headersSent) json(res, 500, { error: 'Internal server error' });
+    });
+    return;
+  }
 
   if (urlPath === '/verify-email') {
     const qs = new URLSearchParams(req.url.split('?')[1] || '');
