@@ -3,6 +3,11 @@ const crypto = require('crypto');
 const http = require('http');
 const fs   = require('fs');
 const path = require('path');
+const os   = require('os');
+
+// Request telemetry (in-memory, resets on restart)
+let _reqTotal = 0;
+const _reqLog = []; // {ts, path, ms}
 
 const PORT = process.env.PORT || 4000;
 const DIR  = __dirname;
@@ -324,6 +329,22 @@ async function handleAPI(req, res, urlPath) {
       return json(res, 200, { ok: true, admins });
     }
 
+    // GET /api/admin/metrics
+    if (urlPath === '/api/admin/metrics') {
+      const mem = process.memoryUsage();
+      return json(res, 200, {
+        uptime:      process.uptime(),
+        memory:      { heapUsed: mem.heapUsed, heapTotal: mem.heapTotal, rss: mem.rss },
+        osMemTotal:  os.totalmem(),
+        osMemFree:   os.freemem(),
+        loadAvg:     os.loadavg(),
+        cpuCount:    os.cpus().length,
+        nodeVersion: process.version,
+        reqTotal:    _reqTotal,
+        reqLog:      _reqLog.slice(-30),
+      });
+    }
+
     return json(res, 404, { error: 'admin route not found' });
   }
 
@@ -417,6 +438,15 @@ async function handleAPI(req, res, urlPath) {
 
 // ── REQUEST HANDLER ────────────────────────────────────────
 function handler(req, res) {
+  const _t0 = Date.now();
+  _reqTotal++;
+  const _origEnd = res.end.bind(res);
+  res.end = function() {
+    _reqLog.push({ ts: Date.now(), path: req.url.split('?')[0], ms: Date.now() - _t0 });
+    if (_reqLog.length > 120) _reqLog.shift();
+    res.end = _origEnd;
+    return _origEnd.apply(res, arguments);
+  };
   let urlPath = req.url.split('?')[0];
   if (urlPath.startsWith('/api/')) { handleAPI(req, res, urlPath); return; }
   if (urlPath === '/verify-email') {
