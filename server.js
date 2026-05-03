@@ -342,6 +342,7 @@ async function handleAPI(req, res, urlPath) {
         nodeVersion: process.version,
         reqTotal:    _reqTotal,
         reqLog:      _reqLog.slice(-30),
+        behindCloudflare: !!req.headers['cf-connecting-ip'],
       });
     }
 
@@ -440,9 +441,14 @@ async function handleAPI(req, res, urlPath) {
 function handler(req, res) {
   const _t0 = Date.now();
   _reqTotal++;
+  // Real visitor IP — Cloudflare passes it in CF-Connecting-IP
+  req.realIP = req.headers['cf-connecting-ip']
+    || (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+    || req.socket.remoteAddress
+    || 'unknown';
   const _origEnd = res.end.bind(res);
   res.end = function() {
-    _reqLog.push({ ts: Date.now(), path: req.url.split('?')[0], ms: Date.now() - _t0 });
+    _reqLog.push({ ts: Date.now(), path: req.url.split('?')[0], ms: Date.now() - _t0, ip: req.realIP });
     if (_reqLog.length > 120) _reqLog.shift();
     res.end = _origEnd;
     return _origEnd.apply(res, arguments);
