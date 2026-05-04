@@ -84,6 +84,10 @@ async function checkAndRecordVisit(ip) {
 
 const PORT = process.env.PORT || 4000;
 const DIR  = __dirname;
+const DATA_DIR = os.tmpdir(); // writable on Vercel Lambda; use KV for true persistence
+
+// In-memory data cache — survives within a Lambda invocation, falls back to KV/file on cold start
+const _cache = {};
 
 // Parse .env file
 (function loadEnv() {
@@ -136,34 +140,54 @@ const KV_URL   = process.env.KV_REST_API_URL   || '';
 const KV_TOKEN = process.env.KV_REST_API_TOKEN || '';
 
 async function kvRead(key, fallback) {
+  // Serve from in-memory cache if available
+  if (_cache[key] !== undefined) return _cache[key];
   if (KV_URL && KV_TOKEN) {
     try {
       const r = await fetch(KV_URL + '/get/' + encodeURIComponent(key), {
         headers: { Authorization: 'Bearer ' + KV_TOKEN },
       });
+      if (!r.ok) throw new Error('KV HTTP ' + r.status);
       const d = await r.json();
-      return (d.result !== null && d.result !== undefined) ? JSON.parse(d.result) : fallback;
-    } catch(e) { console.error('[KV read]', key, e.message); return fallback; }
+      const val = (d.result !== null && d.result !== undefined) ? JSON.parse(d.result) : fallback;
+      _cache[key] = val;
+      return val;
+    } catch(e) { console.error('[KV read]', key, e.message); }
   }
-  // Local file fallback for dev
+  // File fallback — DATA_DIR is writable on Lambda (tmpdir); DIR is read-only
+  try {
+    const val = JSON.parse(fs.readFileSync(path.join(DATA_DIR, key + '.json'), 'utf8'));
+    _cache[key] = val;
+    return val;
+  } catch(e) {}
+  // Dev fallback: try project root too
   try { return JSON.parse(fs.readFileSync(path.join(DIR, key + '.json'), 'utf8')); }
   catch(e) { return fallback; }
 }
 
 async function kvWrite(key, value) {
+  _cache[key] = value; // Always update in-memory cache immediately
   if (KV_URL && KV_TOKEN) {
-    try {
-      await fetch(KV_URL + '/set/' + encodeURIComponent(key), {
-        method: 'POST',
-        headers: { Authorization: 'Bearer ' + KV_TOKEN, 'Content-Type': 'application/json' },
-        body: JSON.stringify(JSON.stringify(value)),
-      });
-    } catch(e) { console.error('[KV write]', key, e.message); }
+    const r = await fetch(KV_URL + '/set/' + encodeURIComponent(key), {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + KV_TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify(JSON.stringify(value)),
+    });
+    if (!r.ok) {
+      const msg = 'KV write failed: HTTP ' + r.status;
+      console.error('[KV write]', key, msg);
+      throw new Error(msg);
+    }
     return;
   }
-  // Local file fallback for dev (Vercel filesystem is read-only; skip silently)
+  // File fallback — try DATA_DIR (tmpdir, writable on Lambda) then project root (dev)
+  try { fs.writeFileSync(path.join(DATA_DIR, key + '.json'), JSON.stringify(value, null, 2)); return; }
+  catch(e) { console.warn('[KV fallback tmpdir write] failed —', e.code || e.message); }
   try { fs.writeFileSync(path.join(DIR, key + '.json'), JSON.stringify(value, null, 2)); }
-  catch(e) { console.warn('[KV fallback write] skipped —', e.code || e.message); }
+  catch(e) {
+    console.error('[KV fallback write] all methods failed for', key, '—', e.code || e.message);
+    throw new Error('Persistence unavailable — configure KV_REST_API_URL and KV_REST_API_TOKEN in Vercel settings');
+  }
 }
 
 const readAdmins   = () => kvRead('admins',   [PRIMARY_ADMIN]);
@@ -415,8 +439,12 @@ async function handleAPI(req, res, urlPath) {
         updatedAt:   new Date().toISOString(),
         addedAt:     clients[key]?.addedAt || new Date().toISOString(),
       };
-      await writeClients(clients);
-      return json(res, 200, { ok: true, client: clients[key] });
+      try {
+        await writeClients(clients);
+        return json(res, 200, { ok: true, client: clients[key] });
+      } catch(e) {
+        return json(res, 500, { error: 'Save failed: ' + e.message });
+      }
     }
 
     if (urlPath === '/api/admin/remove-client' && req.method === 'POST') {

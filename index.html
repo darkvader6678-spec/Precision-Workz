@@ -772,6 +772,13 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .acct-sub-card.active-basic{border-color:rgba(124,58,237,.3);background:rgba(124,58,237,.05)}
 .acct-sub-card.active-gold{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.05);animation:acct-gold-pulse 4s ease-in-out infinite}
 @keyframes acct-gold-pulse{0%,100%{box-shadow:0 0 20px rgba(245,158,11,.07)}50%{box-shadow:0 0 40px rgba(245,158,11,.16),0 0 80px rgba(245,158,11,.06)}}
+.acct-pkg-card{border-radius:13px;padding:16px;border:1px solid var(--border);background:var(--card)}
+.acct-pkg-card.pkg-titanium{border-color:rgba(203,213,225,.35);background:linear-gradient(135deg,rgba(30,30,50,.9),rgba(15,15,35,.95));animation:pkg-titanium-pulse 5s ease-in-out infinite}
+@keyframes pkg-titanium-pulse{0%,100%{box-shadow:0 0 20px rgba(148,163,184,.08)}50%{box-shadow:0 0 50px rgba(148,163,184,.18),0 0 100px rgba(124,58,237,.07)}}
+.acct-pkg-card.pkg-diamond{border-color:rgba(6,182,212,.35);background:rgba(6,182,212,.05);animation:pkg-diamond-pulse 5s ease-in-out infinite}
+@keyframes pkg-diamond-pulse{0%,100%{box-shadow:0 0 20px rgba(6,182,212,.07)}50%{box-shadow:0 0 40px rgba(6,182,212,.16),0 0 80px rgba(6,182,212,.06)}}
+.acct-pkg-card.pkg-premium{border-color:rgba(124,58,237,.35);background:rgba(124,58,237,.06)}
+.acct-pkg-card.pkg-starter{border-color:rgba(99,102,241,.25);background:rgba(99,102,241,.04)}
 .acct-sub-name{font-size:1rem;font-weight:700;margin-bottom:3px}
 .acct-sub-detail{font-size:.78rem;color:var(--muted);margin-bottom:12px}
 .acct-upgrade-btn{width:100%;padding:10px;border-radius:8px;background:linear-gradient(135deg,var(--purple),var(--cyan));color:#fff;font-weight:700;font-size:.85rem;border:none;cursor:pointer;font-family:inherit;transition:opacity .2s,transform .2s}
@@ -4330,6 +4337,7 @@ function closeDashboard(){
 
 function renderDashboard(user){
   var sub=user.sub||null;
+  var pkg=user.packageType||null;
   var body=document.getElementById('acct-body');
 
   /* avatar */
@@ -4345,6 +4353,29 @@ function renderDashboard(user){
     subHtml='<div class="acct-sub-card active-basic"><div class="acct-sub-name">Basic Managed</div><div class="acct-sub-detail">Active subscription</div><button class="acct-upgrade-btn" onclick="closeDashboard();document.getElementById(\'subscription\').scrollIntoView({behavior:\'smooth\'})">Upgrade to Gold →</button></div>';
   } else {
     subHtml='<div class="acct-sub-card active-gold"><div class="acct-sub-name" style="background:linear-gradient(135deg,var(--gold2),#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Gold Managed</div><div class="acct-sub-detail">Active · Priority support</div></div>';
+  }
+
+  /* project package card */
+  var pkgHtml='';
+  if(pkg){
+    var pkgLabel={'titanium':'Titanium','diamond':'Diamond','premium':'Premium','starter':'Starter'}[pkg]||(pkg.charAt(0).toUpperCase()+pkg.slice(1));
+    var pkgClass='pkg-'+pkg;
+    var pkgNameStyle='';
+    var pkgDetail='';
+    if(pkg==='titanium'){
+      pkgNameStyle='background:linear-gradient(135deg,#e2e8f0,#94a3b8,#cbd5e1,#f1f5f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:1.1rem';
+      pkgDetail='Custom design + full-stack build + security hardening';
+    } else if(pkg==='diamond'){
+      pkgNameStyle='background:linear-gradient(135deg,#06b6d4,#818cf8,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:1.05rem';
+      pkgDetail='Advanced site + security layer + CMS + priority support';
+    } else if(pkg==='premium'){
+      pkgNameStyle='background:linear-gradient(135deg,#7c3aed,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent';
+      pkgDetail='Professional site with custom features + SEO';
+    } else {
+      pkgNameStyle='color:#818cf8';
+      pkgDetail='Starter project package';
+    }
+    pkgHtml='<div><div class="acct-section-label">Project Package</div><div class="acct-pkg-card '+pkgClass+'"><div class="acct-sub-name" style="'+pkgNameStyle+'">'+pkgLabel+' Package</div><div class="acct-sub-detail" style="margin-bottom:0">'+pkgDetail+'</div></div></div>';
   }
 
   /* request panel */
@@ -4372,6 +4403,7 @@ function renderDashboard(user){
   body.innerHTML=
     '<div class="acct-user-card">'+avHtml+'<div><div class="acct-user-name-lg">'+user.name+'</div><div class="acct-user-email-lg">'+user.email+'</div></div></div>'+
     '<div><div class="acct-section-label">Subscription</div>'+subHtml+'</div>'+
+    pkgHtml+
     reqHtml+
     '<div><div class="acct-section-label" style="margin-bottom:8px">My Requests</div><div id="client-req-list"><p style="color:var(--dim);font-size:.82rem;text-align:center;padding:16px">Loading…</p></div></div>'+
     '<button class="acct-signout-btn" onclick="signOut()">Sign Out</button>';
