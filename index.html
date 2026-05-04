@@ -21,7 +21,7 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Precision Workz","url":"https://precisonworkz.net"}</script>
 <script src="https://js.stripe.com/v3/"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://www.google.com/recaptcha/api.js?render=6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h"></script>
+<script src="https://www.google.com/recaptcha/enterprise.js?render=6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -4162,8 +4162,8 @@ function sgVerified(){
       enterBtn.classList.add('sg-btn-ready');
     }
     setTimeout(function(){timerDone=true;tryUnlock();},1500);
-    grecaptcha.ready(function(){
-      grecaptcha.execute('6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h',{action:'visit'})
+    grecaptcha.enterprise.ready(function(){
+      grecaptcha.enterprise.execute('6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h',{action:'visit'})
         .then(function(){recaptchaDone=true;tryUnlock();})
         .catch(function(){recaptchaDone=true;tryUnlock();});
     });
@@ -5393,15 +5393,15 @@ function monTestRecaptcha() {
   statusEl.textContent = 'Testing…';
   detailEl.style.display = 'none';
   var t0 = Date.now();
-  if (typeof grecaptcha === 'undefined') {
+  if (typeof grecaptcha === 'undefined' || !grecaptcha.enterprise) {
     statusEl.style.color = '#f87171';
-    statusEl.textContent = '✗ reCAPTCHA script not loaded';
+    statusEl.textContent = '✗ reCAPTCHA Enterprise script not loaded';
     detailEl.style.display = '';
-    detailEl.textContent = 'The reCAPTCHA JS API failed to load. Check for ad blockers or network errors in the browser console.';
+    detailEl.textContent = 'grecaptcha.enterprise is not available. Check for ad blockers or network errors in the browser console (Network tab → filter "enterprise.js").';
     return;
   }
-  grecaptcha.ready(function() {
-    grecaptcha.execute('6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h', {action: 'admin_test'})
+  grecaptcha.enterprise.ready(function() {
+    grecaptcha.enterprise.execute('6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h', {action: 'admin_test'})
       .then(function(token) {
         var ms = Date.now() - t0;
         statusEl.style.color = '#4ade80';
