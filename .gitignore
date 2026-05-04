@@ -1,4 +1,5 @@
 .env
+.env.*
 node_modules/
 package-lock.json
 clients.json
@@ -6,4 +7,6 @@ requests.json
 admins.json
 users.json
 .cache_ggshield
+.vercel
+
 .vercel

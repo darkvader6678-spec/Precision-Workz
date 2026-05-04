@@ -235,35 +235,43 @@ async function kvWrite(key, value) {
   }
 }
 
-const readAdmins = () => kvRead('admins', [PRIMARY_ADMIN]);
+function _parseKV(raw, fallback) {
+  // If KV returned a string (double-encoded), parse it again
+  if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch(e) { return fallback; } }
+  return (raw === null || raw === undefined) ? fallback : raw;
+}
+
+async function readAdmins() {
+  const raw = _parseKV(await kvRead('admins', [PRIMARY_ADMIN]), [PRIMARY_ADMIN]);
+  return Array.isArray(raw) ? raw : [PRIMARY_ADMIN];
+}
 
 async function readRequests() {
-  const raw = await kvRead('requests', []);
+  const raw = _parseKV(await kvRead('requests', []), []);
   return Array.isArray(raw) ? raw : [];
 }
 
 async function readReports() {
-  const raw = await kvRead('reports', []);
+  const raw = _parseKV(await kvRead('reports', []), []);
   return Array.isArray(raw) ? raw : [];
 }
 
 const _emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 async function readClients() {
-  let raw = await kvRead('clients', {});
-  // Convert legacy array format to object
+  let raw = _parseKV(await kvRead('clients', {}), {});
   if (Array.isArray(raw)) {
     const obj = {};
     raw.forEach(c => { if (c && c.email && _emailRe.test(c.email)) obj[c.email.toLowerCase()] = c; });
     raw = obj;
   }
   if (!raw || typeof raw !== 'object') raw = {};
-  // Strip any non-email keys (catches 'undefined', numeric indices, etc.)
-  for (const k of Object.keys(raw)) {
-    if (!_emailRe.test(k)) delete raw[k];
-  }
+  for (const k of Object.keys(raw)) { if (!_emailRe.test(k)) delete raw[k]; }
   return raw;
 }
-const readUsers    = () => kvRead('users',    {});
+async function readUsers() {
+  const raw = _parseKV(await kvRead('users', {}), {});
+  return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+}
 const writeAdmins   = (v) => kvWrite('admins',   v);
 const writeClients  = (v) => kvWrite('clients',  v);
 const writeRequests = (v) => kvWrite('requests', v);

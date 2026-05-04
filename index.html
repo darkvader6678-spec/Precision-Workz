@@ -1264,7 +1264,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 </head>
 <body>
 
-<!-- SPLASH SCREEN -->
 <div id="splash-screen">
   <div class="splash-logo-wrap">
     <span class="pw-logo-ins" data-pw-sz="90"></span>
@@ -1275,13 +1274,11 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
 </div>
 
-<!-- SCROLL PROGRESS -->
 <div id="scroll-progress"></div>
 
 <canvas id="bg-canvas"></canvas>
 <div id="cursor-glow"></div>
 
-<!-- SECURITY GATE -->
 <div id="security-gate">
   <div class="sg-topbar"></div>
   <div class="sg-corner tl"></div><div class="sg-corner tr"></div>
@@ -1312,9 +1309,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
 </div>
 
-<!-- PW LOGO — self-contained SVGs injected by pwLogo() below, one per use site -->
-
-<!-- NAV -->
 <nav>
   <a href="#" class="nav-logo">
     <span class="pw-logo-ins" data-pw-sz="36"></span>
@@ -1331,16 +1325,16 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <li><a href="#" class="nav-demo-link" onclick="openDemoModal();return false">Free Demo</a></li>
   </ul>
   <div class="nav-auth-area">
-    <!-- Admin panel button (only visible to admins) -->
+    
     <button class="admin-nav-btn" id="nav-admin-btn" onclick="openAdmin()">
       <i class="ph-bold ph-shield-star" style="font-size:.85rem"></i> Admin
     </button>
-    <!-- Google Sign-In / Email Sign-In button -->
+    
     <button class="nav-login-btn" id="nav-login-btn" onclick="openSignIn()">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
       Sign In
     </button>
-    <!-- Avatar pill (shown when logged in) -->
+    
     <div class="nav-avatar-pill" id="nav-avatar-pill" onclick="openDashboard()">
       <div class="nav-av-init" id="nav-av-init">U</div>
       <img class="nav-av-img" id="nav-av-img" src="" alt="" style="display:none">
@@ -1364,7 +1358,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   <a href="#" style="color:var(--cyan2)" onclick="closeMobileNav();openDemoModal();return false">Schedule Free Demo</a>
 </div>
 
-<!-- HERO -->
 <section class="hero" id="home">
   <div class="hero-grid"></div>
   <div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
@@ -1402,7 +1395,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   <div class="hero-scroll"><span>Scroll</span><div class="scroll-line"></div></div>
 </section>
 
-<!-- STATS -->
 <div class="stats-bar">
   <div class="stat fade-up"><div class="stat-num" data-target="3">0</div><div class="stat-label">Projects Delivered</div></div>
   <div class="stat fade-up" style="transition-delay:.1s"><div class="stat-num" data-target="100">0</div><div class="stat-label">Client Satisfaction</div></div>
@@ -1418,13 +1410,11 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   <div class="stat fade-up" style="transition-delay:.3s"><div class="stat-num" data-target="24">0</div><div class="stat-label">Hour Support</div></div>
 </div>
 
-<!-- STATEMENT -->
 <section class="statement-section fade-up">
   <p class="statement-text">We don't start<br>from templates.<br><span class="grad-text">We start from scratch.</span></p>
 </section>
 <div class="glow-divider"></div>
 
-<!-- RISK STATS -->
 <section class="risk-section">
   <div class="section-header centered fade-up">
     <div class="section-tag">The Stakes Are Real</div>
@@ -1457,7 +1447,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
 <div class="glow-divider"></div>
 
-<!-- SERVICES -->
 <section id="services">
   <div class="section-header centered fade-up">
     <div class="section-tag">What We Do</div>
@@ -1488,7 +1477,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
 <div class="glow-divider"></div>
 
-<!-- COMMON PROBLEMS -->
 <section style="padding:80px 5%">
   <div class="section-header centered fade-up">
     <div class="section-tag">Sound Familiar?</div>
@@ -1537,7 +1525,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
 <div class="glow-divider"></div>
 
-<!-- PORTFOLIO -->
 <section id="portfolio">
   <div class="portfolio-header section-header centered fade-up">
     <div class="section-tag">Selected Work</div>
@@ -1546,7 +1533,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
   <div class="work-list">
 
-    <!-- WORK 01 -->
     <div class="work-item fade-up">
       <div class="work-visual" data-cta="">
         <div class="work-visual-inner" style="background:linear-gradient(145deg,#050510,#0a0a1e,#0d0d24)">
@@ -1608,7 +1594,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
     </div>
 
-    <!-- WORK 02 — reversed -->
     <div class="work-item fade-up" style="direction:rtl">
       <div class="work-info" style="direction:ltr">
         <div class="work-index">002 — Security Build</div>
@@ -1668,7 +1653,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
     </div>
 
-    <!-- WORK 03 — your project CTA -->
     <div class="work-item fade-up">
       <div class="work-visual" data-cta="Start a Project →">
         <div class="work-visual-inner" style="background:linear-gradient(145deg,#070410,#0e0618,#130820)">
@@ -1740,7 +1724,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
 <div class="glow-divider"></div>
 
-<!-- EXAMPLE WEBSITES -->
 <section id="examples">
   <div class="section-header centered fade-up">
     <div class="section-tag">What You Get</div>
@@ -1749,7 +1732,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
   <div class="ex-grid">
 
-    <!-- STARTER EXAMPLE -->
     <div class="ex-card fade-left">
       <div class="ex-browser-chrome">
         <div class="ex-dot r"></div><div class="ex-dot y"></div><div class="ex-dot g"></div>
@@ -1759,12 +1741,12 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         <div style="background:linear-gradient(160deg,#070714,#0c0c1e);width:100%;height:100%;position:relative;overflow:hidden">
           <div style="position:absolute;width:220px;height:220px;background:rgba(124,58,237,.18);border-radius:50%;filter:blur(55px);top:-60px;left:-40px"></div>
           <div style="position:absolute;width:120px;height:120px;background:rgba(6,182,212,.1);border-radius:50%;filter:blur(40px);bottom:-10px;right:20px"></div>
-          <!-- nav -->
+          
           <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.07);position:relative;z-index:1;background:rgba(4,4,13,.5)">
             <div style="display:flex;gap:6px;align-items:center"><div style="width:16px;height:16px;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:3px"></div><div style="width:52px;height:4px;background:rgba(255,255,255,.55);border-radius:3px"></div></div>
             <div style="display:flex;gap:6px"><div style="width:18px;height:2px;border-radius:2px;background:rgba(255,255,255,.2)"></div><div style="width:18px;height:2px;border-radius:2px;background:rgba(255,255,255,.2)"></div><div style="width:18px;height:2px;border-radius:2px;background:rgba(255,255,255,.2)"></div><div style="width:40px;height:14px;border-radius:4px;background:linear-gradient(135deg,#7c3aed,#06b6d4);margin-left:4px"></div></div>
           </div>
-          <!-- hero -->
+          
           <div style="padding:16px 14px 10px;text-align:center;position:relative;z-index:1">
             <div style="width:36px;height:36px;background:rgba(124,58,237,.25);border:1px solid rgba(124,58,237,.3);border-radius:10px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:3px;border-radius:2px;background:rgba(124,58,237,.8)"></div></div>
             <div style="width:62%;height:7px;background:linear-gradient(90deg,rgba(255,255,255,.9),rgba(255,255,255,.5));border-radius:4px;margin:0 auto 5px"></div>
@@ -1776,7 +1758,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
               <div style="width:50px;height:18px;border-radius:6px;background:transparent;border:1px solid rgba(255,255,255,.22)"></div>
             </div>
           </div>
-          <!-- service cards -->
+          
           <div style="display:flex;gap:5px;padding:0 12px 10px;position:relative;z-index:1">
             <div style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 6px">
               <div style="width:14px;height:14px;border-radius:4px;background:rgba(124,58,237,.4);margin:0 auto 5px"></div>
@@ -1797,7 +1779,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
               <div style="width:65%;height:2px;background:rgba(255,255,255,.07);border-radius:2px;margin:0 auto"></div>
             </div>
           </div>
-          <!-- contact section mini -->
+          
           <div style="margin:0 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:8px 10px;position:relative;z-index:1">
             <div style="width:45%;height:3px;background:rgba(255,255,255,.3);border-radius:2px;margin-bottom:6px"></div>
             <div style="display:flex;gap:5px;margin-bottom:4px"><div style="flex:1;height:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:4px"></div><div style="flex:1;height:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:4px"></div></div>
@@ -1816,7 +1798,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
     </div>
 
-    <!-- PREMIUM EXAMPLE -->
     <div class="ex-card ex-premium fade-scale" style="transition-delay:.08s">
       <div class="ex-browser-chrome">
         <div class="ex-dot r"></div><div class="ex-dot y"></div><div class="ex-dot g"></div>
@@ -1826,12 +1807,12 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         <div style="background:linear-gradient(160deg,#060612,#0a0a20,#0d0820);width:100%;height:100%;position:relative;overflow:hidden">
           <div style="position:absolute;width:200px;height:200px;background:rgba(124,58,237,.22);border-radius:50%;filter:blur(60px);top:-50px;right:-40px"></div>
           <div style="position:absolute;width:140px;height:140px;background:rgba(6,182,212,.15);border-radius:50%;filter:blur(50px);bottom:-20px;left:-10px"></div>
-          <!-- nav with glassmorphism -->
+          
           <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid rgba(124,58,237,.2);background:rgba(4,4,13,.55);backdrop-filter:blur(10px);position:relative;z-index:1">
             <div style="display:flex;gap:7px;align-items:center"><div style="width:17px;height:17px;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:4px;box-shadow:0 0 8px rgba(245,158,11,.4)"></div><div style="width:60px;height:4px;background:linear-gradient(90deg,rgba(255,255,255,.8),rgba(34,211,238,.6));border-radius:3px"></div></div>
             <div style="display:flex;gap:7px;align-items:center"><div style="width:18px;height:2px;border-radius:2px;background:rgba(255,255,255,.22)"></div><div style="width:18px;height:2px;border-radius:2px;background:rgba(255,255,255,.22)"></div><div style="width:18px;height:2px;border-radius:2px;background:rgba(255,255,255,.22)"></div><div style="width:46px;height:15px;border-radius:5px;background:linear-gradient(135deg,#7c3aed,#06b6d4);margin-left:5px;box-shadow:0 0 10px rgba(124,58,237,.45)"></div></div>
           </div>
-          <!-- hero with badge -->
+          
           <div style="padding:12px 14px 8px;position:relative;z-index:1">
             <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:999px;padding:3px 9px;margin-bottom:7px"><div style="width:5px;height:5px;border-radius:50%;background:#22c55e;box-shadow:0 0 5px #22c55e"></div><div style="width:50px;height:3px;border-radius:2px;background:rgba(124,58,237,.7)"></div></div>
             <div style="width:78%;height:8px;background:linear-gradient(90deg,rgba(255,255,255,.92),rgba(34,211,238,.7));border-radius:4px;margin-bottom:4px"></div>
@@ -1840,7 +1821,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
             <div style="width:72%;height:2px;background:rgba(255,255,255,.09);border-radius:2px;margin-bottom:9px"></div>
             <div style="display:flex;gap:5px;margin-bottom:8px"><div style="width:64px;height:18px;border-radius:6px;background:linear-gradient(135deg,#7c3aed,#06b6d4);box-shadow:0 0 12px rgba(124,58,237,.4)"></div><div style="width:54px;height:18px;border-radius:6px;background:transparent;border:1px solid rgba(255,255,255,.22)"></div></div>
           </div>
-          <!-- admin preview strip -->
+          
           <div style="background:rgba(4,4,13,.7);border-top:1px solid rgba(124,58,237,.15);padding:6px 10px;position:relative;z-index:1">
             <div style="font-size:.42rem;font-weight:700;letter-spacing:1px;color:rgba(124,58,237,.7);text-transform:uppercase;margin-bottom:5px">Admin Panel</div>
             <div style="display:flex;gap:5px">
@@ -1858,7 +1839,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
               </div>
             </div>
           </div>
-          <!-- stats row -->
+          
           <div style="display:flex;gap:0;border-top:1px solid rgba(255,255,255,.05);position:relative;z-index:1">
             <div style="flex:1;text-align:center;padding:5px;border-right:1px solid rgba(255,255,255,.04)"><div style="width:28px;height:6px;border-radius:3px;background:linear-gradient(90deg,#7c3aed,#22d3ee);margin:0 auto 2px"></div><div style="width:50%;height:2px;border-radius:2px;background:rgba(255,255,255,.1);margin:0 auto"></div></div>
             <div style="flex:1;text-align:center;padding:5px;border-right:1px solid rgba(255,255,255,.04)"><div style="width:28px;height:6px;border-radius:3px;background:linear-gradient(90deg,#059669,#4ade80);margin:0 auto 2px"></div><div style="width:50%;height:2px;border-radius:2px;background:rgba(255,255,255,.1);margin:0 auto"></div></div>
@@ -1877,7 +1858,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
     </div>
 
-    <!-- DIAMOND EXAMPLE -->
     <div class="ex-card ex-diamond fade-right" style="transition-delay:.12s">
       <div class="ex-browser-chrome">
         <div class="ex-dot r"></div><div class="ex-dot y"></div><div class="ex-dot g"></div>
@@ -1929,7 +1909,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
 <div class="glow-divider"></div>
 
-<!-- PRICING -->
 <section id="pricing">
   <div class="section-header centered fade-up">
     <div class="section-tag">Packages & Pricing</div>
@@ -1945,7 +1924,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <button class="ptab" onclick="switchTab('assess')">Security Assessment</button>
   </div>
 
-  <!-- ALL INCLUSIVE -->
   <div class="pricing-panel active" id="tab-all">
     <div class="pricing-grid">
 
@@ -2023,7 +2001,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <p class="price-note-bottom">Looking for the highest tier? <a onclick="document.getElementById('titan-section').scrollIntoView({behavior:'smooth'})">See the Titanium package below ↓</a></p>
   </div>
 
-  <!-- WEB DESIGN ONLY -->
   <div class="pricing-panel" id="tab-design">
     <div class="pricing-grid">
       <div class="price-card fade-up">
@@ -2079,7 +2056,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <p class="price-note-bottom">Want design + security + development together? <a onclick="switchTab('all')">See All-Inclusive packages.</a></p>
   </div>
 
-  <!-- SECURITY ONLY -->
   <div class="pricing-panel" id="tab-security">
     <div class="pricing-grid">
       <div class="price-card fade-up">
@@ -2140,7 +2116,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <p class="price-note-bottom">Security is included in all <a onclick="switchTab('all')">All-Inclusive packages.</a></p>
   </div>
 
-  <!-- DEVELOPMENT ONLY -->
   <div class="pricing-panel" id="tab-dev">
     <div class="pricing-grid">
       <div class="price-card fade-up">
@@ -2198,7 +2173,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <p class="price-note-bottom">All development packages can be bundled with design & security. <a onclick="switchTab('all')">See All-Inclusive pricing.</a></p>
   </div>
 
-  <!-- SECURITY ASSESSMENT -->
   <div class="pricing-panel" id="tab-assess">
     <div class="pricing-grid">
 
@@ -2268,7 +2242,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <p class="price-note-bottom">Assessment findings can be remediated as a separate engagement. <a href="#contact">Contact us to bundle assessment + fixes.</a></p>
   </div>
 
-  <!-- TITANIUM CALLOUT -->
   <div class="titanium-callout fade-up" id="titan-section">
     <div class="titan-scan"></div>
     <div class="titan-inner">
@@ -2320,7 +2293,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
 <div class="glow-divider"></div>
 
-<!-- COMPARISON TABLE -->
 <section class="compare-section">
   <div class="section-header centered fade-up">
     <div class="section-tag">How We Stack Up</div>
@@ -2434,7 +2406,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
 <div class="glow-divider"></div>
 
-<!-- MANAGED SUBSCRIPTION PLANS -->
 <section id="subscription">
   <div class="section-header centered fade-up">
     <div class="section-tag">Managed Hosting Plans</div>
@@ -2453,7 +2424,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
   <div class="sub-grid fade-up">
 
-    <!-- BASIC MANAGED -->
     <div class="sub-card">
       <div class="sub-tier-label basic">Basic Managed</div>
       <div class="sub-price-row">
@@ -2478,7 +2448,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <button class="sub-btn sub-ghost" onclick="openPayModal('basic','Basic Managed',49)">Get Started →</button>
     </div>
 
-    <!-- GOLD MANAGED -->
     <div class="sub-card sub-gold">
       <div class="sub-tier-label gold">Gold Managed</div>
       <div class="sub-price-row">
@@ -2513,7 +2482,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
 <div class="glow-divider"></div>
 
-<!-- PROCESS -->
 <section id="process">
   <div class="section-header centered fade-up" style="margin-bottom:72px">
     <div class="section-tag">How We Work</div>
@@ -2554,7 +2522,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
 <div class="glow-divider"></div>
 
-<!-- WHY US -->
 <section id="why">
   <div class="why-grid">
     <div>
@@ -2635,7 +2602,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
 <div class="glow-divider"></div>
 
-<!-- TRUST BADGES -->
 <section class="trust-section">
   <div class="section-header centered fade-up">
     <div class="section-tag">Our Commitments</div>
@@ -2688,7 +2654,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
 <div class="glow-divider"></div>
 
-<!-- STACK -->
 <section id="stack" style="padding:100px 5% 0">
   <div class="section-header centered fade-up" style="margin-bottom:60px">
     <div class="section-tag">What We Master</div>
@@ -2711,7 +2676,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
 <div class="glow-divider"></div>
 
-<!-- FAQ -->
 <section class="faq-section">
   <div class="section-header centered fade-up">
     <div class="section-tag">FAQ</div>
@@ -2756,9 +2720,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
 <div class="glow-divider"></div>
 
-
-
-<!-- CONTACT -->
 <section id="contact"> 
   <div class="section-header centered fade-up" style="margin-bottom:48px">
     <div class="section-tag">Get In Touch</div>
@@ -2832,7 +2793,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
           </div>
         </div>
       </div>
-      <!-- SUBSCRIPTION UPSELL — shown when package > Basic is selected -->
+      
       <div class="sub-upsell" id="contact-sub-upsell">
         <div class="sub-upsell-header">
           <div class="sub-upsell-icon">🔄</div>
@@ -2882,7 +2843,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
 </section>
 
-<!-- CTA BANNER -->
 <section class="cta-banner fade-up">
   <span class="cta-banner-eyebrow" id="cta-eyebrow">Ready when you are</span>
   <h2 class="cta-banner-title" id="cta-title">Let's Build<br><span class="grad-text">Something Great</span></h2>
@@ -2892,7 +2852,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
 </section>
 
-<!-- FOOTER -->
 <footer>
   <div class="footer-logo" style="display:flex;align-items:center;gap:10px;-webkit-text-fill-color:unset">
     <span class="pw-logo-ins" data-pw-sz="32" style="filter:drop-shadow(0 0 6px rgba(245,158,11,.3));display:inline-block;line-height:0"></span>
@@ -2916,13 +2875,11 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   <div class="footer-copy">© 2026 Precision Workz · Arizona · Web Design · Security & Development</div>
 </footer>
 
-<!-- FLOATING DEMO BUTTON -->
 <button class="demo-fab" onclick="openDemoModal()">
   <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;flex-shrink:0;animation:pulse-dot 2s infinite"></span>
   Schedule Free Demo
 </button>
 
-<!-- DEMO MODAL -->
 <div class="demo-overlay" id="demo-overlay" onclick="if(event.target===this)closeDemoModal()">
   <div class="demo-box">
     <button class="modal-close-btn" onclick="closeDemoModal()">✕ Close</button>
@@ -2953,7 +2910,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
 </div>
 
-<!-- PAYMENT MODAL (multi-step) -->
 <div class="pay-overlay" id="pay-overlay" onclick="if(event.target===this)closePayModal()">
   <div class="pay-box">
     <button class="modal-close-btn" onclick="closePayModal()">✕ Close</button>
@@ -2965,13 +2921,11 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     </div>
     <div class="pay-divider"></div>
 
-    <!-- Step progress bar -->
     <div class="pay-steps-bar">
       <div class="pay-step-seg seg-active" id="pay-seg-1"></div>
       <div class="pay-step-seg" id="pay-seg-2"></div>
     </div>
 
-    <!-- STEP 1: Confirm info -->
     <div class="pay-step-panel active" id="pay-step-1">
       <p style="font-size:.82rem;color:var(--muted);margin-bottom:18px;line-height:1.65">Confirm your details before we proceed to payment. This information will be used for your subscription account.</p>
       <div class="form-group"><label style="font-size:.76rem;font-weight:600;color:var(--muted);letter-spacing:.4px;display:block;margin-bottom:6px">Full Name</label>
@@ -2986,7 +2940,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </button>
     </div>
 
-    <!-- STEP 2: Card payment -->
     <div class="pay-step-panel" id="pay-step-2">
       <p style="font-size:.82rem;color:var(--muted);margin-bottom:18px;line-height:1.65">Enter your card details below. Your subscription will start immediately after payment.</p>
       <label style="font-size:.76rem;font-weight:600;color:var(--muted);letter-spacing:.4px;display:block;margin-bottom:8px">Card Details</label>
@@ -3004,21 +2957,20 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
 </div>
 
-<!-- SIGN-IN PROMPT MODAL -->
 <div class="signin-overlay" id="signin-overlay" onclick="if(event.target===this)closeSignIn()">
   <div class="signin-box">
     <button class="modal-close-btn" onclick="closeSignIn()">✕ Close</button>
     <div style="font-size:2rem;margin-bottom:12px">🔐</div>
     <h2 style="font-size:1.6rem;font-weight:800;letter-spacing:-1px;margin-bottom:10px">Sign In First</h2>
     <p style="font-size:.88rem;color:var(--muted);line-height:1.72;margin-bottom:24px">Create a free account to subscribe, track your services, and submit support requests.</p>
-    <!-- Google Sign-In -->
+    
     <div id="google-signin-btn-wrap" style="margin-bottom:12px"></div>
     <button class="google-signin-btn" onclick="triggerGoogleLogin()">
       <svg class="google-icon" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
       Continue with Google
     </button>
     <div class="signin-or">or</div>
-    <!-- Email Auth -->
+    
     <div class="ef-tabs">
       <button class="ef-tab active" id="ef-tab-login" onclick="efSwitch('login')">Log In</button>
       <button class="ef-tab" id="ef-tab-register" onclick="efSwitch('register')">Register</button>
@@ -3038,7 +2990,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
 </div>
 
-<!-- ACCOUNT DASHBOARD PANEL -->
 <div class="acct-backdrop" id="acct-backdrop" onclick="closeDashboard()"></div>
 <div class="acct-drawer" id="acct-drawer">
   <div class="acct-header">
@@ -3046,11 +2997,10 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <button class="acct-close" onclick="closeDashboard()">✕</button>
   </div>
   <div class="acct-body" id="acct-body">
-    <!-- dynamically rendered by renderDashboard() -->
+    
   </div>
 </div>
 
-<!-- REPORT A PROBLEM MODAL -->
 <div id="report-overlay" onclick="if(event.target===this)closeReportModal()">
   <div class="rp-box">
     <div class="rp-header">
@@ -3089,7 +3039,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
 </div>
 
-<!-- REQUEST SUBMIT MODAL -->
 <div class="req-overlay" id="req-overlay" onclick="if(event.target===this)closeReqModal()">
   <div class="req-box" id="req-box">
     <button class="modal-close-btn" onclick="closeReqModal()">✕ Close</button>
@@ -3106,7 +3055,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
 </div>
 
-<!-- MUSIC WIDGET -->
 <div class="music-widget" id="music-widget" style="display:none">
   <div class="music-popup" id="music-popup" style="display:none">
     <div class="music-popup-header">
@@ -3123,7 +3071,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </button>
 </div>
 
-<!-- COOKIE BANNER -->
 <div class="cookie-banner" id="cookie-banner">
   <div class="cookie-text">
     We use cookies to improve your experience and analyze site usage. See our <a onclick="openLegal('privacy')">Privacy Policy</a> and <a onclick="openLegal('cookies')">Cookie Policy</a>.
@@ -3134,7 +3081,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
 </div>
 
-<!-- ADMIN PANEL -->
 <div class="admin-overlay" id="admin-overlay">
   <div class="admin-topbar">
     <div class="admin-topbar-left">
@@ -3152,10 +3098,8 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     </div>
     <div id="adm-clients-view">
 
-    <!-- KV Status Banner -->
     <div id="adm-kv-banner" style="display:none;margin-bottom:16px;padding:12px 16px;border-radius:10px;font-size:.8rem;font-weight:600;line-height:1.55"></div>
 
-    <!-- Stats -->
     <div class="admin-stats-row">
       <div class="admin-stat-card"><div class="admin-stat-num" id="adm-stat-total">0</div><div class="admin-stat-label">Total Clients</div></div>
       <div class="admin-stat-card"><div class="admin-stat-num" id="adm-stat-basic">0</div><div class="admin-stat-label">Basic Managed</div></div>
@@ -3164,7 +3108,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <div class="admin-stat-card"><div class="admin-stat-num" id="adm-stat-reqs" style="color:var(--cyan2)">0</div><div class="admin-stat-label">Open Requests</div></div>
     </div>
 
-    <!-- Add / Update Client -->
     <div class="admin-section">
       <div class="admin-section-title">Add / Update Client</div>
       <div class="admin-form-grid">
@@ -3213,7 +3156,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <div class="admin-msg" id="adm-form-msg"></div>
     </div>
 
-    <!-- Developer Access -->
     <div class="admin-section">
       <div class="admin-section-title">Developer Access</div>
       <div id="adm-devs-list" style="margin-bottom:14px"></div>
@@ -3224,7 +3166,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <div class="admin-msg" id="adm-dev-msg"></div>
     </div>
 
-    <!-- Client List -->
     <div class="admin-section">
       <div class="admin-section-title">All Clients</div>
       <div class="admin-search-row">
@@ -3245,7 +3186,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
     </div>
 
-    <!-- Support Requests -->
     <div class="admin-section">
       <div class="admin-section-title" style="display:flex;align-items:center;justify-content:space-between">
         <span>Support Requests</span>
@@ -3263,9 +3203,8 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
     </div>
 
-    </div><!-- /adm-clients-view -->
+    </div>
 
-    <!-- Reports View -->
     <div id="adm-reports-view" style="display:none;padding-top:20px">
       <div class="admin-section">
         <div class="admin-section-title" style="display:flex;align-items:center;justify-content:space-between">
@@ -3278,7 +3217,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
     </div>
 
-    <!-- Progress View -->
     <div id="adm-progress-view" style="display:none;padding-top:20px">
       <div class="admin-section">
         <div class="admin-section-title">Project Progress</div>
@@ -3304,7 +3242,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
     </div>
 
-    <!-- Monitor View -->
     <div id="adm-monitor-view" style="display:none">
       <div class="mon-header">
         <div class="mon-live-badge"><span class="mon-live-dot"></span>LIVE</div>
@@ -3355,7 +3292,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
           <div id="mon-req-log"><div style="color:var(--dim);font-size:.8rem">Loading…</div></div>
         </div>
       </div>
-      <!-- IP Tracker -->
+      
       <div class="mon-card" style="margin-top:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
           <div class="mon-card-title">Visitor IPs</div>
@@ -3381,7 +3318,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         <div class="mon-refresh-info" id="mon-last-refresh">Auto-refreshes every 5s</div>
       </div>
 
-      <!-- reCAPTCHA Diagnostic -->
       <div class="mon-card" style="margin-top:12px">
         <div class="mon-card-title">reCAPTCHA Diagnostic</div>
         <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">
@@ -3398,7 +3334,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
 </div>
 
-<!-- RETURN VISITOR PROMO POPUP -->
 <div class="promo-overlay" id="promo-overlay">
   <div class="promo-box">
     <button class="promo-close" onclick="closePromo()">✕</button>
@@ -3414,7 +3349,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
 </div>
 
-<!-- LEGAL MODALS -->
 <div class="legal-overlay" id="legal-privacy">
   <div class="legal-box">
     <button class="legal-close" onclick="closeLegal('privacy')">✕ Close</button>
