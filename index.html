@@ -2832,6 +2832,18 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
 
       <div class="form-group"><label>Tell Us About Your Project</label><textarea id="cfMsg" placeholder="Describe what you need — the more detail, the better we can help…"></textarea></div>
+      <div class="form-group">
+        <label>Where Did You Hear About Us?</label>
+        <select id="cfSource" class="admin-input" style="width:100%;padding:11px 14px;border-radius:10px;font-size:.88rem;font-family:inherit;outline:none">
+          <option value="" disabled selected>Select…</option>
+          <option>Google Search</option>
+          <option>Social Media (Instagram / Facebook / TikTok)</option>
+          <option>Word of Mouth / Referral</option>
+          <option>Online Ad</option>
+          <option>YouTube</option>
+          <option>Other</option>
+        </select>
+      </div>
       <div class="promo-input-wrap">
         <input class="promo-input" id="cfPromo" type="text" placeholder="Promo code (optional)" maxlength="20">
         <button class="promo-apply-btn" type="button" onclick="applyContactPromo()">Apply</button>
@@ -2902,6 +2914,18 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
           <option>Managed Hosting / Subscription</option>
           <option>Security Assessment</option>
           <option>Not Sure — General Walkthrough</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Where Did You Hear About Us?</label>
+        <select id="demo-source">
+          <option value="" disabled selected>Select…</option>
+          <option>Google Search</option>
+          <option>Social Media (Instagram / Facebook / TikTok)</option>
+          <option>Word of Mouth / Referral</option>
+          <option>Online Ad</option>
+          <option>YouTube</option>
+          <option>Other</option>
         </select>
       </div>
       <button class="demo-submit-btn" onclick="submitDemo()">Book Free Demo →</button>
@@ -3512,11 +3536,12 @@ function submitDemo(){
   var fname=(document.getElementById('demo-fname').value||'').trim();
   var email=(document.getElementById('demo-email').value||'').trim();
   var interest=(document.getElementById('demo-interest').value||'').trim();
+  var source=(document.getElementById('demo-source').value||'').trim();
   var msg=document.getElementById('demo-form-msg');
   if(!fname||!email){msg.style.color='#f87171';msg.textContent='Please enter your name and email.';return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){msg.style.color='#f87171';msg.textContent='Please enter a valid email address.';return}
   var btn=document.querySelector('.demo-submit-btn');btn.disabled=true;btn.textContent='Booking…';
-  fetch('/api/demo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:fname,email:email,interest:interest})}).catch(function(){});
+  fetch('/api/demo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:fname,email:email,interest:interest,source:source})}).catch(function(){});
   setTimeout(function(){
     msg.style.color='#4ade80';
     msg.textContent='✓ We\'ll be in touch within 24 hours to confirm your demo!';
@@ -4183,11 +4208,12 @@ function submitContact(){
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){out.style.color='#f87171';out.textContent='Please enter a valid email address.';return}
   if(!phone){out.style.color='#f87171';out.textContent='Phone number is required.';return}
   var btn=document.querySelector('.form-submit');btn.disabled=true;btn.textContent='Sending…';
-  var details='Package: '+(service||'Not specified')+'\nPhone: '+phone+(promoCode?'\nPromo: '+promoCode:'')+'\n\n'+msg;
+  var source=(document.getElementById('cfSource').value||'').trim();
+  var details='Package: '+(service||'Not specified')+'\nPhone: '+phone+(source?'\nHeard via: '+source:'')+(promoCode?'\nPromo: '+promoCode:'')+'\n\n'+msg;
   fetch('/api/request',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({email:email,name:name+' '+last,type:'quote',details:details,phone:phone,service:service,promoCode:promoCode||null,sub:null})
+    body:JSON.stringify({email:email,name:name+' '+last,type:'quote',details:details,phone:phone,service:service,source:source||null,promoCode:promoCode||null,sub:null})
   }).then(function(r){return r.json()}).then(function(d){
     btn.disabled=false;btn.textContent='Send Message →';
     if(d.ok){
@@ -4199,6 +4225,7 @@ function submitContact(){
       document.getElementById('cfPhone').value='';
       document.getElementById('cfMsg').value='';
       document.getElementById('cfPromo').value='';
+      document.getElementById('cfSource').value='';
     } else {
       out.style.color='#f87171';
       out.textContent=d.error||'Submission failed. Email us directly at precizionworkz@gmail.com';
