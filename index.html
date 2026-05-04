@@ -4138,7 +4138,7 @@ function sgVerified(){
   }
 
   function startScan(){
-    var recaptchaDone=false,timerDone=false;
+    var captchaToken=null,recaptchaDone=false,timerDone=false;
     requestAnimationFrame(function(){
       barEl.style.transition='width 1.5s linear';
       barEl.style.width='92%';
@@ -4152,8 +4152,7 @@ function sgVerified(){
     steps.forEach(function(s){
       setTimeout(function(){if(!timerDone){statusEl.style.opacity='0';setTimeout(function(){statusEl.textContent=s.t;statusEl.style.opacity='1';},120);}},s.delay);
     });
-    function tryUnlock(){
-      if(!recaptchaDone||!timerDone)return;
+    function showSuccess(){
       barEl.style.transition='width .4s ease';
       barEl.style.width='100%';
       barEl.style.background='linear-gradient(90deg,#059669,#4ade80)';
@@ -4162,11 +4161,30 @@ function sgVerified(){
       statusEl.style.color='#4ade80';
       enterBtn.classList.add('sg-btn-ready');
     }
+    function showBlocked(){
+      barEl.style.transition='width .4s ease';
+      barEl.style.width='100%';
+      barEl.style.background='linear-gradient(90deg,#dc2626,#ef4444)';
+      barEl.style.boxShadow='0 0 10px rgba(239,68,68,.4)';
+      statusEl.textContent='✗ Bot signature detected — access denied';
+      statusEl.style.color='#f87171';
+      if(subtitleEl){subtitleEl.textContent='Security Check Failed';subtitleEl.style.color='#f87171';}
+    }
+    function tryUnlock(){
+      if(!recaptchaDone||!timerDone)return;
+      fetch('/api/verify-captcha',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token:captchaToken})
+      }).then(function(r){return r.json();})
+        .then(function(d){d&&d.ok===false?showBlocked():showSuccess();})
+        .catch(function(){showSuccess();}); // fail open on network error
+    }
     setTimeout(function(){timerDone=true;tryUnlock();},1500);
     grecaptcha.enterprise.ready(function(){
       grecaptcha.enterprise.execute('6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h',{action:'visit'})
-        .then(function(){recaptchaDone=true;tryUnlock();})
-        .catch(function(){recaptchaDone=true;tryUnlock();});
+        .then(function(t){captchaToken=t;recaptchaDone=true;tryUnlock();})
+        .catch(function(){captchaToken=null;recaptchaDone=true;tryUnlock();});
     });
   }
 })();

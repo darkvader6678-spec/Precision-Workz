@@ -109,6 +109,34 @@ const PRIMARY_ADMIN = 'precisionworkz9@gmail.com';
 // CO_OWNER_EMAIL is set via Vercel env var — never hardcoded here
 const CO_OWNER_EMAIL = (process.env.CO_OWNER_EMAIL || '').toLowerCase().trim();
 
+// reCAPTCHA Enterprise server-side assessment
+const RECAPTCHA_API_KEY    = process.env.RECAPTCHA_API_KEY    || '';
+const RECAPTCHA_PROJECT_ID = process.env.RECAPTCHA_PROJECT_ID || '';
+const RECAPTCHA_SITE_KEY   = '6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h';
+
+async function verifyRecaptchaToken(token) {
+  if (!RECAPTCHA_API_KEY || !RECAPTCHA_PROJECT_ID || !token) return true; // fail open if not configured
+  try {
+    const r = await fetch(
+      'https://recaptchaenterprise.googleapis.com/v1/projects/' + RECAPTCHA_PROJECT_ID + '/assessments?key=' + RECAPTCHA_API_KEY,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: { token, siteKey: RECAPTCHA_SITE_KEY, expectedAction: 'visit' } }),
+      }
+    );
+    if (!r.ok) { console.warn('[reCAPTCHA] assess HTTP', r.status); return true; }
+    const d = await r.json();
+    const valid = !d.tokenProperties || d.tokenProperties.valid !== false;
+    const score = (d.riskAnalysis && d.riskAnalysis.score != null) ? d.riskAnalysis.score : 0.5;
+    console.log('[reCAPTCHA] valid:', valid, 'score:', score);
+    return valid && score >= 0.5;
+  } catch(e) {
+    console.warn('[reCAPTCHA] assess error:', e.message);
+    return true; // fail open on any error
+  }
+}
+
 try { stripe = require('stripe')(STRIPE_SECRET); }
 catch(e) { console.warn('stripe module not found — run: npm install stripe'); }
 
@@ -315,6 +343,16 @@ async function handleAPI(req, res, urlPath) {
 
   if (urlPath === '/api/gate-check' && req.method === 'POST') {
     return json(res, 200, await checkAndRecordVisit(req.realIP));
+  }
+
+  if (urlPath === '/api/verify-captcha' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const passed = await verifyRecaptchaToken(body.token);
+      return json(res, 200, { ok: passed });
+    } catch(e) {
+      return json(res, 200, { ok: true }); // fail open
+    }
   }
 
   if (urlPath === '/api/report' && req.method === 'POST') {
