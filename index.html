@@ -3376,6 +3376,19 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         <button class="admin-btn ghost" onclick="monRefresh()">↻ Refresh Now</button>
         <div class="mon-refresh-info" id="mon-last-refresh">Auto-refreshes every 5s</div>
       </div>
+
+      <!-- reCAPTCHA Diagnostic -->
+      <div class="mon-card" style="margin-top:12px">
+        <div class="mon-card-title">reCAPTCHA Diagnostic</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">
+          <div style="font-size:.78rem;color:var(--muted)">Site key: <code style="background:rgba(255,255,255,.06);padding:2px 7px;border-radius:5px;font-size:.72rem;color:var(--cyan2)">6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h</code></div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="admin-btn primary" style="padding:8px 18px" onclick="monTestRecaptcha()">▶ Run reCAPTCHA Test</button>
+          <div id="mon-captcha-status" style="font-size:.82rem;color:var(--dim)">Click to test</div>
+        </div>
+        <div id="mon-captcha-detail" style="margin-top:10px;display:none;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:8px;font-size:.75rem;font-family:monospace;color:var(--muted);word-break:break-all;line-height:1.7"></div>
+      </div>
     </div>
 
   </div>
@@ -5362,6 +5375,43 @@ function monSetRing(id, pct) {
   if (!el) return;
   var circ = 163.4;
   el.style.strokeDashoffset = circ - (circ * Math.min(Math.max(pct,0),100) / 100);
+}
+
+function monTestRecaptcha() {
+  var statusEl = document.getElementById('mon-captcha-status');
+  var detailEl = document.getElementById('mon-captcha-detail');
+  statusEl.style.color = 'var(--dim)';
+  statusEl.textContent = 'Testing…';
+  detailEl.style.display = 'none';
+  var t0 = Date.now();
+  if (typeof grecaptcha === 'undefined') {
+    statusEl.style.color = '#f87171';
+    statusEl.textContent = '✗ reCAPTCHA script not loaded';
+    detailEl.style.display = '';
+    detailEl.textContent = 'The reCAPTCHA JS API failed to load. Check for ad blockers or network errors in the browser console.';
+    return;
+  }
+  grecaptcha.ready(function() {
+    grecaptcha.execute('6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h', {action: 'admin_test'})
+      .then(function(token) {
+        var ms = Date.now() - t0;
+        statusEl.style.color = '#4ade80';
+        statusEl.textContent = '✓ Token received in ' + ms + 'ms — reCAPTCHA is working';
+        detailEl.style.display = '';
+        detailEl.innerHTML = '<span style="color:var(--dim)">Token (first 40 chars):</span> ' + token.slice(0, 40) + '…<br>'
+          + '<span style="color:var(--dim)">Length:</span> ' + token.length + ' chars<br>'
+          + '<span style="color:var(--dim)">Domain:</span> ' + location.hostname + '<br>'
+          + '<span style="color:var(--dim)">Note:</span> "Incomplete" in Google Console clears after the first real visitor triggers this on your live domain.';
+      })
+      .catch(function(err) {
+        statusEl.style.color = '#f87171';
+        statusEl.textContent = '✗ reCAPTCHA failed — ' + (err.message || err);
+        detailEl.style.display = '';
+        detailEl.innerHTML = '<span style="color:#f87171">Error:</span> ' + (err.message || JSON.stringify(err)) + '<br>'
+          + '<span style="color:var(--dim)">Domain:</span> ' + location.hostname + '<br>'
+          + '<span style="color:var(--dim)">Fix:</span> Make sure <b>' + location.hostname + '</b> is added to the allowed domains at recaptcha.google.com/admin';
+      });
+  });
 }
 
 function monRefresh() {
