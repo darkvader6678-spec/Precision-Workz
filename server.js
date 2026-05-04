@@ -194,7 +194,18 @@ async function kvRead(key, fallback) {
       });
       if (!r.ok) throw new Error('KV HTTP ' + r.status);
       const d = await r.json();
-      const val = (d.result !== null && d.result !== undefined) ? JSON.parse(d.result) : fallback;
+      let val = fallback;
+      if (d.result !== null && d.result !== undefined) {
+        if (typeof d.result === 'string') {
+          // Upstash returns stored strings already JSON-encoded in the result field.
+          // Our kvWrite double-encodes, so one parse gets us back to the object.
+          try { val = JSON.parse(d.result); } catch(e) { val = d.result; }
+          // If still a string (triple-encoded edge case), parse once more
+          if (typeof val === 'string') { try { val = JSON.parse(val); } catch(e) {} }
+        } else {
+          val = d.result; // Already a JS object/array/number
+        }
+      }
       _cache[key] = val;
       return val;
     } catch(e) { console.error('[KV read]', key, e.message); }
@@ -222,6 +233,12 @@ async function kvWrite(key, value) {
       const msg = 'KV write failed: HTTP ' + r.status;
       console.error('[KV write]', key, msg);
       throw new Error(msg);
+    }
+    // Upstash can return HTTP 200 with {"error":"..."} for Redis-level errors
+    const body = await r.json().catch(() => ({}));
+    if (body && body.error) {
+      console.error('[KV write]', key, 'Upstash error:', body.error);
+      throw new Error('KV Redis error: ' + body.error);
     }
     return;
   }
@@ -845,6 +862,22 @@ async function handleAPI(req, res, urlPath) {
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
+  if (urlPath === '/api/resend-verify' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { email } = body;
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json(res, 400, { error: 'Valid email required' });
+      const key = email.toLowerCase().trim();
+      const users = await readUsers();
+      if (users[key] && users[key].verified) return json(res, 400, { error: 'Email already verified — please log in.' });
+      const token = crypto.randomBytes(32).toString('hex');
+      users[key] = Object.assign(users[key] || {}, { email: key, verified: false, verifyToken: token, tokenExpiry: Date.now() + 86400000 });
+      await writeUsers(users);
+      await sendVerificationEmail(key, token);
+      return json(res, 200, { ok: true });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
   if (urlPath === '/api/set-password' && req.method === 'POST') {
     try {
       const body = await parseBody(req);
@@ -913,7 +946,7 @@ async function handler(req, res) {
     const user = Object.values(users).find(u => u.verifyToken === token);
     if (!user || !token || Date.now() > (user.tokenExpiry || 0)) {
       res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end('<!DOCTYPE html><html><head><title>Precision Workz</title></head><body style="font-family:sans-serif;background:#04040d;color:#f1f5f9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0"><div style="text-align:center"><h2 style="margin-bottom:16px">Invalid or expired link.</h2><a href="/" style="color:#22d3ee">← Back to site</a></div></body></html>');
+      res.end('<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Precision Workz</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;background:#04040d;color:#f1f5f9;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}.box{background:#0d0d26;border:1px solid rgba(124,58,237,.3);border-radius:16px;padding:36px;max-width:400px;width:100%;text-align:center}h2{font-size:1.3rem;margin-bottom:10px;color:#f1f5f9}p{color:#94a3b8;font-size:.88rem;line-height:1.6;margin-bottom:24px}label{display:block;font-size:.78rem;color:#94a3b8;text-align:left;margin-bottom:6px;font-weight:600}input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#f1f5f9;padding:11px 14px;font-size:.9rem;outline:none;margin-bottom:14px;font-family:Arial,sans-serif}button{width:100%;padding:13px;border-radius:8px;background:#7c3aed;color:#fff;font-weight:700;font-size:.9rem;border:none;cursor:pointer;font-family:Arial,sans-serif}.msg{margin-top:12px;font-size:.83rem;min-height:18px}.ok{color:#4ade80}.err{color:#f87171}.back{display:block;margin-top:18px;color:#22d3ee;font-size:.83rem;text-decoration:none}</style></head><body><div class="box"><h2>Link expired or invalid</h2><p>This verification link has expired or already been used. Enter your email below to get a fresh one.</p><label>Your Email Address</label><input type="email" id="em" placeholder="you@example.com"><button onclick="resend()">Resend Verification Email</button><div class="msg" id="msg"></div><a class="back" href="/">← Back to site</a></div><script>async function resend(){var e=document.getElementById("em").value.trim(),m=document.getElementById("msg");if(!e){m.className="msg err";m.textContent="Enter your email address.";return}m.className="msg";m.textContent="Sending...";try{var r=await fetch("/api/resend-verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:e})});var d=await r.json();if(d.ok){m.className="msg ok";m.textContent="✓ New link sent — check your inbox!";}else{m.className="msg err";m.textContent=d.error||"Something went wrong.";}}catch(x){m.className="msg err";m.textContent="Network error — try again.";}}</script></body></html>');
       return;
     }
     serveVerifyPage(res, token, user);
