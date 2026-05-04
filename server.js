@@ -464,15 +464,38 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/clean-clients' && req.method === 'POST') {
-      const clients = await readClients();
-      const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const before = Object.keys(clients).length;
-      for (const k of Object.keys(clients)) {
-        if (!emailRe.test(k)) delete clients[k];
+      try {
+        let clients = await readClients();
+        // If stored as array, convert to object
+        if (Array.isArray(clients)) {
+          const obj = {};
+          clients.forEach(c => { if (c && c.email) obj[c.email.toLowerCase()] = c; });
+          clients = obj;
+        }
+        if (typeof clients !== 'object' || clients === null) clients = {};
+        const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const before = Object.keys(clients).length;
+        for (const k of Object.keys(clients)) {
+          if (!emailRe.test(k)) delete clients[k];
+        }
+        const removed = before - Object.keys(clients).length;
+        await writeClients(clients);
+        return json(res, 200, { ok: true, removed, remaining: Object.keys(clients).length });
+      } catch(e) {
+        console.error('[clean-clients]', e.message);
+        return json(res, 500, { error: e.message });
       }
-      const removed = before - Object.keys(clients).length;
-      await writeClients(clients);
-      return json(res, 200, { ok: true, removed, remaining: Object.keys(clients).length });
+    }
+
+    if (urlPath === '/api/admin/raw-clients' && req.method === 'GET') {
+      try {
+        const raw = await readClients();
+        const type = Array.isArray(raw) ? 'array' : typeof raw;
+        const keys = type === 'object' && raw ? Object.keys(raw).slice(0, 20) : [];
+        return json(res, 200, { type, keyCount: type === 'object' && raw ? Object.keys(raw).length : (Array.isArray(raw) ? raw.length : 0), sampleKeys: keys, cacheHas: !!_cache['clients'] });
+      } catch(e) {
+        return json(res, 500, { error: e.message });
+      }
     }
 
     if (urlPath === '/api/admin/set-client' && req.method === 'POST') {

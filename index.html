@@ -3228,6 +3228,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         <input class="admin-input" id="adm-search" placeholder="Search by email or name…" oninput="adminFilterTable()" style="max-width:340px">
         <button class="admin-btn ghost" onclick="adminLoadData()" style="margin-left:auto">↻ Refresh</button>
         <button class="admin-btn ghost" style="border-color:rgba(239,68,68,.3);color:#f87171" onclick="adminCleanDB()">🗑 Clean DB</button>
+        <button class="admin-btn ghost" style="font-size:.72rem" onclick="adminDebugDB()">Debug KV</button>
       </div>
       <div style="overflow-x:auto">
         <table class="admin-table" id="adm-clients-table">
@@ -5081,6 +5082,14 @@ function adminSaveClient() {
     if (btn) { btn.disabled = false; btn.textContent = 'Save Client'; }
     showMsg('#f87171', 'Network error — check console.');
   });
+}
+
+function adminDebugDB() {
+  fetch('/api/admin/raw-clients?adminEmail=' + encodeURIComponent(adminGetEmail()))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      alert('KV data type: ' + d.type + '\nTotal keys/entries: ' + d.keyCount + '\nIn cache: ' + d.cacheHas + '\nSample keys: ' + (d.sampleKeys||[]).join(', '));
+    }).catch(function(e){ alert('Error: ' + e.message); });
 }
 
 function adminCleanDB() {
