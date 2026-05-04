@@ -135,9 +135,26 @@ const PRICES = {
 const OWNER_EMAIL = 'precizionworkz@gmail.com';
 
 // ── PERSISTENT STORAGE (Vercel KV with local file fallback) ─
-// Set KV_REST_API_URL and KV_REST_API_TOKEN in Vercel dashboard → Storage → KV
-const KV_URL   = process.env.KV_REST_API_URL   || process.env.UPSTASH_REDIS_REST_URL   || process.env.STORAGE_URL   || '';
-const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || process.env.STORAGE_TOKEN || '';
+// Checks all env var naming variants Vercel creates depending on the storage prefix chosen
+function _pickKVURL() {
+  const candidates = [
+    process.env.KV_REST_API_URL,
+    process.env.UPSTASH_REDIS_REST_URL,
+    process.env.STORAGE_REST_API_URL,
+    process.env.STORAGE_URL,
+  ].filter(Boolean);
+  // Must be an HTTPS REST endpoint — skip redis:// connection strings
+  return candidates.find(u => u.startsWith('https://')) || '';
+}
+function _pickKVToken() {
+  return process.env.KV_REST_API_TOKEN
+    || process.env.UPSTASH_REDIS_REST_TOKEN
+    || process.env.STORAGE_REST_API_TOKEN
+    || process.env.STORAGE_TOKEN
+    || '';
+}
+const KV_URL   = _pickKVURL();
+const KV_TOKEN = _pickKVToken();
 
 async function kvRead(key, fallback) {
   // Serve from in-memory cache if available
@@ -191,8 +208,24 @@ async function kvWrite(key, value) {
 }
 
 const readAdmins   = () => kvRead('admins',   [PRIMARY_ADMIN]);
-const readClients  = () => kvRead('clients',  {});
 const readRequests = () => kvRead('requests', []);
+
+const _emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+async function readClients() {
+  let raw = await kvRead('clients', {});
+  // Convert legacy array format to object
+  if (Array.isArray(raw)) {
+    const obj = {};
+    raw.forEach(c => { if (c && c.email && _emailRe.test(c.email)) obj[c.email.toLowerCase()] = c; });
+    raw = obj;
+  }
+  if (!raw || typeof raw !== 'object') raw = {};
+  // Strip any non-email keys (catches 'undefined', numeric indices, etc.)
+  for (const k of Object.keys(raw)) {
+    if (!_emailRe.test(k)) delete raw[k];
+  }
+  return raw;
+}
 const readReports  = () => kvRead('reports',  []);
 const readUsers    = () => kvRead('users',    {});
 const writeAdmins   = (v) => kvWrite('admins',   v);

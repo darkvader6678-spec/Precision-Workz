@@ -981,7 +981,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .admin-input{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:9px;color:var(--text);padding:9px 12px;font-size:.85rem;font-family:inherit;outline:none;width:100%;transition:border-color .2s}
 .admin-input:focus{border-color:rgba(124,58,237,.5);background:rgba(124,58,237,.04)}
 .admin-input::placeholder{color:var(--dim)}
-.admin-input option{background:#1a1a2e}
+.admin-input option{background:#1a1a2e;color:#f1f5f9}
 .admin-btn{padding:9px 18px;border-radius:9px;font-weight:700;font-size:.84rem;border:none;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
 .admin-btn.primary{background:linear-gradient(135deg,var(--purple),var(--cyan));color:#fff;box-shadow:0 0 20px rgba(124,58,237,.25)}
 .admin-btn.primary:hover{opacity:.88;transform:translateY(-1px)}
@@ -1141,7 +1141,8 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .prog-slider{flex:1;appearance:none;height:4px;border-radius:999px;background:rgba(255,255,255,.08);outline:none;cursor:pointer}
 .prog-slider::-webkit-slider-thumb{appearance:none;width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#22d3ee);cursor:pointer;box-shadow:0 0 8px rgba(124,58,237,.5)}
 .prog-pct-display{font-size:.75rem;font-weight:700;color:var(--cyan2);width:36px;text-align:right;font-family:'Orbitron',monospace}
-.prog-status-sel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:var(--text);padding:4px 8px;font-size:.72rem;font-family:inherit;cursor:pointer}
+.prog-status-sel{background:#0d0d24;border:1px solid rgba(255,255,255,.1);border-radius:7px;color:var(--text);padding:4px 8px;font-size:.72rem;font-family:inherit;cursor:pointer}
+.prog-status-sel option{background:#0d0d24;color:var(--text)}
 /* Work stats row */
 .work-stat-num{font-size:1.5rem;font-weight:800;line-height:1}
 
@@ -4968,7 +4969,8 @@ function adminRenderDevs(admins, primary, coOwner) {
 }
 
 function adminRenderTable(clients) {
-  var keys = Object.keys(clients).sort();
+  var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  var keys = Object.keys(clients).filter(function(k){ return emailRe.test(k); }).sort();
   _allClientRows = keys;
   adminFilterTable();
 }
