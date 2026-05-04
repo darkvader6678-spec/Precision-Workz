@@ -5194,6 +5194,7 @@ function adminRenderRequests() {
           + (isOpen
             ? '<button class="admin-btn ghost" style="padding:7px 14px;font-size:.78rem" onclick="adminResolveRequest(\''+r.id+'\')">Mark Resolved</button>'
             : '<button class="admin-btn ghost" style="padding:7px 14px;font-size:.78rem;opacity:.5" onclick="adminResolveRequest(\''+r.id+'\')">Reopen</button>')
+          + '<button class="admin-btn danger" style="padding:7px 14px;font-size:.78rem" onclick="adminDeleteRequest(\''+r.id+'\')">Delete</button>'
         + '</div>'
       + '</div>'
     + '</div>';
@@ -5239,6 +5240,17 @@ function adminResolveRequest(id) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ adminEmail: adminGetEmail(), id: id, status: newStatus })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (!d.error) adminLoadRequests();
+  });
+}
+
+function adminDeleteRequest(id) {
+  if (!confirm('Permanently delete this request? This cannot be undone.')) return;
+  fetch('/api/admin/delete-request', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminEmail: adminGetEmail(), id: id })
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (!d.error) adminLoadRequests();
   });

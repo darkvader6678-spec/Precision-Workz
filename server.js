@@ -562,6 +562,16 @@ async function handleAPI(req, res, urlPath) {
       } catch(e) { return json(res, 500, { error: e.message }); }
     }
 
+    if (urlPath === '/api/admin/delete-request' && req.method === 'POST') {
+      try {
+        const { id } = body;
+        if (!id) return json(res, 400, { error: 'id required' });
+        const reqs = (await readRequests()).filter(r => r.id !== id);
+        await writeRequests(reqs);
+        return json(res, 200, { ok: true });
+      } catch(e) { return json(res, 500, { error: e.message }); }
+    }
+
     if (urlPath === '/api/admin/reply-request' && req.method === 'POST') {
       try {
       const { id, replyText } = body;
