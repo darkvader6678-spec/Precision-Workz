@@ -913,6 +913,25 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .music-popup-close:hover{color:var(--text)}
 @media(max-width:600px){.music-widget{left:12px}.music-popup{width:calc(100vw - 24px)}}
 
+/* ─── SUBSCRIPTION UPSELL IN CONTACT FORM ─────────────── */
+.sub-upsell{display:none;background:linear-gradient(135deg,rgba(124,58,237,.07),rgba(6,182,212,.05));border:1px solid rgba(124,58,237,.28);border-radius:14px;padding:20px 22px;margin-bottom:20px;animation:modal-slide-in .3s cubic-bezier(.22,1,.36,1)}
+.sub-upsell.visible{display:block}
+.sub-upsell-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sub-upsell-icon{width:36px;height:36px;border-radius:10px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.sub-upsell-title{font-size:.92rem;font-weight:700;color:var(--text)}
+.sub-upsell-sub{font-size:.77rem;color:var(--muted);margin-top:1px}
+.sub-upsell-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.sub-upsell-opt{border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:border-color .2s,background .2s;background:rgba(255,255,255,.02);position:relative}
+.sub-upsell-opt:hover{border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.05)}
+.sub-upsell-opt.selected{border-color:var(--purple2);background:rgba(124,58,237,.1)}
+.sub-upsell-opt input[type=radio]{position:absolute;opacity:0;pointer-events:none}
+.suo-label{font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:2px}
+.suo-price{font-size:1rem;font-weight:800;background:linear-gradient(135deg,var(--cyan2),var(--purple2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.suo-desc{font-size:.72rem;color:var(--muted);margin-top:3px;line-height:1.5}
+.sub-upsell-note{font-size:.76rem;color:var(--dim);text-align:center;line-height:1.55}
+.sub-upsell-skip{background:none;border:none;color:var(--dim);font-size:.75rem;cursor:pointer;font-family:inherit;text-decoration:underline;margin-top:6px;display:block;width:100%;text-align:center;transition:color .2s}
+.sub-upsell-skip:hover{color:var(--muted)}
+
 /* ─── PROMO CODE ──────────────────────────────────────── */
 .promo-input-wrap{display:flex;gap:8px;margin-top:14px;padding:14px;background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.15);border-radius:10px}
 .promo-input{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 12px;font-size:.85rem;font-family:inherit;outline:none;transition:border-color .2s;letter-spacing:.5px;text-transform:uppercase}
@@ -1302,7 +1321,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <div class="term-body">
         <div class="t-row"><span class="t-ico t-ok">✓</span><span class="t-txt">SSL Certificate</span><span class="t-val t-ok">Grade A+</span></div>
         <div class="t-row"><span class="t-ico t-ok">✓</span><span class="t-txt">Rate Limiter</span><span class="t-val t-ok">Armed</span></div>
-        <div class="t-row"><span class="t-ico t-warn">⚡</span><span class="t-txt">Active Sessions</span><span class="t-val t-blu">1</span></div>
+        <div class="t-row"><span class="t-ico t-warn">⚡</span><span class="t-txt">Active Sessions</span><span class="t-val t-blu">3</span></div>
         <div class="t-row"><span class="t-ico t-bad">⛔</span><span class="t-txt">Threats Blocked Today</span><span class="t-val t-bad">18</span></div>
         <div class="t-row"><span class="t-ico t-ok">✓</span><span class="t-txt">Sentinel System</span><span class="t-val t-ok">ACTIVE</span></div>
         <div class="t-row" style="margin-top:4px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06)"><span class="t-ico t-blu">›_</span><span class="t-txt t-blu" style="font-size:.72rem;color:var(--dim)">Monitoring 24 / 7</span><span class="t-blink"></span></div>
@@ -1314,15 +1333,15 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
 <!-- STATS -->
 <div class="stats-bar">
-  <div class="stat fade-up"><div class="stat-num" data-target="1">0</div><div class="stat-label">Projects Delivered</div></div>
+  <div class="stat fade-up"><div class="stat-num" data-target="3">0</div><div class="stat-label">Projects Delivered</div></div>
   <div class="stat fade-up" style="transition-delay:.1s"><div class="stat-num" data-target="100">0</div><div class="stat-label">Client Satisfaction</div></div>
   <div class="stat fade-up stat-clickable" id="stat-age" style="transition-delay:.2s" onclick="toggleStatNote('age-note')">
-    <div class="stat-num" data-target="4" data-suffix=" days">0</div>
+    <div class="stat-num" id="stat-num-age" data-suffix=" days">0</div>
     <div class="stat-label">In Business <span class="stat-click-hint">↑</span></div>
     <div class="stat-note" id="age-note">
       <button class="stat-note-close" onclick="event.stopPropagation();toggleStatNote('age-note')">×</button>
       <strong style="display:block;margin-bottom:6px;color:var(--text);font-size:.85rem">Just Getting Started.</strong>
-      Precision Workz launched 4 days ago — and we're already building full-stack platforms that agencies charge 5× more for. New doesn't mean less. It means hungrier, faster, and more committed to getting it right.
+      Precision Workz launched <span id="age-note-days">a few</span> days ago — and we're already building full-stack platforms that agencies charge 5× more for. New doesn't mean less. It means hungrier, faster, and more committed to getting it right.
     </div>
   </div>
   <div class="stat fade-up" style="transition-delay:.3s"><div class="stat-num" data-target="24">0</div><div class="stat-label">Hour Support</div></div>
@@ -1476,7 +1495,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
                   <div class="wv-prop-price-wrap">
                     <span style="font-size:.95rem;font-weight:700;color:#e8e8e8">$289</span><span style="font-size:.5rem;color:rgba(192,192,192,.45)">/night</span>
                   </div>
-                  <button class="wv-book-btn">Reserve</button>
+                  <button class="wv-book-btn" onclick="window.open('https://hiddenjeweltucson.com/','_blank')">Reserve</button>
                 </div>
                 <div class="wv-cal-label">Availability</div>
                 <div class="wv-cal-grid">
@@ -1638,98 +1657,135 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   <div class="ex-grid">
 
     <!-- STARTER EXAMPLE -->
-    <div class="ex-card fade-up">
+    <div class="ex-card fade-left">
       <div class="ex-browser-chrome">
         <div class="ex-dot r"></div><div class="ex-dot y"></div><div class="ex-dot g"></div>
         <div class="ex-url">cleanlaunch.co · Starter Build</div>
       </div>
       <div class="ex-preview">
         <div style="background:linear-gradient(160deg,#070714,#0c0c1e);width:100%;height:100%;position:relative;overflow:hidden">
-          <div style="position:absolute;width:180px;height:180px;background:rgba(124,58,237,.15);border-radius:50%;filter:blur(55px);top:-40px;left:-30px"></div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.06);position:relative;z-index:1">
-            <div style="display:flex;gap:6px;align-items:center"><div style="width:16px;height:16px;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:3px"></div><div style="width:55px;height:4px;background:rgba(255,255,255,.5);border-radius:3px"></div></div>
-            <div style="display:flex;gap:7px"><div style="width:18px;height:3px;border-radius:2px;background:rgba(255,255,255,.18)"></div><div style="width:18px;height:3px;border-radius:2px;background:rgba(255,255,255,.18)"></div><div style="width:18px;height:3px;border-radius:2px;background:rgba(255,255,255,.18)"></div><div style="width:42px;height:14px;border-radius:4px;background:rgba(124,58,237,.5);margin-left:4px"></div></div>
+          <div style="position:absolute;width:220px;height:220px;background:rgba(124,58,237,.18);border-radius:50%;filter:blur(55px);top:-60px;left:-40px"></div>
+          <div style="position:absolute;width:120px;height:120px;background:rgba(6,182,212,.1);border-radius:50%;filter:blur(40px);bottom:-10px;right:20px"></div>
+          <!-- nav -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.07);position:relative;z-index:1;background:rgba(4,4,13,.5)">
+            <div style="display:flex;gap:6px;align-items:center"><div style="width:16px;height:16px;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:3px"></div><div style="width:52px;height:4px;background:rgba(255,255,255,.55);border-radius:3px"></div></div>
+            <div style="display:flex;gap:6px"><div style="width:18px;height:2px;border-radius:2px;background:rgba(255,255,255,.2)"></div><div style="width:18px;height:2px;border-radius:2px;background:rgba(255,255,255,.2)"></div><div style="width:18px;height:2px;border-radius:2px;background:rgba(255,255,255,.2)"></div><div style="width:40px;height:14px;border-radius:4px;background:linear-gradient(135deg,#7c3aed,#06b6d4);margin-left:4px"></div></div>
           </div>
-          <div style="padding:18px 16px 0;text-align:center;position:relative;z-index:1">
-            <div style="width:58%;height:7px;background:linear-gradient(90deg,rgba(255,255,255,.88),rgba(255,255,255,.55));border-radius:4px;margin:0 auto 7px"></div>
-            <div style="width:44%;height:5px;background:rgba(255,255,255,.25);border-radius:3px;margin:0 auto 5px"></div>
-            <div style="width:72%;height:3px;background:rgba(255,255,255,.11);border-radius:3px;margin:0 auto 14px"></div>
-            <div style="display:flex;gap:6px;justify-content:center;margin-bottom:14px">
-              <div style="width:58px;height:18px;border-radius:5px;background:linear-gradient(135deg,#7c3aed,#06b6d4)"></div>
-              <div style="width:52px;height:18px;border-radius:5px;background:transparent;border:1px solid rgba(255,255,255,.2)"></div>
+          <!-- hero -->
+          <div style="padding:16px 14px 10px;text-align:center;position:relative;z-index:1">
+            <div style="width:36px;height:36px;background:rgba(124,58,237,.25);border:1px solid rgba(124,58,237,.3);border-radius:10px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:3px;border-radius:2px;background:rgba(124,58,237,.8)"></div></div>
+            <div style="width:62%;height:7px;background:linear-gradient(90deg,rgba(255,255,255,.9),rgba(255,255,255,.5));border-radius:4px;margin:0 auto 5px"></div>
+            <div style="width:46%;height:5px;background:rgba(255,255,255,.28);border-radius:3px;margin:0 auto 4px"></div>
+            <div style="width:75%;height:3px;background:rgba(255,255,255,.12);border-radius:3px;margin:0 auto 3px"></div>
+            <div style="width:60%;height:3px;background:rgba(255,255,255,.08);border-radius:3px;margin:0 auto 12px"></div>
+            <div style="display:flex;gap:6px;justify-content:center;margin-bottom:12px">
+              <div style="width:60px;height:18px;border-radius:6px;background:linear-gradient(135deg,#7c3aed,#06b6d4);box-shadow:0 0 8px rgba(124,58,237,.35)"></div>
+              <div style="width:50px;height:18px;border-radius:6px;background:transparent;border:1px solid rgba(255,255,255,.22)"></div>
             </div>
-            <div style="display:flex;gap:5px;padding:0 4px">
-              <div style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:7px 5px">
-                <div style="width:11px;height:11px;border-radius:3px;background:rgba(124,58,237,.45);margin:0 auto 5px"></div>
-                <div style="width:68%;height:3px;background:rgba(255,255,255,.35);border-radius:2px;margin:0 auto 3px"></div>
-                <div style="width:82%;height:2px;background:rgba(255,255,255,.1);border-radius:2px;margin:0 auto"></div>
-              </div>
-              <div style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:7px 5px">
-                <div style="width:11px;height:11px;border-radius:3px;background:rgba(6,182,212,.45);margin:0 auto 5px"></div>
-                <div style="width:68%;height:3px;background:rgba(255,255,255,.35);border-radius:2px;margin:0 auto 3px"></div>
-                <div style="width:82%;height:2px;background:rgba(255,255,255,.1);border-radius:2px;margin:0 auto"></div>
-              </div>
-              <div style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:7px 5px">
-                <div style="width:11px;height:11px;border-radius:3px;background:rgba(236,72,153,.45);margin:0 auto 5px"></div>
-                <div style="width:68%;height:3px;background:rgba(255,255,255,.35);border-radius:2px;margin:0 auto 3px"></div>
-                <div style="width:82%;height:2px;background:rgba(255,255,255,.1);border-radius:2px;margin:0 auto"></div>
-              </div>
+          </div>
+          <!-- service cards -->
+          <div style="display:flex;gap:5px;padding:0 12px 10px;position:relative;z-index:1">
+            <div style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 6px">
+              <div style="width:14px;height:14px;border-radius:4px;background:rgba(124,58,237,.4);margin:0 auto 5px"></div>
+              <div style="width:70%;height:3px;background:rgba(255,255,255,.35);border-radius:2px;margin:0 auto 3px"></div>
+              <div style="width:85%;height:2px;background:rgba(255,255,255,.1);border-radius:2px;margin:0 auto 2px"></div>
+              <div style="width:65%;height:2px;background:rgba(255,255,255,.07);border-radius:2px;margin:0 auto"></div>
             </div>
+            <div style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 6px">
+              <div style="width:14px;height:14px;border-radius:4px;background:rgba(6,182,212,.4);margin:0 auto 5px"></div>
+              <div style="width:70%;height:3px;background:rgba(255,255,255,.35);border-radius:2px;margin:0 auto 3px"></div>
+              <div style="width:85%;height:2px;background:rgba(255,255,255,.1);border-radius:2px;margin:0 auto 2px"></div>
+              <div style="width:65%;height:2px;background:rgba(255,255,255,.07);border-radius:2px;margin:0 auto"></div>
+            </div>
+            <div style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 6px">
+              <div style="width:14px;height:14px;border-radius:4px;background:rgba(236,72,153,.4);margin:0 auto 5px"></div>
+              <div style="width:70%;height:3px;background:rgba(255,255,255,.35);border-radius:2px;margin:0 auto 3px"></div>
+              <div style="width:85%;height:2px;background:rgba(255,255,255,.1);border-radius:2px;margin:0 auto 2px"></div>
+              <div style="width:65%;height:2px;background:rgba(255,255,255,.07);border-radius:2px;margin:0 auto"></div>
+            </div>
+          </div>
+          <!-- contact section mini -->
+          <div style="margin:0 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:8px 10px;position:relative;z-index:1">
+            <div style="width:45%;height:3px;background:rgba(255,255,255,.3);border-radius:2px;margin-bottom:6px"></div>
+            <div style="display:flex;gap:5px;margin-bottom:4px"><div style="flex:1;height:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:4px"></div><div style="flex:1;height:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:4px"></div></div>
+            <div style="width:100%;height:18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:4px;margin-bottom:5px"></div>
+            <div style="width:100%;height:26px;background:linear-gradient(135deg,rgba(124,58,237,.5),rgba(6,182,212,.4));border-radius:5px"></div>
           </div>
         </div>
       </div>
       <div class="ex-info">
         <div class="ex-tier-pill starter">Starter · $750+</div>
         <div class="ex-name">Clean Business Website</div>
-        <p class="ex-desc">Fast, responsive, 4-page custom site with contact form, core security pre-configured, and mobile-first animations.</p>
+        <p class="ex-desc">Fast, responsive, 4-page custom site with a hero section, services overview, contact form, core security pre-configured, and mobile-first scroll animations. Delivered in 2 weeks.</p>
         <div class="ex-feat-list">
-          <span class="ex-feat-pill">4 Pages</span><span class="ex-feat-pill">Mobile-First</span><span class="ex-feat-pill">Contact Form</span><span class="ex-feat-pill">SSL + Rate Limiting</span><span class="ex-feat-pill">Animations</span>
+          <span class="ex-feat-pill">4 Pages</span><span class="ex-feat-pill">Mobile-First</span><span class="ex-feat-pill">Contact Form</span><span class="ex-feat-pill">SSL + Rate Limiting</span><span class="ex-feat-pill">Scroll Animations</span><span class="ex-feat-pill">SEO Ready</span><span class="ex-feat-pill">Custom Design</span>
         </div>
       </div>
     </div>
 
     <!-- PREMIUM EXAMPLE -->
-    <div class="ex-card ex-premium fade-up" style="transition-delay:.1s">
+    <div class="ex-card ex-premium fade-scale" style="transition-delay:.08s">
       <div class="ex-browser-chrome">
         <div class="ex-dot r"></div><div class="ex-dot y"></div><div class="ex-dot g"></div>
         <div class="ex-url">elitestudio.io · Premium Build</div>
       </div>
       <div class="ex-preview">
         <div style="background:linear-gradient(160deg,#060612,#0a0a20,#0d0820);width:100%;height:100%;position:relative;overflow:hidden">
-          <div style="position:absolute;width:200px;height:200px;background:rgba(124,58,237,.2);border-radius:50%;filter:blur(60px);top:-50px;right:-40px"></div>
+          <div style="position:absolute;width:200px;height:200px;background:rgba(124,58,237,.22);border-radius:50%;filter:blur(60px);top:-50px;right:-40px"></div>
           <div style="position:absolute;width:140px;height:140px;background:rgba(6,182,212,.15);border-radius:50%;filter:blur(50px);bottom:-20px;left:-10px"></div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(124,58,237,.2);background:rgba(4,4,13,.5);backdrop-filter:blur(8px);position:relative;z-index:1">
-            <div style="display:flex;gap:7px;align-items:center"><div style="width:17px;height:17px;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:4px;box-shadow:0 0 8px rgba(245,158,11,.4)"></div><div style="width:65px;height:4px;background:linear-gradient(90deg,rgba(255,255,255,.8),rgba(34,211,238,.6));border-radius:3px"></div></div>
-            <div style="display:flex;gap:7px;align-items:center"><div style="width:20px;height:3px;border-radius:2px;background:rgba(255,255,255,.2)"></div><div style="width:20px;height:3px;border-radius:2px;background:rgba(255,255,255,.2)"></div><div style="width:20px;height:3px;border-radius:2px;background:rgba(255,255,255,.2)"></div><div style="width:46px;height:15px;border-radius:5px;background:linear-gradient(135deg,#7c3aed,#06b6d4);margin-left:4px;box-shadow:0 0 8px rgba(124,58,237,.4)"></div></div>
+          <!-- nav with glassmorphism -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid rgba(124,58,237,.2);background:rgba(4,4,13,.55);backdrop-filter:blur(10px);position:relative;z-index:1">
+            <div style="display:flex;gap:7px;align-items:center"><div style="width:17px;height:17px;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:4px;box-shadow:0 0 8px rgba(245,158,11,.4)"></div><div style="width:60px;height:4px;background:linear-gradient(90deg,rgba(255,255,255,.8),rgba(34,211,238,.6));border-radius:3px"></div></div>
+            <div style="display:flex;gap:7px;align-items:center"><div style="width:18px;height:2px;border-radius:2px;background:rgba(255,255,255,.22)"></div><div style="width:18px;height:2px;border-radius:2px;background:rgba(255,255,255,.22)"></div><div style="width:18px;height:2px;border-radius:2px;background:rgba(255,255,255,.22)"></div><div style="width:46px;height:15px;border-radius:5px;background:linear-gradient(135deg,#7c3aed,#06b6d4);margin-left:5px;box-shadow:0 0 10px rgba(124,58,237,.45)"></div></div>
           </div>
-          <div style="padding:14px 16px 0;position:relative;z-index:1">
-            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:999px;padding:3px 8px;margin-bottom:8px"><div style="width:5px;height:5px;border-radius:50%;background:#22c55e;box-shadow:0 0 4px #22c55e"></div><div style="width:48px;height:3px;border-radius:2px;background:rgba(124,58,237,.7)"></div></div>
-            <div style="width:76%;height:8px;background:linear-gradient(90deg,rgba(255,255,255,.9),rgba(34,211,238,.7));border-radius:4px;margin-bottom:5px"></div>
-            <div style="width:62%;height:5px;background:linear-gradient(90deg,rgba(168,85,247,.7),rgba(34,211,238,.5));border-radius:4px;margin-bottom:8px"></div>
-            <div style="width:88%;height:3px;background:rgba(255,255,255,.14);border-radius:2px;margin-bottom:3px"></div>
-            <div style="width:68%;height:3px;background:rgba(255,255,255,.09);border-radius:2px;margin-bottom:10px"></div>
-            <div style="display:flex;gap:5px;margin-bottom:10px"><div style="width:62px;height:17px;border-radius:6px;background:linear-gradient(135deg,#7c3aed,#06b6d4);box-shadow:0 0 10px rgba(124,58,237,.35)"></div><div style="width:54px;height:17px;border-radius:6px;background:transparent;border:1px solid rgba(255,255,255,.22)"></div></div>
-            <div style="display:flex;gap:5px;border-top:1px solid rgba(255,255,255,.06);padding-top:8px">
-              <div style="flex:1;text-align:center"><div style="width:28px;height:6px;border-radius:3px;background:linear-gradient(90deg,#7c3aed,#22d3ee);margin:0 auto 3px"></div><div style="width:50%;height:2px;border-radius:2px;background:rgba(255,255,255,.14);margin:0 auto"></div></div>
-              <div style="flex:1;text-align:center"><div style="width:28px;height:6px;border-radius:3px;background:linear-gradient(90deg,#7c3aed,#22d3ee);margin:0 auto 3px"></div><div style="width:50%;height:2px;border-radius:2px;background:rgba(255,255,255,.14);margin:0 auto"></div></div>
-              <div style="flex:1;text-align:center"><div style="width:28px;height:6px;border-radius:3px;background:linear-gradient(90deg,#7c3aed,#22d3ee);margin:0 auto 3px"></div><div style="width:50%;height:2px;border-radius:2px;background:rgba(255,255,255,.14);margin:0 auto"></div></div>
-              <div style="flex:1;text-align:center"><div style="width:28px;height:6px;border-radius:3px;background:linear-gradient(90deg,#ec4899,#a855f7);margin:0 auto 3px"></div><div style="width:50%;height:2px;border-radius:2px;background:rgba(255,255,255,.14);margin:0 auto"></div></div>
+          <!-- hero with badge -->
+          <div style="padding:12px 14px 8px;position:relative;z-index:1">
+            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:999px;padding:3px 9px;margin-bottom:7px"><div style="width:5px;height:5px;border-radius:50%;background:#22c55e;box-shadow:0 0 5px #22c55e"></div><div style="width:50px;height:3px;border-radius:2px;background:rgba(124,58,237,.7)"></div></div>
+            <div style="width:78%;height:8px;background:linear-gradient(90deg,rgba(255,255,255,.92),rgba(34,211,238,.7));border-radius:4px;margin-bottom:4px"></div>
+            <div style="width:60%;height:5px;background:linear-gradient(90deg,rgba(168,85,247,.7),rgba(34,211,238,.5));border-radius:4px;margin-bottom:7px"></div>
+            <div style="width:90%;height:2px;background:rgba(255,255,255,.14);border-radius:2px;margin-bottom:3px"></div>
+            <div style="width:72%;height:2px;background:rgba(255,255,255,.09);border-radius:2px;margin-bottom:9px"></div>
+            <div style="display:flex;gap:5px;margin-bottom:8px"><div style="width:64px;height:18px;border-radius:6px;background:linear-gradient(135deg,#7c3aed,#06b6d4);box-shadow:0 0 12px rgba(124,58,237,.4)"></div><div style="width:54px;height:18px;border-radius:6px;background:transparent;border:1px solid rgba(255,255,255,.22)"></div></div>
+          </div>
+          <!-- admin preview strip -->
+          <div style="background:rgba(4,4,13,.7);border-top:1px solid rgba(124,58,237,.15);padding:6px 10px;position:relative;z-index:1">
+            <div style="font-size:.42rem;font-weight:700;letter-spacing:1px;color:rgba(124,58,237,.7);text-transform:uppercase;margin-bottom:5px">Admin Panel</div>
+            <div style="display:flex;gap:5px">
+              <div style="flex:1;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.18);border-radius:5px;padding:4px 6px">
+                <div style="width:60%;height:2px;background:rgba(124,58,237,.5);border-radius:2px;margin-bottom:3px"></div>
+                <div style="font-size:.38rem;color:rgba(255,255,255,.4)">Bookings</div>
+              </div>
+              <div style="flex:1;background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.15);border-radius:5px;padding:4px 6px">
+                <div style="width:75%;height:2px;background:rgba(6,182,212,.5);border-radius:2px;margin-bottom:3px"></div>
+                <div style="font-size:.38rem;color:rgba(255,255,255,.4)">Analytics</div>
+              </div>
+              <div style="flex:1;background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.15);border-radius:5px;padding:4px 6px">
+                <div style="width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 4px #4ade80;margin-bottom:2px"></div>
+                <div style="font-size:.38rem;color:rgba(255,255,255,.4)">Security</div>
+              </div>
             </div>
+          </div>
+          <!-- stats row -->
+          <div style="display:flex;gap:0;border-top:1px solid rgba(255,255,255,.05);position:relative;z-index:1">
+            <div style="flex:1;text-align:center;padding:5px;border-right:1px solid rgba(255,255,255,.04)"><div style="width:28px;height:6px;border-radius:3px;background:linear-gradient(90deg,#7c3aed,#22d3ee);margin:0 auto 2px"></div><div style="width:50%;height:2px;border-radius:2px;background:rgba(255,255,255,.1);margin:0 auto"></div></div>
+            <div style="flex:1;text-align:center;padding:5px;border-right:1px solid rgba(255,255,255,.04)"><div style="width:28px;height:6px;border-radius:3px;background:linear-gradient(90deg,#059669,#4ade80);margin:0 auto 2px"></div><div style="width:50%;height:2px;border-radius:2px;background:rgba(255,255,255,.1);margin:0 auto"></div></div>
+            <div style="flex:1;text-align:center;padding:5px;border-right:1px solid rgba(255,255,255,.04)"><div style="width:28px;height:6px;border-radius:3px;background:linear-gradient(90deg,#7c3aed,#22d3ee);margin:0 auto 2px"></div><div style="width:50%;height:2px;border-radius:2px;background:rgba(255,255,255,.1);margin:0 auto"></div></div>
+            <div style="flex:1;text-align:center;padding:5px"><div style="width:28px;height:6px;border-radius:3px;background:linear-gradient(90deg,#ec4899,#a855f7);margin:0 auto 2px"></div><div style="width:50%;height:2px;border-radius:2px;background:rgba(255,255,255,.1);margin:0 auto"></div></div>
           </div>
         </div>
       </div>
       <div class="ex-info">
         <div class="ex-tier-pill premium">Premium · $2,000+</div>
         <div class="ex-name">Full Custom Platform + Admin Panel</div>
-        <p class="ex-desc">Multi-section site with real admin panel, booking engine, dark/light mode, email automation, and advanced animations.</p>
+        <p class="ex-desc">Multi-section site with a real custom-built admin panel, booking engine, email automation, advanced scroll animations, and a full security suite. No CMS, no plugins — pure code.</p>
         <div class="ex-feat-list">
-          <span class="ex-feat-pill">Admin Panel</span><span class="ex-feat-pill">Booking Engine</span><span class="ex-feat-pill">Dark/Light Mode</span><span class="ex-feat-pill">Full Security Suite</span><span class="ex-feat-pill">Email Automation</span>
+          <span class="ex-feat-pill">Admin Panel</span><span class="ex-feat-pill">Booking Engine</span><span class="ex-feat-pill">Dark/Light Mode</span><span class="ex-feat-pill">Full Security Suite</span><span class="ex-feat-pill">Email Automation</span><span class="ex-feat-pill">Analytics Dashboard</span><span class="ex-feat-pill">8+ Pages</span>
         </div>
       </div>
     </div>
 
     <!-- DIAMOND EXAMPLE -->
-    <div class="ex-card ex-diamond fade-up" style="transition-delay:.2s">
+    <div class="ex-card ex-diamond fade-right" style="transition-delay:.12s">
       <div class="ex-browser-chrome">
         <div class="ex-dot r"></div><div class="ex-dot y"></div><div class="ex-dot g"></div>
         <div class="ex-url">nexusprime.app · Diamond Build</div>
@@ -1767,10 +1823,10 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
       <div class="ex-info">
         <div class="ex-tier-pill diamond-pill">Diamond · $4,500+</div>
-        <div class="ex-name">Enterprise Platform + Live Dashboard</div>
-        <p class="ex-desc">Complete platform with multi-panel admin, live monitoring dashboard, sentinel security, analytics, and full automation.</p>
+        <div class="ex-name">Enterprise Platform + Live Security Dashboard</div>
+        <p class="ex-desc">Complete custom-engineered platform with multi-panel admin architecture, live monitoring dashboard, sentinel security lockdown, full analytics, and custom automation workflows. Built to rival enterprise SaaS — at a fraction of the cost.</p>
         <div class="ex-feat-list">
-          <span class="ex-feat-pill">Live Dashboard</span><span class="ex-feat-pill">Multi-Panel Admin</span><span class="ex-feat-pill">Sentinel Security</span><span class="ex-feat-pill">Custom Automation</span><span class="ex-feat-pill">Full Analytics</span>
+          <span class="ex-feat-pill">Live Security Dashboard</span><span class="ex-feat-pill">Multi-Panel Admin</span><span class="ex-feat-pill">Sentinel Lockdown</span><span class="ex-feat-pill">Custom Automation</span><span class="ex-feat-pill">Revenue Analytics</span><span class="ex-feat-pill">Unlimited Pages</span><span class="ex-feat-pill">Particle Effects</span><span class="ex-feat-pill">Client CRM</span>
         </div>
       </div>
     </div>
@@ -2682,6 +2738,44 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
           </div>
         </div>
       </div>
+      <!-- SUBSCRIPTION UPSELL — shown when package > Basic is selected -->
+      <div class="sub-upsell" id="contact-sub-upsell">
+        <div class="sub-upsell-header">
+          <div class="sub-upsell-icon">🔄</div>
+          <div>
+            <div class="sub-upsell-title">Add a Managed Plan?</div>
+            <div class="sub-upsell-sub">Keep your site secure, updated, and supported after launch</div>
+          </div>
+        </div>
+        <div class="sub-upsell-options">
+          <label class="sub-upsell-opt" onclick="selectSubUpsell(this,'none')">
+            <input type="radio" name="sub-upsell-choice" value="none" checked>
+            <div class="suo-label">No Thanks</div>
+            <div class="suo-price" style="-webkit-text-fill-color:var(--dim);background:none;font-size:.9rem">One-time build</div>
+            <div class="suo-desc">Just the project, no ongoing plan</div>
+          </label>
+          <label class="sub-upsell-opt" onclick="selectSubUpsell(this,'basic')">
+            <input type="radio" name="sub-upsell-choice" value="basic">
+            <div class="suo-label">Basic Managed</div>
+            <div class="suo-price">$49<span style="-webkit-text-fill-color:var(--dim);font-size:.72rem;font-weight:500;background:none">/mo</span></div>
+            <div class="suo-desc">Monthly updates, uptime monitoring & priority support</div>
+          </label>
+          <label class="sub-upsell-opt" onclick="selectSubUpsell(this,'gold')">
+            <input type="radio" name="sub-upsell-choice" value="gold">
+            <div class="suo-label">Gold Managed</div>
+            <div class="suo-price">$149<span style="-webkit-text-fill-color:var(--dim);font-size:.72rem;font-weight:500;background:none">/mo</span></div>
+            <div class="suo-desc">Weekly updates, security monitoring, feature requests & emergency support</div>
+          </label>
+          <label class="sub-upsell-opt" onclick="selectSubUpsell(this,'discuss')">
+            <input type="radio" name="sub-upsell-choice" value="discuss">
+            <div class="suo-label">Let's Discuss</div>
+            <div class="suo-price" style="-webkit-text-fill-color:var(--cyan2);background:none;font-size:.9rem">Custom</div>
+            <div class="suo-desc">I'd like to talk through managed plan options</div>
+          </label>
+        </div>
+        <div class="sub-upsell-note">Managed plans start after launch — no commitment needed now. We'll discuss details during your discovery call.</div>
+      </div>
+
       <div class="form-group"><label>Tell Us About Your Project</label><textarea id="cfMsg" placeholder="Describe what you need — the more detail, the better we can help…"></textarea></div>
       <div class="promo-input-wrap">
         <input class="promo-input" id="cfPromo" type="text" placeholder="Promo code (optional)" maxlength="20">
@@ -2700,7 +2794,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   <h2 class="cta-banner-title" id="cta-title">Let's Build<br><span class="grad-text">Something Great</span></h2>
   <p class="cta-banner-sub" id="cta-sub">Every project starts with a free discovery call. No commitment, no pressure — just a real conversation about what you need.</p>
   <div class="hero-btns">
-    <a href="#contact" class="btn-primary" id="cta-main-btn">Start a Project</a>
     <a href="#pricing" class="btn-ghost">View Packages</a>
   </div>
 </section>
@@ -3490,6 +3583,17 @@ async function submitPayment(){
     });
   },{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
   document.querySelectorAll('.fade-up').forEach(function(el){io.observe(el)});
+})();
+
+/* ── DAYS IN BUSINESS — dynamic counter ─────────────────── */
+(function(){
+  var launch=new Date('2026-04-29T00:00:00');
+  var days=Math.floor((Date.now()-launch.getTime())/(1000*60*60*24));
+  if(days<1)days=1;
+  var ageEl=document.getElementById('stat-num-age');
+  if(ageEl)ageEl.dataset.target=days;
+  var noteSpan=document.getElementById('age-note-days');
+  if(noteSpan)noteSpan.textContent=days;
 })();
 
 function sgVerified(){
@@ -4994,6 +5098,22 @@ function csSelect(e,id,value){
   var clean=value.replace(/\s*\(\$[^)]+\)/,'');
   document.getElementById('cfService').value=clean;
   cs.classList.remove('cs-open');
+  /* show subscription upsell for non-basic packages */
+  if(id==='cs-service'){
+    var basicPatterns=['Starter','Basic','Not Sure','Assessment'];
+    var isBasic=basicPatterns.some(function(p){return value.indexOf(p)!==-1});
+    var upsell=document.getElementById('contact-sub-upsell');
+    if(upsell){
+      if(isBasic){upsell.classList.remove('visible')}
+      else{upsell.classList.add('visible')}
+    }
+  }
+}
+function selectSubUpsell(el,val){
+  document.querySelectorAll('.sub-upsell-opt').forEach(function(o){o.classList.remove('selected')});
+  el.classList.add('selected');
+  /* store choice so submitContact can include it */
+  window._subUpsellChoice=val;
 }
 document.addEventListener('click',function(e){
   if(!e.target.closest('.custom-select')){
