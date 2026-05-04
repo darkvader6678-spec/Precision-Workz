@@ -3656,7 +3656,7 @@ async function submitPayment(){
 
   function init(){tier=getTier();theme=THEMES[tier];N=theme.n;pts=[];for(var i=0;i<N;i++)pts.push(mkPt());}
 
-  var PUSH=115,PUSH_F=.7,GRAB_R=28;
+  var PUSH=115,PUSH_F=.7,GRAB_RP=28,GRAB_RL=20,LINE_ZONE=80;
 
   /* draw pointy-top hexagon */
   function hexPath(x,y,r){
@@ -3669,26 +3669,56 @@ async function submitPayment(){
     cx.closePath();
   }
 
-  /* find nearest particle OR line midpoint */
+  /* perpendicular distance² from point (px,py) to segment (ax,ay)-(bx,by) */
+  function segDist2(px,py,ax,ay,bx,by){
+    var dx=bx-ax,dy=by-ay,len2=dx*dx+dy*dy;
+    if(len2<1) return (px-ax)*(px-ax)+(py-ay)*(py-ay);
+    var t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/len2));
+    var nx=ax+t*dx,ny=ay+t*dy;
+    return (px-nx)*(px-nx)+(py-ny)*(py-ny);
+  }
+
+  /* find nearest grabbable target:
+     - particles: within GRAB_RP px of center
+     - lines: within GRAB_RL px perpendicular to segment (anywhere along it) */
   function findTarget(x,y){
-    var best=null,bd=GRAB_R*GRAB_R;
+    var bestP=null,bdP=GRAB_RP*GRAB_RP;
     for(var i=0;i<N;i++){
       var p=pts[i],dx=p.x-x,dy=p.y-y,d2=dx*dx+dy*dy;
-      if(d2<bd){bd=d2;best={type:'particle',p:p};}
+      if(d2<bdP){bdP=d2;bestP={type:'particle',p:p};}
     }
-    var LINK=theme.link;
+    var bestL=null,bdL=GRAB_RL*GRAB_RL,LINK=theme.link;
     for(var i=0;i<N;i++){
       var p=pts[i];
       for(var j=i+1;j<N;j++){
         var q=pts[j];
         var ddx=p.x-q.x,ddy=p.y-q.y;
         if(ddx*ddx+ddy*ddy>LINK*LINK) continue;
-        var mx=(p.x+q.x)/2,my=(p.y+q.y)/2;
-        var lx=mx-x,ly=my-y,ld=lx*lx+ly*ly;
-        if(ld<bd){bd=ld;best={type:'line',p:p,q:q};}
+        var sd=segDist2(x,y,p.x,p.y,q.x,q.y);
+        if(sd<bdL){bdL=sd;bestL={type:'line',p:p,q:q};}
       }
     }
-    return best;
+    /* prefer line when both found (particle is tiny, lines need lower threshold) */
+    return bestL||bestP;
+  }
+
+  /* build set of particle indices to skip repulsion (near any line segment) */
+  var skipIdx={};
+  function buildSkipSet(){
+    skipIdx={};
+    if(mouse.x<-900) return;
+    var LINK=theme.link,Z2=LINE_ZONE*LINE_ZONE;
+    for(var i=0;i<N;i++){
+      var p=pts[i];
+      for(var j=i+1;j<N;j++){
+        var q=pts[j];
+        var ddx=p.x-q.x,ddy=p.y-q.y;
+        if(ddx*ddx+ddy*ddy>LINK*LINK) continue;
+        if(segDist2(mouse.x,mouse.y,p.x,p.y,q.x,q.y)<Z2){
+          skipIdx[i]=true;skipIdx[j]=true;
+        }
+      }
+    }
   }
 
   /* selector for UI elements — mousedown skips grab inside these */
@@ -3700,8 +3730,8 @@ async function submitPayment(){
     if(getTier()!==tier) init();
     var LINK=theme.link;
 
-    /* refresh hover target every 3 ticks */
-    if(tick%3===0) hoverT=findTarget(mouse.x,mouse.y);
+    /* refresh hover target + skip set every 3 ticks */
+    if(tick%3===0){ hoverT=findTarget(mouse.x,mouse.y); buildSkipSet(); }
 
     /* update + draw particles */
     for(var i=0;i<N;i++){
@@ -3713,9 +3743,8 @@ async function submitPayment(){
         }else{p.x=mouse.x;p.y=mouse.y;}
         p.vx=mvx;p.vy=mvy;
       }else{
-        /* skip repulsion for line-hover endpoints so they stay grabbable */
-        var skip=hoverT&&hoverT.type==='line'&&(hoverT.p===p||hoverT.q===p);
-        if(!skip){
+        /* no repulsion for particles that form a line near the cursor */
+        if(!skipIdx[i]){
           var mdx=p.x-mouse.x,mdy=p.y-mouse.y;
           var md=Math.sqrt(mdx*mdx+mdy*mdy);
           if(md<PUSH&&md>1){var f=(1-md/PUSH)*PUSH_F;p.vx+=mdx/md*f;p.vy+=mdy/md*f;}
@@ -4762,7 +4791,16 @@ function adminSaveClient() {
   function showMsg(color, text) {
     msgEl.style.color = color;
     msgEl.textContent = text;
-    msgEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    /* scroll the admin-body container to bottom so message is always visible */
+    var ab = document.querySelector('.admin-body');
+    if (ab) ab.scrollTop = ab.scrollHeight;
+    /* floating toast so it can never be missed */
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;top:72px;left:50%;transform:translateX(-50%);z-index:999999;padding:13px 26px;border-radius:12px;font-weight:700;font-size:.88rem;color:#fff;white-space:nowrap;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.55);transition:opacity .4s';
+    t.style.background = (color === '#4ade80') ? 'linear-gradient(135deg,#15803d,#16a34a)' : 'linear-gradient(135deg,#7c1d1d,#b91c1c)';
+    t.textContent = text;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.style.opacity='0'; setTimeout(function(){t.remove();},400); }, 3000);
   }
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
