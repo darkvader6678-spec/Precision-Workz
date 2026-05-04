@@ -1085,15 +1085,63 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .wv-sec-type{font-size:.48rem;color:rgba(6,182,212,.7);text-align:right;flex-shrink:0}
 .wv-sec-footer{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:rgba(6,182,212,.04);border-top:1px solid rgba(6,182,212,.1)}
 /* Next in Line scene */
-.wv-next-scene{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:16px}
-.wv-next-orb{width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,.4),rgba(124,58,237,.2),transparent 70%);box-shadow:0 0 40px rgba(168,85,247,.3),0 0 80px rgba(124,58,237,.15);animation:float-gentle 4s ease-in-out infinite}
-.wv-next-ring{position:absolute;border-radius:50%;border:1px solid rgba(168,85,247,.2);animation:ring-pulse 3s ease-in-out infinite;pointer-events:none}
-@keyframes ring-pulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.45}50%{transform:translate(-50%,-50%) scale(1.06);opacity:1}}
-.wv-next-label{text-align:center;position:relative;z-index:3}
-.wv-next-spots{display:flex;gap:8px;margin-top:4px}
-.wv-spot-dot{width:10px;height:10px;border-radius:50%}
-.wv-spot-filled{background:var(--purple2);box-shadow:0 0 8px var(--purple2)}
-.wv-spot-open{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15)}
+/* ── BUILD QUEUE TERMINAL ──────────────────────────── */
+.wv-terminal-window{width:100%;max-width:280px;background:rgba(4,4,13,.98);border:1px solid rgba(124,58,237,.28);border-radius:12px;overflow:hidden;box-shadow:0 0 40px rgba(124,58,237,.1),0 0 80px rgba(6,182,212,.04);position:relative}
+.wv-terminal-window::before{content:'';position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(6,182,212,.35),transparent);animation:wv-scan-h 3s ease-in-out infinite;pointer-events:none;z-index:2;top:0}
+@keyframes wv-scan-h{0%{top:-2px;opacity:0}15%{opacity:1}85%{opacity:.3}100%{top:100%;opacity:0}}
+.wv-term-hdr{display:flex;align-items:center;gap:6px;padding:9px 12px;background:rgba(255,255,255,.02);border-bottom:1px solid rgba(124,58,237,.14)}
+.wv-tdot{width:8px;height:8px;border-radius:50%}
+.wv-term-title-txt{font-size:.5rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-left:auto;font-family:'Orbitron',monospace}
+.wv-term-content{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.wv-term-sect-label{font-size:.46rem;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(124,58,237,.65);margin-bottom:7px;font-family:'Orbitron',monospace}
+.wv-term-client-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.wv-term-client-icon{font-size:.65rem;flex-shrink:0;width:14px;text-align:center;font-family:monospace}
+.wv-term-client-id{font-size:.56rem;color:rgba(255,255,255,.35);font-family:'Orbitron',monospace;flex:1;letter-spacing:.5px}
+.wv-term-bar-wrap{width:56px;height:2px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;flex-shrink:0}
+.wv-term-bar-inner{height:100%;border-radius:999px;background:linear-gradient(90deg,#7c3aed,#a855f7)}
+.wv-term-bar-active{background:linear-gradient(90deg,#7c3aed,#22d3ee);animation:wv-active-bar 2.5s ease-in-out infinite}
+@keyframes wv-active-bar{0%,100%{filter:brightness(1);box-shadow:none}50%{filter:brightness(1.5);box-shadow:0 0 6px rgba(34,211,238,.5)}}
+.wv-term-pct{font-size:.48rem;color:rgba(255,255,255,.25);font-family:monospace;flex-shrink:0;width:28px;text-align:right}
+.wv-term-your-slot{display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.18);border-radius:8px}
+.wv-term-slot-icon{font-size:.85rem;color:var(--cyan2);flex-shrink:0}
+.wv-term-slot-text{font-size:.58rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan2);font-family:'Orbitron',monospace}
+.wv-term-cursor{display:inline-block;width:5px;height:10px;background:var(--cyan2);animation:wv-blink-cur .85s step-end infinite;vertical-align:middle;margin-left:3px;border-radius:1px}
+@keyframes wv-blink-cur{0%,100%{opacity:1}50%{opacity:0}}
+.wv-term-open-slot{display:flex;align-items:center;gap:8px;padding:5px 10px;opacity:.3}
+.wv-term-footer-bar{padding:8px 16px;background:rgba(255,255,255,.015);border-top:1px solid rgba(255,255,255,.05);font-size:.46rem;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(74,222,128,.6);font-family:'Orbitron',monospace}
+/* ── PROJECT PROGRESS (client dashboard) ─────────── */
+.proj-pipeline{display:flex;flex-direction:column;gap:0;padding:4px 0}
+.proj-stage-row{display:flex;align-items:center;gap:12px;padding:9px 0;position:relative}
+.proj-stage-row::before{content:'';position:absolute;left:9px;top:0;bottom:0;width:1px;background:rgba(255,255,255,.05);z-index:0}
+.proj-stage-row:first-child::before{top:50%}
+.proj-stage-row:last-child::before{height:50%}
+.proj-stage-node{width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,255,255,.12);background:#04040d;flex-shrink:0;z-index:1;display:flex;align-items:center;justify-content:center;font-size:.6rem;transition:all .5s}
+.proj-stage-node.complete{border-color:#4ade80;background:rgba(74,222,128,.12);box-shadow:0 0 10px rgba(74,222,128,.25);color:#4ade80}
+.proj-stage-node.active{border-color:var(--cyan2);background:rgba(6,182,212,.08);animation:proj-node-pulse 2s ease-in-out infinite}
+@keyframes proj-node-pulse{0%,100%{box-shadow:0 0 8px rgba(6,182,212,.25)}50%{box-shadow:0 0 20px rgba(6,182,212,.55),0 0 40px rgba(124,58,237,.15)}}
+.proj-stage-node.pending{border-color:rgba(255,255,255,.08)}
+.proj-stage-info{flex:1;min-width:0}
+.proj-stage-name{font-size:.7rem;font-weight:700;color:var(--muted);letter-spacing:.2px;margin-bottom:4px}
+.proj-stage-name.s-active{color:var(--text)}
+.proj-stage-bar-track{height:3px;background:rgba(255,255,255,.05);border-radius:999px;overflow:hidden}
+.proj-stage-bar-fill{height:100%;border-radius:999px;transition:width 1.2s cubic-bezier(.25,.46,.45,.94)}
+.proj-fill-complete{background:linear-gradient(90deg,#22c55e,#4ade80)}
+.proj-fill-active{background:linear-gradient(90deg,#7c3aed,#22d3ee);animation:proj-fill-glow 2s ease-in-out infinite}
+@keyframes proj-fill-glow{0%,100%{box-shadow:none}50%{box-shadow:0 0 8px rgba(34,211,238,.5)}}
+.proj-fill-pending{background:rgba(255,255,255,.03);width:0!important}
+.proj-stage-pct{font-size:.62rem;color:var(--dim);font-family:'Orbitron',monospace;flex-shrink:0;width:34px;text-align:right}
+.proj-current-task{margin-top:12px;padding:11px 13px;background:rgba(6,182,212,.04);border:1px solid rgba(6,182,212,.12);border-radius:10px}
+.proj-task-label{font-size:.5rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(6,182,212,.65);margin-bottom:5px;font-family:'Orbitron',monospace}
+.proj-task-text{font-size:.82rem;color:var(--text);line-height:1.55}
+.proj-updated{font-size:.63rem;color:var(--dim);margin-top:8px;text-align:right}
+/* admin progress form */
+.prog-stage-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.prog-stage-row:last-child{border-bottom:none}
+.prog-stage-label{font-size:.78rem;font-weight:700;color:var(--muted);width:110px;flex-shrink:0}
+.prog-slider{flex:1;appearance:none;height:4px;border-radius:999px;background:rgba(255,255,255,.08);outline:none;cursor:pointer}
+.prog-slider::-webkit-slider-thumb{appearance:none;width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#22d3ee);cursor:pointer;box-shadow:0 0 8px rgba(124,58,237,.5)}
+.prog-pct-display{font-size:.75rem;font-weight:700;color:var(--cyan2);width:36px;text-align:right;font-family:'Orbitron',monospace}
+.prog-status-sel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:var(--text);padding:4px 8px;font-size:.72rem;font-family:inherit;cursor:pointer}
 /* Work stats row */
 .work-stat-num{font-size:1.5rem;font-weight:800;line-height:1}
 
@@ -1621,20 +1669,42 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <div class="work-visual" data-cta="Start a Project →">
         <div class="work-visual-inner" style="background:linear-gradient(145deg,#070410,#0e0618,#130820)">
           <div style="position:absolute;inset:0;background:radial-gradient(circle at 40% 55%,rgba(236,72,153,.1),transparent 50%),radial-gradient(circle at 70% 30%,rgba(124,58,237,.12),transparent 50%)"></div>
-          <div class="wv-next-scene">
-            <div class="wv-next-ring" style="width:160px;height:160px;top:50%;left:50%"></div>
-            <div class="wv-next-ring" style="width:230px;height:230px;top:50%;left:50%;animation-delay:.9s;animation-duration:3.8s;border-color:rgba(124,58,237,.1)"></div>
-            <div class="wv-next-orb"></div>
-            <div class="wv-next-label">
-              <div style="font-size:.52rem;letter-spacing:2px;text-transform:uppercase;color:rgba(168,85,247,.7);margin-bottom:5px;font-weight:600">YOUR PROJECT</div>
-              <div style="font-size:1.05rem;font-weight:800;background:linear-gradient(135deg,var(--purple2),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Next in Line</div>
+          <div class="wv-terminal-window">
+            <div class="wv-term-hdr">
+              <div class="wv-tdot" style="background:#ef4444"></div>
+              <div class="wv-tdot" style="background:#f59e0b"></div>
+              <div class="wv-tdot" style="background:#22c55e"></div>
+              <div class="wv-term-title-txt">Build Queue</div>
             </div>
-            <div class="wv-next-spots">
-              <div class="wv-spot-dot wv-spot-filled"></div>
-              <div class="wv-spot-dot wv-spot-filled"></div>
-              <div class="wv-spot-dot wv-spot-open"></div>
-              <div class="wv-spot-dot wv-spot-open"></div>
+            <div class="wv-term-content">
+              <div>
+                <div class="wv-term-sect-label">Active Projects</div>
+                <div class="wv-term-client-row">
+                  <div class="wv-term-client-icon" style="color:#7c3aed">■</div>
+                  <div class="wv-term-client-id">CLIENT_001</div>
+                  <div class="wv-term-bar-wrap"><div class="wv-term-bar-inner" style="width:100%"></div></div>
+                  <div class="wv-term-pct">100%</div>
+                </div>
+                <div class="wv-term-client-row">
+                  <div class="wv-term-client-icon" style="color:#a855f7">■</div>
+                  <div class="wv-term-client-id">CLIENT_002</div>
+                  <div class="wv-term-bar-wrap"><div class="wv-term-bar-inner wv-term-bar-active" style="width:68%"></div></div>
+                  <div class="wv-term-pct">68%</div>
+                </div>
+              </div>
+              <div>
+                <div class="wv-term-sect-label">Available Slots</div>
+                <div class="wv-term-your-slot">
+                  <div class="wv-term-slot-icon">▶</div>
+                  <div class="wv-term-slot-text">Your Project<span class="wv-term-cursor"></span></div>
+                </div>
+                <div class="wv-term-open-slot" style="margin-top:6px">
+                  <div class="wv-term-client-icon" style="color:rgba(255,255,255,.2)">○</div>
+                  <div class="wv-term-client-id">OPEN SLOT</div>
+                </div>
+              </div>
             </div>
+            <div class="wv-term-footer-bar">▶ Accepting New Projects</div>
           </div>
         </div>
       </div>
@@ -3072,6 +3142,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   <div class="admin-body">
     <div class="admin-tabs-row">
       <button class="admin-tab-btn active" id="atab-clients" onclick="adminTab('clients')">Clients</button>
+      <button class="admin-tab-btn" id="atab-progress" onclick="adminTab('progress')">Progress</button>
       <button class="admin-tab-btn" id="atab-reports" onclick="adminTab('reports')">Reports <span id="atab-reports-badge" style="display:none;background:rgba(239,68,68,.18);color:#f87171;border-radius:999px;padding:1px 7px;font-size:.65rem;margin-left:4px">0</span></button>
       <button class="admin-tab-btn" id="atab-monitor" onclick="adminTab('monitor')">Monitor</button>
     </div>
@@ -3194,6 +3265,32 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         </div>
         <div id="adm-reports-list" style="margin-top:14px">
           <p style="color:var(--dim);font-size:.85rem">Loading…</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress View -->
+    <div id="adm-progress-view" style="display:none;padding-top:20px">
+      <div class="admin-section">
+        <div class="admin-section-title">Project Progress</div>
+        <p style="font-size:.82rem;color:var(--dim);margin-bottom:18px;line-height:1.6">Set the progress for each client's build stages. Clients will see a live animated view in their dashboard.</p>
+        <div style="margin-bottom:18px">
+          <div style="font-size:.72rem;color:var(--dim);margin-bottom:6px;font-weight:600">Select Client</div>
+          <select class="admin-input" id="prog-client-select" onchange="adminProgressClientChange()" style="max-width:340px">
+            <option value="">— select a client —</option>
+          </select>
+        </div>
+        <div id="prog-form" style="display:none">
+          <div style="font-size:.72rem;color:var(--dim);margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px">Build Stages</div>
+          <div id="prog-stages-form" style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px 16px;margin-bottom:16px"></div>
+          <div>
+            <div style="font-size:.72rem;color:var(--dim);margin-bottom:6px;font-weight:600">Current Task (shown to client)</div>
+            <input class="admin-input" id="prog-task" type="text" placeholder="e.g. Finalizing homepage layout…" style="max-width:100%">
+          </div>
+          <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+            <button class="admin-btn primary" onclick="adminSaveProgress()">Save Progress</button>
+            <div class="admin-msg" id="prog-msg" style="margin:0"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -4363,6 +4460,7 @@ function openDashboard(){
         user.sub=d.client.sub||null;
         user.billing=d.client.billing||'monthly';
         user.packageType=d.client.packageType||null;
+        user.progress=d.client.progress||null;
         setUserData(user);
       }
       renderDashboard(user);
@@ -4440,10 +4538,38 @@ function renderDashboard(user){
     reqHtml='<div class="acct-req-panel '+panelClass+'"><div class="acct-section-label" style="margin-bottom:12px">Submit a Request</div>'+btns+'</div>';
   }
 
+  /* project progress */
+  var progressHtml = '';
+  if (pkg && user.progress && user.progress.stages && user.progress.stages.length) {
+    var pr = user.progress;
+    var stagesHtml = pr.stages.map(function(s) {
+      var nodeClass = 'proj-stage-node ' + (s.status==='complete'?'complete':s.status==='active'?'active':'pending');
+      var nameClass = 'proj-stage-name' + (s.status==='active'?' s-active':'');
+      var fillClass = 'proj-stage-bar-fill ' + (s.status==='complete'?'proj-fill-complete':s.status==='active'?'proj-fill-active':'proj-fill-pending');
+      var icon = s.status==='complete'?'✓':s.status==='active'?'●':'';
+      return '<div class="proj-stage-row">'
+        + '<div class="'+nodeClass+'">'+icon+'</div>'
+        + '<div class="proj-stage-info">'
+          + '<div class="'+nameClass+'">'+escHtml(s.name)+'</div>'
+          + '<div class="proj-stage-bar-track"><div class="'+fillClass+'" style="width:'+Math.min(100,s.pct||0)+'%"></div></div>'
+        + '</div>'
+        + '<div class="proj-stage-pct">'+(s.pct||0)+'%</div>'
+      + '</div>';
+    }).join('');
+    var taskHtml = pr.currentTask ? '<div class="proj-current-task"><div class="proj-task-label">▶ Current Task</div><div class="proj-task-text">'+escHtml(pr.currentTask)+'</div></div>' : '';
+    var updHtml = pr.lastUpdated ? '<div class="proj-updated">Updated '+new Date(pr.lastUpdated).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div>' : '';
+    progressHtml = '<div><div class="acct-section-label">Project Progress</div>'
+      + '<div class="acct-pkg-card" style="padding:14px 16px">'
+      + '<div class="proj-pipeline">'+stagesHtml+'</div>'
+      + taskHtml + updHtml
+      + '</div></div>';
+  }
+
   body.innerHTML=
     '<div class="acct-user-card">'+avHtml+'<div><div class="acct-user-name-lg">'+user.name+'</div><div class="acct-user-email-lg">'+user.email+'</div></div></div>'+
     '<div><div class="acct-section-label">Subscription</div>'+subHtml+'</div>'+
     pkgHtml+
+    progressHtml+
     reqHtml+
     '<div><div class="acct-section-label" style="margin-bottom:8px">My Requests</div><div id="client-req-list"><p style="color:var(--dim);font-size:.82rem;text-align:center;padding:16px">Loading…</p></div></div>'+
     '<button class="acct-signout-btn" onclick="signOut()">Sign Out</button>';
@@ -4741,6 +4867,7 @@ function adminLoadData() {
     .then(function(d) {
       if (d.error) { console.warn('Admin load error:', d.error); return; }
       _adminData = d;
+      window._adminClients = d.clients;
       adminRenderStats(d.clients);
       adminRenderDevs(d.admins, d.primaryAdmin, d.coOwner);
       adminRenderTable(d.clients);
@@ -5057,14 +5184,16 @@ function adminResolveRequest(id) {
 var _monTimer = null;
 
 function adminTab(tab) {
-  ['clients','reports','monitor'].forEach(function(t) {
+  ['clients','progress','reports','monitor'].forEach(function(t) {
     var btn = document.getElementById('atab-' + t);
     if (btn) btn.classList.toggle('active', t === tab);
   });
   var cv = document.getElementById('adm-clients-view');
+  var pv = document.getElementById('adm-progress-view');
   var rv = document.getElementById('adm-reports-view');
   var mv = document.getElementById('adm-monitor-view');
   if (cv) cv.style.display = tab === 'clients' ? '' : 'none';
+  if (pv) pv.style.display = tab === 'progress' ? '' : 'none';
   if (rv) rv.style.display = tab === 'reports' ? '' : 'none';
   if (mv) mv.style.display = tab === 'monitor' ? '' : 'none';
   if (tab === 'monitor') {
@@ -5074,6 +5203,91 @@ function adminTab(tab) {
     if (_monTimer) { clearInterval(_monTimer); _monTimer = null; }
   }
   if (tab === 'reports') adminLoadReports();
+  if (tab === 'progress') adminProgressPopulateClients();
+}
+
+/* ── ADMIN PROJECT PROGRESS ─────────────────────────── */
+var _progressClients = {};
+var PROG_STAGES = ['Discovery','Design','Development','Security','Launch'];
+
+function adminProgressPopulateClients() {
+  var sel = document.getElementById('prog-client-select');
+  if (!sel) return;
+  _progressClients = {};
+  var clients = window._adminClients || {};
+  var emails = Object.keys(clients);
+  sel.innerHTML = '<option value="">— select a client —</option>';
+  emails.filter(function(e){ return clients[e].packageType; }).forEach(function(e) {
+    _progressClients[e] = clients[e];
+    var opt = document.createElement('option');
+    opt.value = e;
+    opt.textContent = (clients[e].name || e) + ' (' + (clients[e].packageType||'') + ')';
+    sel.appendChild(opt);
+  });
+  // add all remaining clients (no package) as secondary group
+  emails.filter(function(e){ return !clients[e].packageType; }).forEach(function(e) {
+    _progressClients[e] = clients[e];
+    var opt = document.createElement('option');
+    opt.value = e;
+    opt.textContent = (clients[e].name || e);
+    sel.appendChild(opt);
+  });
+  document.getElementById('prog-form').style.display = 'none';
+}
+
+function adminProgressClientChange() {
+  var email = document.getElementById('prog-client-select').value;
+  var form = document.getElementById('prog-form');
+  if (!email) { form.style.display = 'none'; return; }
+  form.style.display = '';
+  var client = _progressClients[email] || {};
+  var progress = client.progress || {};
+  var stages = progress.stages || PROG_STAGES.map(function(n){ return {name:n,pct:0,status:'pending'}; });
+  document.getElementById('prog-task').value = progress.currentTask || '';
+  var stagesEl = document.getElementById('prog-stages-form');
+  stagesEl.innerHTML = stages.map(function(s, i) {
+    return '<div class="prog-stage-row">'
+      + '<div class="prog-stage-label">' + escHtml(s.name) + '</div>'
+      + '<input class="prog-slider" type="range" min="0" max="100" value="' + (s.pct||0) + '" id="prog-pct-' + i + '" oninput="document.getElementById(\'prog-pct-val-' + i + '\').textContent=this.value+\'%\'">'
+      + '<div class="prog-pct-display" id="prog-pct-val-' + i + '">' + (s.pct||0) + '%</div>'
+      + '<select class="prog-status-sel" id="prog-status-' + i + '">'
+        + ['pending','active','complete'].map(function(st){ return '<option value="'+st+'"'+(s.status===st?' selected':'')+'>'+st+'</option>'; }).join('')
+      + '</select>'
+    + '</div>';
+  }).join('');
+}
+
+function adminSaveProgress() {
+  var email = document.getElementById('prog-client-select').value;
+  var msgEl = document.getElementById('prog-msg');
+  if (!email) return;
+  var stages = PROG_STAGES.map(function(name, i) {
+    var pct = parseInt(document.getElementById('prog-pct-' + i).value, 10) || 0;
+    var status = document.getElementById('prog-status-' + i).value;
+    return {name: name, pct: pct, status: status};
+  });
+  var currentTask = (document.getElementById('prog-task').value || '').trim();
+  var btn = document.querySelector('#adm-progress-view .admin-btn.primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  fetch('/api/admin/set-progress', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({adminEmail: adminGetEmail(), targetEmail: email, stages: stages, currentTask: currentTask})
+  }).then(function(r){return r.json();}).then(function(d){
+    if (btn) { btn.disabled = false; btn.textContent = 'Save Progress'; }
+    if (d.ok) {
+      msgEl.style.color = '#4ade80'; msgEl.textContent = '✓ Saved';
+      if (_progressClients[email]) {
+        _progressClients[email].progress = {stages: stages, currentTask: currentTask, lastUpdated: new Date().toISOString()};
+      }
+      setTimeout(function(){ msgEl.textContent = ''; }, 3000);
+    } else {
+      msgEl.style.color = '#f87171'; msgEl.textContent = d.error || 'Save failed';
+    }
+  }).catch(function(){
+    if (btn) { btn.disabled = false; btn.textContent = 'Save Progress'; }
+    msgEl.style.color = '#f87171'; msgEl.textContent = 'Network error';
+  });
 }
 
 function monFmtBytes(b) {

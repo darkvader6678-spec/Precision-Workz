@@ -486,6 +486,25 @@ async function handleAPI(req, res, urlPath) {
       }
     }
 
+    if (urlPath === '/api/admin/set-progress' && req.method === 'POST') {
+      const { targetEmail, stages, currentTask } = body;
+      if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
+      const clients = await readClients();
+      const key = targetEmail.toLowerCase().trim();
+      if (!clients[key]) return json(res, 404, { error: 'Client not found' });
+      clients[key].progress = {
+        stages: (stages || []).map(s => ({ name: String(s.name||''), pct: Math.min(100, Math.max(0, parseInt(s.pct)||0)), status: ['pending','active','complete'].includes(s.status) ? s.status : 'pending' })),
+        currentTask: (currentTask || '').trim() || null,
+        lastUpdated: new Date().toISOString(),
+      };
+      try {
+        await writeClients(clients);
+        return json(res, 200, { ok: true });
+      } catch(e) {
+        return json(res, 500, { error: 'Save failed: ' + e.message });
+      }
+    }
+
     if (urlPath === '/api/admin/remove-client' && req.method === 'POST') {
       const { targetEmail } = body;
       if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
