@@ -235,8 +235,17 @@ async function kvWrite(key, value) {
   }
 }
 
-const readAdmins   = () => kvRead('admins',   [PRIMARY_ADMIN]);
-const readRequests = () => kvRead('requests', []);
+const readAdmins = () => kvRead('admins', [PRIMARY_ADMIN]);
+
+async function readRequests() {
+  const raw = await kvRead('requests', []);
+  return Array.isArray(raw) ? raw : [];
+}
+
+async function readReports() {
+  const raw = await kvRead('reports', []);
+  return Array.isArray(raw) ? raw : [];
+}
 
 const _emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 async function readClients() {
@@ -254,7 +263,6 @@ async function readClients() {
   }
   return raw;
 }
-const readReports  = () => kvRead('reports',  []);
 const readUsers    = () => kvRead('users',    {});
 const writeAdmins   = (v) => kvWrite('admins',   v);
 const writeClients  = (v) => kvWrite('clients',  v);
