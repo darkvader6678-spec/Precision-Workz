@@ -1234,6 +1234,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 @keyframes sg-dot-pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
 .sg-footer-note{font-size:.68rem;color:rgba(255,255,255,.2);display:flex;align-items:center;gap:8px;margin-top:6px}
 .sg-footer-note span{opacity:.5}
+.grecaptcha-badge{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
 #sg-enter-btn{display:block;width:100%;margin-top:16px;padding:13px 20px;background:linear-gradient(135deg,#7c3aed,#06b6d4);color:#fff;font-weight:800;font-size:.92rem;border:none;border-radius:12px;cursor:pointer;font-family:inherit;letter-spacing:.3px;box-shadow:0 0 20px rgba(124,58,237,.35);opacity:0;pointer-events:none;transform:translateY(6px);transition:opacity .45s ease,transform .45s ease}
 #sg-enter-btn.sg-btn-ready{opacity:1;pointer-events:auto;transform:translateY(0)}
 #sg-enter-btn:hover{box-shadow:0 0 32px rgba(124,58,237,.6)}
@@ -3148,6 +3149,9 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     </div>
     <div id="adm-clients-view">
 
+    <!-- KV Status Banner -->
+    <div id="adm-kv-banner" style="display:none;margin-bottom:16px;padding:12px 16px;border-radius:10px;font-size:.8rem;font-weight:600;line-height:1.55"></div>
+
     <!-- Stats -->
     <div class="admin-stats-row">
       <div class="admin-stat-card"><div class="admin-stat-num" id="adm-stat-total">0</div><div class="admin-stat-label">Total Clients</div></div>
@@ -4859,9 +4863,43 @@ function adminGetEmail() {
   return u ? u.email : '';
 }
 
+function adminCheckKV() {
+  var email = adminGetEmail();
+  if (!email) return;
+  fetch('/api/admin/kv-status?adminEmail=' + encodeURIComponent(email))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var banner = document.getElementById('adm-kv-banner');
+      if (!banner) return;
+      if (!d.configured) {
+        banner.style.display = '';
+        banner.style.background = 'rgba(239,68,68,.08)';
+        banner.style.border = '1px solid rgba(239,68,68,.25)';
+        banner.style.color = '#fca5a5';
+        banner.innerHTML = '<b style="color:#f87171">⚠ KV Storage Not Configured</b> — Data is in-memory only and will reset on every server restart. '
+          + 'To persist data: go to Vercel → Storage → Create Upstash Redis → Connect to this project. '
+          + 'Vercel will auto-add <code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px">UPSTASH_REDIS_REST_URL</code> and <code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px">UPSTASH_REDIS_REST_TOKEN</code> env vars, then redeploy.';
+      } else if (!d.kvWorking) {
+        banner.style.display = '';
+        banner.style.background = 'rgba(251,146,60,.08)';
+        banner.style.border = '1px solid rgba(251,146,60,.25)';
+        banner.style.color = '#fdba74';
+        banner.innerHTML = '<b style="color:#fb923c">⚠ KV Configured but Not Responding</b> — Error: ' + (d.kvError||'unknown') + '. Check your KV credentials in Vercel env vars.';
+      } else {
+        banner.style.display = '';
+        banner.style.background = 'rgba(74,222,128,.06)';
+        banner.style.border = '1px solid rgba(74,222,128,.2)';
+        banner.style.color = '#86efac';
+        banner.innerHTML = '<b style="color:#4ade80">✓ KV Storage Active</b> — Data is persisting correctly.';
+        setTimeout(function(){ banner.style.display = 'none'; }, 4000);
+      }
+    }).catch(function(){});
+}
+
 function adminLoadData() {
   var email = adminGetEmail();
   if (!email) return;
+  adminCheckKV();
   fetch('/api/admin/data?adminEmail=' + encodeURIComponent(email))
     .then(function(r) { return r.json(); })
     .then(function(d) {

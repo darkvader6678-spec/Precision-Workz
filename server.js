@@ -491,7 +491,7 @@ async function handleAPI(req, res, urlPath) {
       if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
       const clients = await readClients();
       const key = targetEmail.toLowerCase().trim();
-      if (!clients[key]) return json(res, 404, { error: 'Client not found' });
+      if (!clients[key]) clients[key] = { email: key, name: key, addedAt: new Date().toISOString() };
       clients[key].progress = {
         stages: (stages || []).map(s => ({ name: String(s.name||''), pct: Math.min(100, Math.max(0, parseInt(s.pct)||0)), status: ['pending','active','complete'].includes(s.status) ? s.status : 'pending' })),
         currentTask: (currentTask || '').trim() || null,
@@ -573,6 +573,31 @@ async function handleAPI(req, res, urlPath) {
       rec.cooldownUntil = 0; rec.bypass = false; rec.forcedRisk = null;
       persistIPTracker();
       return json(res, 200, { ok: true });
+    }
+
+    if (urlPath === '/api/admin/kv-status') {
+      const configured = !!(KV_URL && KV_TOKEN);
+      let kvWorking = false;
+      let kvError = null;
+      if (configured) {
+        try {
+          const testKey = '_kv_health_check';
+          const testVal = { ts: Date.now() };
+          const wr = await fetch(KV_URL + '/set/' + encodeURIComponent(testKey), {
+            method: 'POST',
+            headers: { Authorization: 'Bearer ' + KV_TOKEN, 'Content-Type': 'application/json' },
+            body: JSON.stringify(JSON.stringify(testVal)),
+          });
+          if (!wr.ok) throw new Error('write HTTP ' + wr.status);
+          const rr = await fetch(KV_URL + '/get/' + encodeURIComponent(testKey), {
+            headers: { Authorization: 'Bearer ' + KV_TOKEN },
+          });
+          if (!rr.ok) throw new Error('read HTTP ' + rr.status);
+          kvWorking = true;
+        } catch(e) { kvError = e.message; }
+      }
+      const clientCount = Object.keys(_cache['clients'] || {}).length;
+      return json(res, 200, { configured, kvWorking, kvError, cacheKeys: Object.keys(_cache), clientsInCache: clientCount, KV_URL: KV_URL ? KV_URL.slice(0,40)+'…' : null });
     }
 
     if (urlPath === '/api/admin/metrics') {
