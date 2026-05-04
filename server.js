@@ -463,9 +463,23 @@ async function handleAPI(req, res, urlPath) {
       return json(res, 200, { ok: true });
     }
 
+    if (urlPath === '/api/admin/clean-clients' && req.method === 'POST') {
+      const clients = await readClients();
+      const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const before = Object.keys(clients).length;
+      for (const k of Object.keys(clients)) {
+        if (!emailRe.test(k)) delete clients[k];
+      }
+      const removed = before - Object.keys(clients).length;
+      await writeClients(clients);
+      return json(res, 200, { ok: true, removed, remaining: Object.keys(clients).length });
+    }
+
     if (urlPath === '/api/admin/set-client' && req.method === 'POST') {
       const { targetEmail, name, sub, billing, packageType, notes } = body;
       if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
+      const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRe.test(targetEmail.trim())) return json(res, 400, { error: 'Invalid email address' });
       const clients = await readClients();
       const key = targetEmail.toLowerCase().trim();
       clients[key] = {
@@ -489,6 +503,7 @@ async function handleAPI(req, res, urlPath) {
     if (urlPath === '/api/admin/set-progress' && req.method === 'POST') {
       const { targetEmail, stages, currentTask } = body;
       if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(targetEmail.trim())) return json(res, 400, { error: 'Invalid email' });
       const clients = await readClients();
       const key = targetEmail.toLowerCase().trim();
       if (!clients[key]) clients[key] = { email: key, name: key, addedAt: new Date().toISOString() };
