@@ -317,7 +317,21 @@ function sendVerificationEmail(toEmail, token) {
     from: '"Precision Workz" <' + GMAIL_USER + '>',
     to: toEmail,
     subject: 'Verify your Precision Workz account',
-    html: '<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#04040d;color:#f1f5f9;border-radius:16px"><h2 style="font-size:1.5rem;font-weight:800;margin-bottom:12px">Verify your email</h2><p style="color:#94a3b8;line-height:1.7;margin-bottom:24px">Click the button below to verify your email and set your password. This link expires in 24 hours.</p><a href="' + link + '" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#7c3aed,#06b6d4);color:#fff;font-weight:700;border-radius:10px;text-decoration:none">Verify Email & Set Password →</a><p style="color:#475569;font-size:.8rem;margin-top:24px">If you did not request this, ignore this email.</p></div>'
+    text: 'Verify your Precision Workz email\n\nClick the link below to verify your email and set your password. This link expires in 24 hours.\n\n' + link + '\n\nIf you did not request this, ignore this email.',
+    html: [
+      '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#ffffff;border-radius:12px;border:1px solid #e2e8f0">',
+      '<h2 style="font-size:1.4rem;font-weight:800;color:#0f172a;margin:0 0 12px">Verify your email</h2>',
+      '<p style="color:#475569;line-height:1.7;margin:0 0 28px;font-size:.92rem">Click the button below to verify your email and set your password. This link expires in 24 hours.</p>',
+      '<table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:24px">',
+      '<tr><td style="background:#7c3aed;border-radius:10px;padding:0">',
+      '<a href="' + link + '" style="display:inline-block;padding:14px 28px;color:#ffffff;font-weight:700;font-size:.95rem;text-decoration:none;border-radius:10px;font-family:Arial,sans-serif">Verify Email &amp; Set Password &#8594;</a>',
+      '</td></tr></table>',
+      '<p style="color:#64748b;font-size:.8rem;margin:0 0 8px">Button not working? Copy and paste this link into your browser:</p>',
+      '<p style="margin:0"><a href="' + link + '" style="color:#7c3aed;font-size:.78rem;word-break:break-all">' + link + '</a></p>',
+      '<hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">',
+      '<p style="color:#94a3b8;font-size:.75rem;margin:0">If you did not request this, ignore this email.</p>',
+      '</div>'
+    ].join('')
   });
 }
 
