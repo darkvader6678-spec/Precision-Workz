@@ -244,6 +244,13 @@ function sendVerificationEmail(toEmail, token) {
   });
 }
 
+async function sendEmail(to, subject, html) {
+  if (!nodemailer || !GMAIL_USER || !GMAIL_PASS) return;
+  const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: GMAIL_USER, pass: GMAIL_PASS } });
+  const recipients = Array.isArray(to) ? to.filter(Boolean).join(',') : to;
+  await transporter.sendMail({ from: '"Precision Workz" <' + GMAIL_USER + '>', to: recipients, subject, html });
+}
+
 function serveVerifyPage(res, token, user) {
   res.writeHead(200, { 'Content-Type': 'text/html' });
   res.end('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Set Password — Precision Workz</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,system-ui,sans-serif;background:#04040d;color:#f1f5f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}.box{background:linear-gradient(145deg,#0d0d26,#121232);border:1px solid rgba(124,58,237,.35);border-radius:24px;padding:40px 36px;max-width:420px;width:100%}h2{font-size:1.6rem;font-weight:800;margin-bottom:8px}p{color:#94a3b8;font-size:.88rem;line-height:1.7;margin-bottom:24px}label{display:block;font-size:.78rem;font-weight:600;color:#94a3b8;margin-bottom:6px}input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#f1f5f9;padding:12px 14px;font-size:.9rem;outline:none;margin-bottom:16px;font-family:inherit}input:focus{border-color:rgba(124,58,237,.5)}button{width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#06b6d4);color:#fff;font-weight:700;font-size:.95rem;border:none;cursor:pointer;font-family:inherit}.msg{margin-top:12px;font-size:.85rem;text-align:center}.ok{color:#4ade80}.err{color:#f87171}</style></head><body><div class="box"><h2>Set Your Password</h2><p>Creating account for <strong style="color:#22d3ee">' + user.email + '</strong></p><label>Password</label><input type="password" id="pw1" placeholder="At least 8 characters"><label>Confirm Password</label><input type="password" id="pw2" placeholder="Repeat password"><button onclick="go()">Create Account →</button><div class="msg" id="m"></div></div><script>async function go(){var p1=document.getElementById("pw1").value,p2=document.getElementById("pw2").value,m=document.getElementById("m");if(p1.length<8){m.className="msg err";m.textContent="Password must be at least 8 characters.";return}if(p1!==p2){m.className="msg err";m.textContent="Passwords do not match.";return}m.className="msg";m.textContent="Setting up...";var r=await fetch("/api/set-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:"' + token + '",password:p1})});var d=await r.json();if(d.ok){m.className="msg ok";m.textContent="Account created! Redirecting...";setTimeout(function(){window.location="/"},1800);}else{m.className="msg err";m.textContent=d.error||"Something went wrong.";}}</script></body></html>');
@@ -302,17 +309,36 @@ async function handleAPI(req, res, urlPath) {
   if (urlPath === '/api/request' && req.method === 'POST') {
     try {
       const body = await parseBody(req);
-      const { email, name, type, details, sub } = body;
+      const { email, name, type, details, sub, phone, service, promoCode } = body;
       if (!email || !details) return json(res, 400, { error: 'Missing fields' });
       const newReq = {
         id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-        email, name: name || email, type: type || 'general', details, sub: sub || null,
-        status: 'open', createdAt: new Date().toISOString(),
+        email, name: name || email, type: type || 'general', details,
+        phone: phone || null, service: service || null, promoCode: promoCode || null,
+        sub: sub || null, status: 'open', createdAt: new Date().toISOString(),
       };
       const reqs = await readRequests();
       reqs.unshift(newReq);
       await writeRequests(reqs);
       console.log('[Request submitted]', newReq.type, 'from', newReq.email);
+      // Email notification to admins
+      const typeLabel = newReq.type === 'quote' ? 'Quote Request' : newReq.type.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+      const adminRecipients = [GMAIL_USER, CO_OWNER_EMAIL].filter(Boolean);
+      const adminHtml = '<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#04040d;color:#f1f5f9;border-radius:16px">'
+        + '<div style="font-size:.6rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#94a3b8;margin-bottom:16px">Precision Workz</div>'
+        + '<h2 style="font-size:1.3rem;font-weight:800;margin:0 0 6px">New ' + typeLabel + '</h2>'
+        + '<p style="color:#94a3b8;font-size:.85rem;margin:0 0 24px">' + new Date().toLocaleString() + '</p>'
+        + '<table style="width:100%;border-collapse:collapse;margin-bottom:20px">'
+        + '<tr><td style="padding:8px 0;color:#64748b;font-size:.82rem;width:100px">From</td><td style="padding:8px 0;font-weight:600">' + (newReq.name || '') + '</td></tr>'
+        + '<tr><td style="padding:8px 0;color:#64748b;font-size:.82rem">Email</td><td style="padding:8px 0"><a href="mailto:' + newReq.email + '" style="color:#22d3ee">' + newReq.email + '</a></td></tr>'
+        + (newReq.phone ? '<tr><td style="padding:8px 0;color:#64748b;font-size:.82rem">Phone</td><td style="padding:8px 0;color:#22d3ee">' + newReq.phone + '</td></tr>' : '')
+        + (newReq.service ? '<tr><td style="padding:8px 0;color:#64748b;font-size:.82rem">Package</td><td style="padding:8px 0">' + newReq.service + '</td></tr>' : '')
+        + (newReq.promoCode ? '<tr><td style="padding:8px 0;color:#64748b;font-size:.82rem">Promo</td><td style="padding:8px 0">' + newReq.promoCode + '</td></tr>' : '')
+        + '</table>'
+        + '<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;font-size:.88rem;color:#cbd5e1;white-space:pre-wrap;word-break:break-word">' + newReq.details + '</div>'
+        + '<p style="margin-top:24px;font-size:.75rem;color:#475569">Reply directly to this email to respond to the client, or log in to the admin panel.</p>'
+        + '</div>';
+      sendEmail(adminRecipients, 'New ' + typeLabel + ' — ' + (newReq.name || newReq.email), adminHtml).catch(e => console.warn('[Email notify]', e.message));
       return json(res, 200, { ok: true, id: newReq.id });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
@@ -421,6 +447,19 @@ async function handleAPI(req, res, urlPath) {
       if (!reqs[idx].replies) reqs[idx].replies = [];
       reqs[idx].replies.push({ text: replyText, from: 'admin', createdAt: new Date().toISOString() });
       await writeRequests(reqs);
+      // Email client + notify co-owner
+      const clientEmail = reqs[idx].email;
+      const clientName = reqs[idx].name || clientEmail;
+      const replyHtml = '<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#04040d;color:#f1f5f9;border-radius:16px">'
+        + '<div style="font-size:.6rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#94a3b8;margin-bottom:16px">Precision Workz</div>'
+        + '<h2 style="font-size:1.3rem;font-weight:800;margin:0 0 8px">We replied to your request</h2>'
+        + '<p style="color:#94a3b8;font-size:.85rem;margin:0 0 24px">Hi ' + clientName.split(' ')[0] + ', here\'s our response:</p>'
+        + '<div style="background:rgba(255,255,255,.04);border:1px solid rgba(6,182,212,.2);border-radius:10px;padding:16px;font-size:.88rem;color:#cbd5e1;white-space:pre-wrap;word-break:break-word">' + replyText + '</div>'
+        + '<p style="margin-top:24px;font-size:.82rem;color:#94a3b8">You can reply to this email or visit <a href="' + SITE_URL + '" style="color:#22d3ee">your dashboard</a> to view the full thread.</p>'
+        + '<p style="margin-top:8px;font-size:.75rem;color:#475569">— Precision Workz · Tucson, AZ</p>'
+        + '</div>';
+      sendEmail(clientEmail, 'Reply from Precision Workz', replyHtml).catch(e => console.warn('[Email reply]', e.message));
+      if (CO_OWNER_EMAIL) sendEmail(CO_OWNER_EMAIL, 'Reply sent to ' + clientEmail, replyHtml).catch(e => console.warn('[Email co-owner]', e.message));
       return json(res, 200, { ok: true });
     }
 

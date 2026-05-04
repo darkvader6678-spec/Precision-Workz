@@ -1146,29 +1146,37 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 #security-gate{position:fixed;inset:0;z-index:999999;background:#04040d;display:flex;align-items:center;justify-content:center;transition:opacity .65s cubic-bezier(.22,1,.36,1)}
 #security-gate.sg-exit{opacity:0;pointer-events:none}
 #security-gate::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 28% 55%,rgba(124,58,237,.14),transparent 52%),radial-gradient(ellipse at 72% 45%,rgba(6,182,212,.09),transparent 52%);pointer-events:none}
-.sg-topbar{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,#7c3aed 35%,#22d3ee 65%,transparent 100%);animation:sg-sweep 4s ease-in-out infinite}
-@keyframes sg-sweep{0%,100%{opacity:.5;background-position:0% 50%}50%{opacity:1;background-position:100% 50%}}
+.sg-topbar{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,#7c3aed 35%,#22d3ee 65%,transparent 100%);animation:sg-topbar-anim 2s ease-in-out infinite}
+.sg-topbar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:inherit;filter:blur(4px);opacity:.6}
+@keyframes sg-topbar-anim{0%,100%{opacity:.4;background-size:200% 100%;background-position:0% 50%}50%{opacity:1;background-size:200% 100%;background-position:100% 50%}}
 .sg-corner{position:absolute;width:18px;height:18px;opacity:.35}
 .sg-corner.tl{top:20px;left:20px;border-top:1.5px solid var(--cyan2);border-left:1.5px solid var(--cyan2)}
 .sg-corner.tr{top:20px;right:20px;border-top:1.5px solid var(--cyan2);border-right:1.5px solid var(--cyan2)}
 .sg-corner.bl{bottom:20px;left:20px;border-bottom:1.5px solid var(--cyan2);border-left:1.5px solid var(--cyan2)}
 .sg-corner.br{bottom:20px;right:20px;border-bottom:1.5px solid var(--cyan2);border-right:1.5px solid var(--cyan2)}
 .sg-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:18px;padding:48px 32px;text-align:center}
-.sg-ring-wrap{position:relative;width:88px;height:88px;display:flex;align-items:center;justify-content:center;margin-bottom:4px}
-.sg-ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(124,58,237,.45);animation:sg-ring-pulse 2.4s ease-in-out infinite}
-.sg-ring2{position:absolute;inset:-10px;border-radius:50%;border:1px solid rgba(6,182,212,.18);animation:sg-ring-pulse 2.4s ease-in-out infinite .6s}
-@keyframes sg-ring-pulse{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.1);opacity:.9}}
-.sg-icon{font-size:2.8rem;filter:drop-shadow(0 0 18px rgba(124,58,237,.6))}
+.sg-ring-wrap{position:relative;width:88px;height:88px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;perspective:400px}
+.sg-ring-wrap::after{content:'';position:absolute;top:0;left:50%;width:1px;height:100%;background:linear-gradient(180deg,transparent 0%,rgba(6,182,212,.8) 50%,transparent 100%);animation:sg-vscan 1.8s ease-in-out infinite;pointer-events:none}
+@keyframes sg-vscan{0%,100%{opacity:0;transform:translateX(-38px)}40%,60%{opacity:1;transform:translateX(0px)}80%{opacity:0;transform:translateX(38px)}}
+.sg-ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(124,58,237,.55);animation:sg-spin-cw 3.5s linear infinite}
+.sg-ring2{position:absolute;inset:-12px;border-radius:50%;border:1px solid rgba(6,182,212,.25);animation:sg-spin-ccw 5s linear infinite;border-style:dashed}
+.sg-ring3{position:absolute;inset:-24px;border-radius:50%;border:1px solid rgba(124,58,237,.1);animation:sg-spin-cw 9s linear infinite}
+@keyframes sg-spin-cw{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes sg-spin-ccw{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}
+.sg-icon{font-size:2.8rem;filter:drop-shadow(0 0 18px rgba(124,58,237,.6));animation:sg-icon-pulse 2.8s ease-in-out infinite}
+@keyframes sg-icon-pulse{0%,100%{filter:drop-shadow(0 0 18px rgba(124,58,237,.6))}50%{filter:drop-shadow(0 0 32px rgba(6,182,212,.9)) drop-shadow(0 0 64px rgba(124,58,237,.4))}}
 .sg-brand-tag{font-size:.58rem;font-weight:800;letter-spacing:3.5px;text-transform:uppercase;color:rgba(255,255,255,.28)}
 .sg-title{font-size:1.85rem;font-weight:900;letter-spacing:-.5px;background:linear-gradient(135deg,#b8b8b8,#f2f2f2,#a0a0a0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.15}
 .sg-subtitle{font-size:.78rem;color:rgba(255,255,255,.28);letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-top:-6px}
 .sg-desc{font-size:.88rem;color:rgba(255,255,255,.42);line-height:1.75;max-width:360px}
 .sg-desc strong{color:rgba(255,255,255,.7);font-weight:700}
-.sg-scan-box{width:300px;background:rgba(255,255,255,.025);border:1px solid rgba(124,58,237,.22);border-radius:14px;padding:22px 24px;position:relative;overflow:hidden}
-.sg-scan-sweep{position:absolute;top:-2px;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(124,58,237,.08),rgba(34,211,238,.06),transparent);animation:sg-sweep-h 2.2s ease-in-out infinite}
+.sg-scan-box{width:300px;background:rgba(255,255,255,.025);border:1px solid rgba(124,58,237,.22);border-radius:14px;padding:22px 24px;position:relative;overflow:hidden;box-shadow:0 0 40px rgba(124,58,237,.08),inset 0 0 40px rgba(6,182,212,.02)}
+.sg-scan-sweep{position:absolute;top:-2px;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(124,58,237,.12),rgba(34,211,238,.08),transparent);animation:sg-sweep-h 1.6s ease-in-out infinite}
 @keyframes sg-sweep-h{0%{left:-60%}100%{left:110%}}
+.sg-scan-vsweep{position:absolute;left:0;top:-100%;width:100%;height:40%;background:linear-gradient(180deg,transparent,rgba(6,182,212,.05),rgba(124,58,237,.04),transparent);animation:sg-sweep-v 2.4s ease-in-out infinite .8s;pointer-events:none}
+@keyframes sg-sweep-v{0%{top:-40%}100%{top:110%}}
 .sg-scan-label{font-size:.55rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-bottom:10px}
-.sg-scan-status{font-size:.8rem;color:rgba(255,255,255,.6);font-weight:600;margin-bottom:14px;min-height:20px;transition:color .3s}
+.sg-scan-status{font-size:.8rem;color:rgba(255,255,255,.6);font-weight:600;margin-bottom:14px;min-height:20px;transition:color .3s,opacity .2s;font-family:'Orbitron',monospace;font-size:.72rem;letter-spacing:.5px}
 .sg-bar-track{height:4px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;margin-bottom:14px}
 .sg-bar-fill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#7c3aed,#22d3ee);transition:width .6s cubic-bezier(.25,.46,.45,.94);box-shadow:0 0 8px rgba(124,58,237,.5)}
 .sg-dots{display:flex;gap:5px;align-items:center}
@@ -1230,6 +1238,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <div class="sg-ring-wrap">
       <div class="sg-ring"></div>
       <div class="sg-ring2"></div>
+      <div class="sg-ring3"></div>
       <div class="sg-icon">🛡️</div>
     </div>
     <div class="sg-brand-tag">Precision Workz</div>
@@ -1238,6 +1247,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <p class="sg-desc" id="sg-desc">This site is protected against <strong>automated bots</strong> and <strong>DDoS attacks</strong>. Complete the verification below to continue.</p>
     <div class="sg-scan-box">
       <div class="sg-scan-sweep" id="sg-sweep"></div>
+      <div class="sg-scan-vsweep"></div>
       <div class="sg-scan-label" id="sg-label">Security Scan</div>
       <div class="sg-scan-status" id="sg-status">Initializing…</div>
       <div class="sg-bar-track"><div class="sg-bar-fill" id="sg-bar"></div></div>
@@ -2703,6 +2713,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         <div class="form-group"><label>Last Name</label><input type="text" id="cfLast" placeholder="Smith"></div>
       </div>
       <div class="form-group"><label>Email Address</label><input type="email" id="cfEmail" placeholder="john@company.com"></div>
+      <div class="form-group"><label>Phone Number <span style="color:#f87171;font-size:.85em">*</span></label><input type="tel" id="cfPhone" placeholder="(555) 555-5555" maxlength="20"></div>
       <div class="form-group">
         <label>Package / Service</label>
         <input type="hidden" id="cfService">
@@ -4012,17 +4023,17 @@ function sgVerified(){
   function startScan(){
     var recaptchaDone=false,timerDone=false;
     requestAnimationFrame(function(){
-      barEl.style.transition='width 3s linear';
+      barEl.style.transition='width 1.5s linear';
       barEl.style.width='92%';
     });
     var steps=[
-      {t:'Initializing security scan…',  delay:0},
-      {t:'Analyzing request signature…', delay:700},
-      {t:'Checking behavior patterns…',  delay:1500},
-      {t:'Verifying with reCAPTCHA…',    delay:2200}
+      {t:'INIT SCAN…',          delay:0},
+      {t:'SIG ANALYSIS…',       delay:400},
+      {t:'BEHAVIOR CHECK…',     delay:850},
+      {t:'RECAPTCHA VERIFY…',   delay:1200}
     ];
     steps.forEach(function(s){
-      setTimeout(function(){if(!timerDone)statusEl.textContent=s.t;},s.delay);
+      setTimeout(function(){if(!timerDone){statusEl.style.opacity='0';setTimeout(function(){statusEl.textContent=s.t;statusEl.style.opacity='1';},120);}},s.delay);
     });
     function tryUnlock(){
       if(!recaptchaDone||!timerDone)return;
@@ -4034,7 +4045,7 @@ function sgVerified(){
       statusEl.style.color='#4ade80';
       enterBtn.classList.add('sg-btn-ready');
     }
-    setTimeout(function(){timerDone=true;tryUnlock();},3000);
+    setTimeout(function(){timerDone=true;tryUnlock();},1500);
     grecaptcha.ready(function(){
       grecaptcha.execute('6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h',{action:'visit'})
         .then(function(){recaptchaDone=true;tryUnlock();})
@@ -4085,14 +4096,43 @@ function applyContactPromo(){
 }
 
 function submitContact(){
-  var name=(document.getElementById('cfName').value||'').trim(),last=(document.getElementById('cfLast').value||'').trim(),email=(document.getElementById('cfEmail').value||'').trim(),service=(document.getElementById('cfService').value||'').trim(),msg=(document.getElementById('cfMsg').value||'').trim(),out=document.getElementById('cfMsg2');
+  var name=(document.getElementById('cfName').value||'').trim();
+  var last=(document.getElementById('cfLast').value||'').trim();
+  var email=(document.getElementById('cfEmail').value||'').trim();
+  var phone=(document.getElementById('cfPhone').value||'').trim();
+  var service=(document.getElementById('cfService').value||'').trim();
+  var msg=(document.getElementById('cfMsg').value||'').trim();
+  var promoCode=(document.getElementById('cfPromo').value||'').trim().toUpperCase();
+  var out=document.getElementById('cfMsg2');
   if(!name||!email||!msg){out.style.color='#f87171';out.textContent='Please fill in your name, email, and message.';return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){out.style.color='#f87171';out.textContent='Please enter a valid email address.';return}
+  if(!phone){out.style.color='#f87171';out.textContent='Phone number is required.';return}
   var btn=document.querySelector('.form-submit');btn.disabled=true;btn.textContent='Sending…';
-  var promoCode=(document.getElementById('cfPromo').value||'').trim().toUpperCase();
-  var promoLine=promoCode?'\nPromo Code: '+promoCode:'';
-  window.location.href='mailto:precizionworkz@gmail.com?subject='+encodeURIComponent('New Inquiry — '+(service||'General')+' from '+name+' '+last)+'&body='+encodeURIComponent('Name: '+name+' '+last+'\nEmail: '+email+'\nPackage: '+(service||'Not specified')+promoLine+'\n\n'+msg);
-  setTimeout(function(){out.style.color='#4ade80';out.textContent='✓ Opening your email client…';btn.disabled=false;btn.textContent='Send Message →'},800);
+  var details='Package: '+(service||'Not specified')+'\nPhone: '+phone+(promoCode?'\nPromo: '+promoCode:'')+'\n\n'+msg;
+  fetch('/api/request',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email:email,name:name+' '+last,type:'quote',details:details,phone:phone,service:service,promoCode:promoCode||null,sub:null})
+  }).then(function(r){return r.json()}).then(function(d){
+    btn.disabled=false;btn.textContent='Send Message →';
+    if(d.ok){
+      out.style.color='#4ade80';
+      out.textContent='✓ Message sent — we\'ll reach out within 24 hours.';
+      document.getElementById('cfName').value='';
+      document.getElementById('cfLast').value='';
+      document.getElementById('cfEmail').value='';
+      document.getElementById('cfPhone').value='';
+      document.getElementById('cfMsg').value='';
+      document.getElementById('cfPromo').value='';
+    } else {
+      out.style.color='#f87171';
+      out.textContent=d.error||'Submission failed. Email us directly at precizionworkz@gmail.com';
+    }
+  }).catch(function(){
+    btn.disabled=false;btn.textContent='Send Message →';
+    out.style.color='#f87171';
+    out.textContent='Network error — please email us at precizionworkz@gmail.com';
+  });
 }
 function toggleFaq(btn){
   var item=btn.parentElement;
@@ -4937,16 +4977,20 @@ function adminRenderRequests() {
   el.innerHTML = list.map(function(r) {
     var isOpen = r.status === 'open';
     var date = r.createdAt ? new Date(r.createdAt).toLocaleString() : '—';
-    var typeLabel = r.type ? r.type.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()}) : 'General';
-    return '<div style="background:rgba(255,255,255,.03);border:1px solid '+(isOpen?'rgba(124,58,237,.3)':'rgba(255,255,255,.06)')+';border-radius:12px;padding:16px 18px;margin-bottom:10px">'
+    var typeLabel = r.type==='quote'?'Quote Request':r.type ? r.type.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()}) : 'General';
+    var isQuote = r.type==='quote';
+    var borderColor = isQuote?'rgba(245,158,11,.35)':isOpen?'rgba(124,58,237,.3)':'rgba(255,255,255,.06)';
+    var typeBadge = isQuote?'<span style="font-size:.65rem;font-weight:800;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:#fbbf24;padding:2px 8px;border-radius:999px;letter-spacing:.5px">QUOTE</span>':'';
+    return '<div style="background:'+(isQuote?'rgba(245,158,11,.03)':'rgba(255,255,255,.03)')+';border:1px solid '+borderColor+';border-radius:12px;padding:16px 18px;margin-bottom:10px">'
       + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">'
         + '<div style="flex:1;min-width:0">'
           + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">'
+            + typeBadge
             + '<span style="font-size:.72rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:'+(isOpen?'var(--cyan2)':'var(--dim)')+'">'+r.status+'</span>'
             + '<span style="font-size:.78rem;font-weight:600;color:var(--muted)">'+typeLabel+'</span>'
             + '<span style="font-size:.72rem;color:var(--dim)">'+date+'</span>'
           + '</div>'
-          + '<div style="font-size:.82rem;color:var(--muted);margin-bottom:4px"><b style="color:var(--text)">'+escHtml(r.name||r.email)+'</b> &lt;'+escHtml(r.email)+'&gt;</div>'
+          + '<div style="font-size:.82rem;color:var(--muted);margin-bottom:4px"><b style="color:var(--text)">'+escHtml(r.name||r.email)+'</b> &lt;'+escHtml(r.email)+'&gt;'+(r.phone?' · <span style="color:var(--cyan2)">📞 '+escHtml(r.phone)+'</span>':'')+'</div>'
           + '<div style="font-size:.88rem;color:var(--text);white-space:pre-wrap;word-break:break-word;margin-top:8px;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:8px">'+escHtml(r.details)+'</div>'
           + (r.replies&&r.replies.length ? '<div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">'+(r.replies.map(function(rep){var bg=rep.from==='admin'?'rgba(6,182,212,.07)':'rgba(124,58,237,.07)';var lbl=rep.from==='admin'?'<span style="font-size:.63rem;color:var(--cyan2);font-weight:700;display:block;margin-bottom:2px">Precision Workz</span>':'<span style="font-size:.63rem;color:var(--purple2);font-weight:700;display:block;margin-bottom:2px">Client</span>';return '<div style="padding:7px 10px;background:'+bg+';border-radius:7px;font-size:.82rem;color:var(--text)">'+lbl+escHtml(rep.text)+'<div style="font-size:.6rem;color:var(--dim);margin-top:2px;text-align:right">'+new Date(rep.createdAt).toLocaleString()+'</div></div>'}).join(''))+'</div>' : '')
           + '<div class="adm-reply-form" id="arf-'+r.id+'">'
