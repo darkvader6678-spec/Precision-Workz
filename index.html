@@ -26,7 +26,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<script>(function(){if(!sessionStorage.getItem('pw_g'))document.documentElement.classList.add('sg-locked');})()</script>
 <style>
+html.sg-locked body>*:not(#security-gate):not(#bg-canvas):not(#cursor-glow){visibility:hidden!important;pointer-events:none!important}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#04040d;--bg2:#07071a;--bg3:#0c0c22;
@@ -4076,6 +4078,8 @@ async function submitPayment(){
 })();
 
 function sgVerified(){
+  sessionStorage.setItem('pw_g','1');
+  document.documentElement.classList.remove('sg-locked');
   var g=document.getElementById('security-gate');
   g.classList.add('sg-exit');
   setTimeout(function(){g.style.display='none'},700);
@@ -4083,6 +4087,8 @@ function sgVerified(){
 (function(){
   var g=document.getElementById('security-gate');
   if(!g)return;
+  // Already verified this session — hide gate instantly, no scan needed
+  if(sessionStorage.getItem('pw_g')){g.style.display='none';return;}
   var statusEl   =document.getElementById('sg-status');
   var barEl      =document.getElementById('sg-bar');
   var enterBtn   =document.getElementById('sg-enter-btn');
