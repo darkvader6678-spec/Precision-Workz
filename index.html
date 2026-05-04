@@ -4466,8 +4466,13 @@ function openDashboard(){
         user.billing=d.client.billing||'monthly';
         user.packageType=d.client.packageType||null;
         user.progress=d.client.progress||null;
-        setUserData(user);
+      } else {
+        user.sub=null;
+        user.billing='monthly';
+        user.packageType=null;
+        user.progress=null;
       }
+      setUserData(user);
       renderDashboard(user);
     })
     .catch(function(){renderDashboard(user)});
