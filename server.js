@@ -136,8 +136,8 @@ const OWNER_EMAIL = 'precizionworkz@gmail.com';
 
 // ── PERSISTENT STORAGE (Vercel KV with local file fallback) ─
 // Set KV_REST_API_URL and KV_REST_API_TOKEN in Vercel dashboard → Storage → KV
-const KV_URL   = process.env.KV_REST_API_URL   || '';
-const KV_TOKEN = process.env.KV_REST_API_TOKEN || '';
+const KV_URL   = process.env.KV_REST_API_URL   || process.env.UPSTASH_REDIS_REST_URL   || '';
+const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '';
 
 async function kvRead(key, fallback) {
   // Serve from in-memory cache if available
