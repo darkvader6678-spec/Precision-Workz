@@ -416,29 +416,36 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/report-read' && req.method === 'POST') {
-      const { id } = body;
-      const reports = await readReports();
-      const idx = reports.findIndex(r => r.id === id);
-      if (idx >= 0) { reports[idx].read = true; await writeReports(reports); }
-      return json(res, 200, { ok: true });
+      try {
+        const { id } = body;
+        const reports = await readReports();
+        const idx = reports.findIndex(r => r.id === id);
+        if (idx >= 0) { reports[idx].read = true; await writeReports(reports); }
+        return json(res, 200, { ok: true });
+      } catch(e) { return json(res, 500, { error: e.message }); }
     }
 
     if (urlPath === '/api/admin/report-delete' && req.method === 'POST') {
-      const { id } = body;
-      const reports = (await readReports()).filter(r => r.id !== id);
-      await writeReports(reports);
-      return json(res, 200, { ok: true });
+      try {
+        const { id } = body;
+        const reports = (await readReports()).filter(r => r.id !== id);
+        await writeReports(reports);
+        return json(res, 200, { ok: true });
+      } catch(e) { return json(res, 500, { error: e.message }); }
     }
 
     if (urlPath === '/api/admin/update-request' && req.method === 'POST') {
-      const { id, status } = body;
-      const reqs = await readRequests();
-      const idx = reqs.findIndex(r => r.id === id);
-      if (idx >= 0) { reqs[idx].status = status; reqs[idx].updatedAt = new Date().toISOString(); await writeRequests(reqs); }
-      return json(res, 200, { ok: true });
+      try {
+        const { id, status } = body;
+        const reqs = await readRequests();
+        const idx = reqs.findIndex(r => r.id === id);
+        if (idx >= 0) { reqs[idx].status = status; reqs[idx].updatedAt = new Date().toISOString(); await writeRequests(reqs); }
+        return json(res, 200, { ok: true });
+      } catch(e) { return json(res, 500, { error: e.message }); }
     }
 
     if (urlPath === '/api/admin/reply-request' && req.method === 'POST') {
+      try {
       const { id, replyText } = body;
       if (!id || !replyText) return json(res, 400, { error: 'Missing fields' });
       const reqs = await readRequests();
@@ -461,6 +468,7 @@ async function handleAPI(req, res, urlPath) {
       sendEmail(clientEmail, 'Reply from Precision Workz', replyHtml).catch(e => console.warn('[Email reply]', e.message));
       if (CO_OWNER_EMAIL) sendEmail(CO_OWNER_EMAIL, 'Reply sent to ' + clientEmail, replyHtml).catch(e => console.warn('[Email co-owner]', e.message));
       return json(res, 200, { ok: true });
+      } catch(e) { return json(res, 500, { error: e.message }); }
     }
 
     if (urlPath === '/api/admin/clean-clients' && req.method === 'POST') {
@@ -499,85 +507,101 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/set-client' && req.method === 'POST') {
-      const { targetEmail, name, sub, billing, packageType, notes } = body;
-      if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
-      const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRe.test(targetEmail.trim())) return json(res, 400, { error: 'Invalid email address' });
-      const clients = await readClients();
-      const key = targetEmail.toLowerCase().trim();
-      clients[key] = {
-        name:        name        || clients[key]?.name || '',
-        email:       key,
-        sub:         sub         !== undefined ? sub         : (clients[key]?.sub || null),
-        billing:     billing     !== undefined ? billing     : (clients[key]?.billing || 'monthly'),
-        packageType: packageType !== undefined ? packageType : (clients[key]?.packageType || null),
-        notes:       notes       !== undefined ? notes       : (clients[key]?.notes || ''),
-        updatedAt:   new Date().toISOString(),
-        addedAt:     clients[key]?.addedAt || new Date().toISOString(),
-      };
       try {
+        const { targetEmail, name, sub, billing, packageType, notes } = body;
+        if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
+        const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRe.test(targetEmail.trim())) return json(res, 400, { error: 'Invalid email address' });
+        let clients = await readClients();
+        if (!clients || typeof clients !== 'object' || Array.isArray(clients)) clients = {};
+        const key = targetEmail.toLowerCase().trim();
+        const existing = clients[key] || {};
+        clients[key] = {
+          name:        name        || existing.name || '',
+          email:       key,
+          sub:         sub         !== undefined ? sub         : (existing.sub || null),
+          billing:     billing     !== undefined ? billing     : (existing.billing || 'monthly'),
+          packageType: packageType !== undefined ? packageType : (existing.packageType || null),
+          notes:       notes       !== undefined ? notes       : (existing.notes || ''),
+          updatedAt:   new Date().toISOString(),
+          addedAt:     existing.addedAt || new Date().toISOString(),
+        };
+        if (existing.progress) clients[key].progress = existing.progress;
         await writeClients(clients);
         return json(res, 200, { ok: true, client: clients[key] });
       } catch(e) {
+        console.error('[set-client]', e.message);
         return json(res, 500, { error: 'Save failed: ' + e.message });
       }
     }
 
     if (urlPath === '/api/admin/set-progress' && req.method === 'POST') {
-      const { targetEmail, stages, currentTask } = body;
-      if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(targetEmail.trim())) return json(res, 400, { error: 'Invalid email' });
-      const clients = await readClients();
-      const key = targetEmail.toLowerCase().trim();
-      if (!clients[key]) clients[key] = { email: key, name: key, addedAt: new Date().toISOString() };
-      clients[key].progress = {
-        stages: (stages || []).map(s => ({ name: String(s.name||''), pct: Math.min(100, Math.max(0, parseInt(s.pct)||0)), status: ['pending','active','complete'].includes(s.status) ? s.status : 'pending' })),
-        currentTask: (currentTask || '').trim() || null,
-        lastUpdated: new Date().toISOString(),
-      };
       try {
+        const { targetEmail, stages, currentTask } = body;
+        if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(targetEmail.trim())) return json(res, 400, { error: 'Invalid email' });
+        let clients = await readClients();
+        if (!clients || typeof clients !== 'object' || Array.isArray(clients)) clients = {};
+        const key = targetEmail.toLowerCase().trim();
+        if (!clients[key]) clients[key] = { email: key, name: key, addedAt: new Date().toISOString() };
+        clients[key].progress = {
+          stages: (stages || []).map(s => ({ name: String(s.name||''), pct: Math.min(100, Math.max(0, parseInt(s.pct)||0)), status: ['pending','active','complete'].includes(s.status) ? s.status : 'pending' })),
+          currentTask: (currentTask || '').trim() || null,
+          lastUpdated: new Date().toISOString(),
+        };
         await writeClients(clients);
         return json(res, 200, { ok: true });
       } catch(e) {
+        console.error('[set-progress]', e.message);
         return json(res, 500, { error: 'Save failed: ' + e.message });
       }
     }
 
     if (urlPath === '/api/admin/remove-client' && req.method === 'POST') {
-      const { targetEmail } = body;
-      if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
-      const clients = await readClients();
-      delete clients[targetEmail.toLowerCase().trim()];
-      await writeClients(clients);
-      return json(res, 200, { ok: true });
+      try {
+        const { targetEmail } = body;
+        if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
+        let clients = await readClients();
+        if (!clients || typeof clients !== 'object' || Array.isArray(clients)) clients = {};
+        delete clients[targetEmail.toLowerCase().trim()];
+        await writeClients(clients);
+        return json(res, 200, { ok: true });
+      } catch(e) {
+        console.error('[remove-client]', e.message);
+        return json(res, 500, { error: 'Remove failed: ' + e.message });
+      }
     }
 
     if (urlPath === '/api/admin/add-admin' && req.method === 'POST') {
-      if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) {
-        return json(res, 403, { error: 'Only the primary admin can add developers' });
-      }
-      const { newEmail } = body;
-      if (!newEmail) return json(res, 400, { error: 'newEmail required' });
-      const admins = await readAdmins();
-      const key = newEmail.toLowerCase().trim();
-      if (!admins.map(e => e.toLowerCase()).includes(key)) {
-        admins.push(newEmail.trim());
-        await writeAdmins(admins);
-      }
-      return json(res, 200, { ok: true, admins });
+      try {
+        if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) {
+          return json(res, 403, { error: 'Only the primary admin can add developers' });
+        }
+        const { newEmail } = body;
+        if (!newEmail) return json(res, 400, { error: 'newEmail required' });
+        const admins = await readAdmins();
+        const key = newEmail.toLowerCase().trim();
+        if (!admins.map(e => e.toLowerCase()).includes(key)) {
+          admins.push(newEmail.trim());
+          await writeAdmins(admins);
+        }
+        return json(res, 200, { ok: true, admins });
+      } catch(e) { return json(res, 500, { error: e.message }); }
     }
 
     if (urlPath === '/api/admin/remove-admin' && req.method === 'POST') {
-      if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) {
-        return json(res, 403, { error: 'Only the primary admin can remove developers' });
-      }
-      const { targetEmail } = body;
-      const admins = (await readAdmins()).filter(e =>
-        e.toLowerCase() !== (targetEmail||'').toLowerCase() && e.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()
-      );
-      admins.unshift(PRIMARY_ADMIN);
-      await writeAdmins(admins);
-      return json(res, 200, { ok: true, admins });
+      try {
+        if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) {
+          return json(res, 403, { error: 'Only the primary admin can remove developers' });
+        }
+        const { targetEmail } = body;
+        const admins = (await readAdmins()).filter(e =>
+          e.toLowerCase() !== (targetEmail||'').toLowerCase() && e.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()
+        );
+        admins.unshift(PRIMARY_ADMIN);
+        await writeAdmins(admins);
+        return json(res, 200, { ok: true, admins });
+      } catch(e) { return json(res, 500, { error: e.message }); }
     }
 
     // IP management endpoints
