@@ -2,7 +2,7 @@
 
 Custom web design, security infrastructure, and full-stack development for businesses in Tucson, AZ. Zero templates — every site built from scratch.
 
-**Live site:** https://precisioworkz.net
+**Live site:** https://precisionworkz.net
 
 ---
 
