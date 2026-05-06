@@ -16,4 +16,4 @@ Allow: /
 User-agent: CCBot
 Disallow: /
 
-Sitemap: https://precisonworkz.net/sitemap.xml
+Sitemap: https://precisionworkz.net/sitemap.xml
