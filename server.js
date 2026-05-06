@@ -150,7 +150,8 @@ const SITE_URL   = process.env.SITE_URL   || 'http://localhost:4000';
 const MIME = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript',
   '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon', '.woff2': 'font/woff2',
+  '.ico': 'image/x-icon', '.woff2': 'font/woff2', '.xml': 'application/xml',
+  '.txt': 'text/plain',
 };
 
 const PRICES = {
@@ -960,6 +961,17 @@ async function handler(req, res) {
       return;
     }
     serveVerifyPage(res, token, user);
+    return;
+  }
+
+  if (urlPath === '/sitemap.xml' || urlPath === '/robots.txt') {
+    const staticPath = path.join(DIR, urlPath);
+    fs.readFile(staticPath, function(err, data) {
+      if (err) { res.writeHead(404); res.end('Not found'); return; }
+      const mime = urlPath.endsWith('.xml') ? 'application/xml' : 'text/plain';
+      res.writeHead(200, { 'Content-Type': mime });
+      res.end(data);
+    });
     return;
   }
 
