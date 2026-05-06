@@ -964,14 +964,23 @@ async function handler(req, res) {
     return;
   }
 
-  if (urlPath === '/sitemap.xml' || urlPath === '/robots.txt') {
-    const staticPath = path.join(DIR, urlPath);
-    fs.readFile(staticPath, function(err, data) {
-      if (err) { res.writeHead(404); res.end('Not found'); return; }
-      const mime = urlPath.endsWith('.xml') ? 'application/xml' : 'text/plain';
-      res.writeHead(200, { 'Content-Type': mime });
-      res.end(data);
-    });
+  if (urlPath === '/sitemap.xml') {
+    res.writeHead(200, { 'Content-Type': 'application/xml' });
+    res.end(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://precisionworkz.net/</loc>
+    <lastmod>2026-05-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`);
+    return;
+  }
+
+  if (urlPath === '/robots.txt') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end(`User-agent: *\nAllow: /\n\nUser-agent: GPTBot\nAllow: /\n\nUser-agent: OAI-SearchBot\nAllow: /\n\nUser-agent: PerplexityBot\nAllow: /\n\nUser-agent: ClaudeBot\nAllow: /\n\nUser-agent: CCBot\nDisallow: /\n\nSitemap: https://precisionworkz.net/sitemap.xml`);
     return;
   }
 
