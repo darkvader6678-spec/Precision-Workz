@@ -39,7 +39,21 @@ ul,ol{padding-left:22px;margin-bottom:14px}
 .nav-link{display:block;padding:6px 20px;font-size:.8rem;color:var(--muted);transition:color .15s,background .15s;border-left:2px solid transparent}
 .nav-link:hover,.nav-link.active{color:var(--text);background:rgba(124,58,237,.08);border-left-color:var(--purple);text-decoration:none}
 .content{margin-left:240px;padding:60px 80px;max-width:900px}
-@media(max-width:900px){.sidebar{display:none}.content{margin-left:0;padding:32px 24px}}
+table{overflow-x:auto;display:block;width:100%}
+.mobile-nav-btn{display:none;position:fixed;top:14px;left:14px;z-index:200;background:rgba(7,7,26,.95);border:1px solid var(--border2);color:var(--text);font-size:.8rem;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer;letter-spacing:.5px}
+@media(max-width:900px){
+  .sidebar{display:none;z-index:150}
+  .sidebar.open{display:block}
+  .sidebar-overlay{display:none;position:fixed;inset:0;z-index:140;background:rgba(0,0,0,.6)}
+  .sidebar-overlay.open{display:block}
+  .mobile-nav-btn{display:flex;align-items:center;gap:7px}
+  .content{margin-left:0;padding:64px 18px 40px}
+  h1{font-size:2rem}
+  h2{font-size:1.35rem;margin:40px 0 14px}
+  pre{padding:14px;font-size:.78em}
+  .hero-block{padding:24px 18px}
+  th,td{padding:8px 10px;font-size:.78rem}
+}
 
 /* COMPONENTS */
 .hero-block{background:linear-gradient(145deg,#0a0a1e,#0e0e26);border:1px solid rgba(124,58,237,.25);border-radius:16px;padding:40px;margin-bottom:48px}
@@ -86,10 +100,13 @@ tr:last-child td{border-bottom:none}
 </head>
 <body>
 
+<button class="mobile-nav-btn" onclick="toggleMobileNav()" id="mobile-nav-btn">☰ Menu</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeMobileNav()"></div>
+
 <div class="shell">
 
 <!-- SIDEBAR -->
-<aside class="sidebar">
+<aside class="sidebar" id="docs-sidebar">
   <div class="sidebar-logo">
     <span>Precision Workz</span>
     <div>Developer Documentation</div>
@@ -653,6 +670,24 @@ fetch('/api/auth-log', {
 </div>
 
 <script>
+function toggleMobileNav(){
+  var sb=document.getElementById('docs-sidebar');
+  var ov=document.getElementById('sidebar-overlay');
+  var btn=document.getElementById('mobile-nav-btn');
+  var open=sb.classList.toggle('open');
+  ov.classList.toggle('open',open);
+  btn.textContent=open?'✕ Close':'☰ Menu';
+}
+function closeMobileNav(){
+  document.getElementById('docs-sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+  document.getElementById('mobile-nav-btn').textContent='☰ Menu';
+}
+/* Close sidebar when a nav link is clicked on mobile */
+document.querySelectorAll('.nav-link').forEach(function(a){
+  a.addEventListener('click',function(){if(window.innerWidth<=900)closeMobileNav();});
+});
+
 /* Highlight active nav link on scroll */
 var links=document.querySelectorAll('.nav-link');
 var sections=[];

@@ -2744,13 +2744,13 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     </div>
     <div class="contact-form fade-up" style="transition-delay:.15s">
       <div class="form-row">
-        <div class="form-group"><label>First Name</label><input type="text" id="cfName" placeholder="John"></div>
-        <div class="form-group"><label>Last Name</label><input type="text" id="cfLast" placeholder="Smith"></div>
+        <div class="form-group"><label for="cfName">First Name</label><input type="text" id="cfName" placeholder="John"></div>
+        <div class="form-group"><label for="cfLast">Last Name</label><input type="text" id="cfLast" placeholder="Smith"></div>
       </div>
-      <div class="form-group"><label>Email Address</label><input type="email" id="cfEmail" placeholder="john@company.com"></div>
-      <div class="form-group"><label>Phone Number <span style="color:#f87171;font-size:.85em">*</span></label><input type="tel" id="cfPhone" placeholder="(555) 555-5555" maxlength="20"></div>
+      <div class="form-group"><label for="cfEmail">Email Address</label><input type="email" id="cfEmail" placeholder="john@company.com"></div>
+      <div class="form-group"><label for="cfPhone">Phone Number <span style="color:#f87171;font-size:.85em">*</span></label><input type="tel" id="cfPhone" placeholder="(555) 555-5555" maxlength="20"></div>
       <div class="form-group">
-        <label>Package / Service</label>
+        <label for="cfService">Package / Service</label>
         <input type="hidden" id="cfService">
         <div class="custom-select" id="cs-service" onclick="csToggle(event,'cs-service')">
           <div class="cs-trigger">
@@ -2831,9 +2831,9 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         <div class="sub-upsell-note">Managed plans start after launch — no commitment needed now. We'll discuss details during your discovery call.</div>
       </div>
 
-      <div class="form-group"><label>Tell Us About Your Project</label><textarea id="cfMsg" placeholder="Describe what you need — the more detail, the better we can help…"></textarea></div>
+      <div class="form-group"><label for="cfMsg">Tell Us About Your Project</label><textarea id="cfMsg" placeholder="Describe what you need — the more detail, the better we can help…"></textarea></div>
       <div class="form-group">
-        <label>Where Did You Hear About Us?</label>
+        <label for="cfSource">Where Did You Hear About Us?</label>
         <select id="cfSource" class="admin-input" style="width:100%;padding:11px 14px;border-radius:10px;font-size:.88rem;font-family:inherit;outline:none">
           <option value="" disabled selected>Select…</option>
           <option>Google Search</option>
@@ -2900,12 +2900,12 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <p>See exactly what we'd build for you — a real 30-minute walkthrough tailored to your business. No sales pressure, just a real conversation.</p>
     <div class="demo-form">
       <div class="form-row">
-        <div class="form-group"><label>First Name</label><input type="text" id="demo-fname" placeholder="John"></div>
-        <div class="form-group"><label>Last Name</label><input type="text" id="demo-lname" placeholder="Smith"></div>
+        <div class="form-group"><label for="demo-fname">First Name</label><input type="text" id="demo-fname" placeholder="John"></div>
+        <div class="form-group"><label for="demo-lname">Last Name</label><input type="text" id="demo-lname" placeholder="Smith"></div>
       </div>
-      <div class="form-group"><label>Email Address</label><input type="email" id="demo-email" placeholder="john@company.com"></div>
+      <div class="form-group"><label for="demo-email">Email Address</label><input type="email" id="demo-email" placeholder="john@company.com"></div>
       <div class="form-group">
-        <label>What Are You Looking For?</label>
+        <label for="demo-interest">What Are You Looking For?</label>
         <select id="demo-interest">
           <option value="" disabled selected>Select…</option>
           <option>Web Design + Development</option>
@@ -2917,7 +2917,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         </select>
       </div>
       <div class="form-group">
-        <label>Where Did You Hear About Us?</label>
+        <label for="demo-source">Where Did You Hear About Us?</label>
         <select id="demo-source">
           <option value="" disabled selected>Select…</option>
           <option>Google Search</option>
@@ -2952,10 +2952,10 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
     <div class="pay-step-panel active" id="pay-step-1">
       <p style="font-size:.82rem;color:var(--muted);margin-bottom:18px;line-height:1.65">Confirm your details before we proceed to payment. This information will be used for your subscription account.</p>
-      <div class="form-group"><label style="font-size:.76rem;font-weight:600;color:var(--muted);letter-spacing:.4px;display:block;margin-bottom:6px">Full Name</label>
+      <div class="form-group"><label for="pay-step1-name" style="font-size:.76rem;font-weight:600;color:var(--muted);letter-spacing:.4px;display:block;margin-bottom:6px">Full Name</label>
         <input type="text" id="pay-step1-name" class="pay-card-field" style="border-radius:10px;color:var(--text);font-size:.88rem;font-family:inherit;outline:none;width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);padding:11px 14px" placeholder="John Smith">
       </div>
-      <div class="form-group" style="margin-top:12px"><label style="font-size:.76rem;font-weight:600;color:var(--muted);letter-spacing:.4px;display:block;margin-bottom:6px">Email Address</label>
+      <div class="form-group" style="margin-top:12px"><label for="pay-step1-email" style="font-size:.76rem;font-weight:600;color:var(--muted);letter-spacing:.4px;display:block;margin-bottom:6px">Email Address</label>
         <input type="email" id="pay-step1-email" class="pay-card-field" style="border-radius:10px;color:var(--text);font-size:.88rem;font-family:inherit;outline:none;width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);padding:11px 14px" placeholder="you@company.com">
       </div>
       <div class="pay-error-msg" id="pay-step1-error" style="margin-top:6px"></div>
@@ -2966,8 +2966,8 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 
     <div class="pay-step-panel" id="pay-step-2">
       <p style="font-size:.82rem;color:var(--muted);margin-bottom:18px;line-height:1.65">Enter your card details below. Your subscription will start immediately after payment.</p>
-      <label style="font-size:.76rem;font-weight:600;color:var(--muted);letter-spacing:.4px;display:block;margin-bottom:8px">Card Details</label>
-      <div class="pay-card-field" id="stripe-card-element"></div>
+      <div style="font-size:.76rem;font-weight:600;color:var(--muted);letter-spacing:.4px;margin-bottom:8px">Card Details</div>
+      <div class="pay-card-field" id="stripe-card-element" role="group" aria-label="Card Details"></div>
       <div class="pay-error-msg" id="pay-error"></div>
       <button class="pay-submit-btn" id="pay-submit-btn" onclick="submitPayment()" style="margin-top:16px">
         <i class="ph-bold ph-lock-simple" style="font-size:.9rem"></i> <span id="pay-btn-label">Subscribe Now</span>
@@ -3000,13 +3000,13 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <button class="ef-tab" id="ef-tab-register" onclick="efSwitch('register')">Register</button>
     </div>
     <div class="email-fallback-form" id="ef-login-form">
-      <div class="form-group"><label>Email</label><input type="email" id="ef-email-login" placeholder="you@company.com" autocomplete="email"></div>
-      <div class="form-group"><label>Password</label><input type="password" id="ef-password-login" placeholder="Your password" autocomplete="current-password"></div>
+      <div class="form-group"><label for="ef-email-login">Email</label><input type="email" id="ef-email-login" placeholder="you@company.com" autocomplete="email"></div>
+      <div class="form-group"><label for="ef-password-login">Password</label><input type="password" id="ef-password-login" placeholder="Your password" autocomplete="current-password"></div>
       <button class="email-signin-btn" onclick="emailLogin()">Log In →</button>
       <div class="ef-msg" id="ef-login-msg"></div>
     </div>
     <div class="email-fallback-form" id="ef-register-form" style="display:none">
-      <div class="form-group"><label>Email</label><input type="email" id="ef-email-register" placeholder="you@company.com" autocomplete="email"></div>
+      <div class="form-group"><label for="ef-email-register">Email</label><input type="email" id="ef-email-register" placeholder="you@company.com" autocomplete="email"></div>
       <button class="email-signin-btn" onclick="emailRegister()">Send Verification Email →</button>
       <div class="ef-msg" id="ef-register-msg"></div>
     </div>
@@ -3035,7 +3035,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     </div>
     <div class="rp-body">
       <div class="rp-field">
-        <label class="rp-label">Category</label>
+        <div class="rp-label">Category</div>
         <div class="rp-cat-wrap" id="rp-cat-wrap">
           <div class="rp-cat-trigger empty" id="rp-cat-trigger" onclick="rpToggleCat()">
             <span id="rp-cat-label">Select a category…</span>
@@ -3044,7 +3044,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         </div>
       </div>
       <div class="rp-field">
-        <label class="rp-label">Description <span class="rp-opt">(min 20 characters)</span></label>
+        <label class="rp-label" for="rp-desc">Description <span class="rp-opt">(min 20 characters)</span></label>
         <textarea class="rp-textarea" id="rp-desc" placeholder="Describe the problem in detail…" oninput="rpCharCount()"></textarea>
         <div class="rp-charrow">
           <span></span>
@@ -3052,7 +3052,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         </div>
       </div>
       <div class="rp-field">
-        <label class="rp-label">Reply Email <span class="rp-opt">(optional — so we can respond)</span></label>
+        <label class="rp-label" for="rp-email">Reply Email <span class="rp-opt">(optional — so we can respond)</span></label>
         <input class="rp-input" id="rp-email" type="email" placeholder="you@example.com">
       </div>
     </div>
@@ -3069,7 +3069,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <span class="demo-eyebrow" id="req-eyebrow">Support Request</span>
     <h2 style="font-size:1.7rem;font-weight:800;letter-spacing:-1px;margin-bottom:10px" id="req-title">Submit Request</h2>
     <p style="font-size:.88rem;color:var(--muted);line-height:1.72;margin-bottom:22px" id="req-desc">Describe the issue and we'll get back to you within your plan's SLA window.</p>
-    <div class="form-group" style="margin-bottom:14px"><label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">Details</label>
+    <div class="form-group" style="margin-bottom:14px"><label for="req-details" style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">Details</label>
       <textarea id="req-details" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px 14px;font-size:.88rem;font-family:inherit;outline:none;resize:vertical;min-height:100px;transition:border-color .2s" placeholder="Describe what's happening, any error messages, and your urgency level…"></textarea>
     </div>
     <div class="pay-error-msg" id="req-msg"></div>
