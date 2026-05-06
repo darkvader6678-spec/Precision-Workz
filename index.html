@@ -4091,13 +4091,14 @@ function sgVerified(){
       if(rem<=0){
         clearInterval(tick);
         barEl.style.cssText+=';transition:width .4s ease;width:100%;background:linear-gradient(90deg,#059669,#4ade80);box-shadow:0 0 10px rgba(74,222,128,.5)';
-        statusEl.textContent='✓ Cooldown Complete — Click to Enter';
+        statusEl.textContent='✓ Cooldown Complete';
         statusEl.style.color='#4ade80';
         if(subtitleEl){subtitleEl.textContent='Access Restored';subtitleEl.style.color='';}
         if(cdNum)   cdNum.style.display='none';
         if(cdLabel) cdLabel.style.display='none';
         if(dotsEl)  dotsEl.style.display='flex';
         enterBtn.classList.add('sg-btn-ready');
+        setTimeout(sgVerified,500);
       }
     },1000);
   }
@@ -4105,14 +4106,14 @@ function sgVerified(){
   function startScan(){
     var captchaToken=null,recaptchaDone=false,timerDone=false;
     requestAnimationFrame(function(){
-      barEl.style.transition='width 1.5s linear';
+      barEl.style.transition='width 0.9s linear';
       barEl.style.width='92%';
     });
     var steps=[
       {t:'INIT SCAN…',          delay:0},
-      {t:'SIG ANALYSIS…',       delay:400},
-      {t:'BEHAVIOR CHECK…',     delay:850},
-      {t:'RECAPTCHA VERIFY…',   delay:1200}
+      {t:'SIG ANALYSIS…',       delay:200},
+      {t:'BEHAVIOR CHECK…',     delay:450},
+      {t:'RECAPTCHA VERIFY…',   delay:700}
     ];
     steps.forEach(function(s){
       setTimeout(function(){if(!timerDone){statusEl.style.opacity='0';setTimeout(function(){statusEl.textContent=s.t;statusEl.style.opacity='1';},120);}},s.delay);
@@ -4122,9 +4123,10 @@ function sgVerified(){
       barEl.style.width='100%';
       barEl.style.background='linear-gradient(90deg,#059669,#4ade80)';
       barEl.style.boxShadow='0 0 10px rgba(74,222,128,.5)';
-      statusEl.textContent='✓ Verification Complete — Click to Enter';
+      statusEl.textContent='✓ Verification Complete';
       statusEl.style.color='#4ade80';
       enterBtn.classList.add('sg-btn-ready');
+      setTimeout(sgVerified,500);
     }
     function showBlocked(){
       barEl.style.transition='width .4s ease';
@@ -4145,7 +4147,7 @@ function sgVerified(){
         .then(function(d){d&&d.ok===false?showBlocked():showSuccess();})
         .catch(function(){showSuccess();}); // fail open on network error
     }
-    setTimeout(function(){timerDone=true;tryUnlock();},1500);
+    setTimeout(function(){timerDone=true;tryUnlock();},900);
     grecaptcha.enterprise.ready(function(){
       grecaptcha.enterprise.execute('6Lft7NYsAAAAAEianu0W1CoaV42ABKro6ignxv3h',{action:'visit'})
         .then(function(t){captchaToken=t;recaptchaDone=true;tryUnlock();})
