@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <clipPath id="cl">
+      <polygon points="16,2 4,9 4,21 16,30"/>
+    </clipPath>
+    <clipPath id="cr">
+      <polygon points="16,2 28,9 28,21 16,30"/>
+    </clipPath>
+  </defs>
+  <path d="M16,2 L28,9 L28,21 L16,30 L4,21 L4,9 Z" fill="#0a0a1e"/>
+  <path d="M16,2 L28,9 L28,21 L16,30 L4,21 L4,9 Z" fill="#d97706" clip-path="url(#cl)"/>
+  <path d="M16,2 L28,9 L28,21 L16,30 L4,21 L4,9 Z" fill="#2563eb" clip-path="url(#cr)"/>
+  <path d="M16,2 L28,9 L28,21 L16,30 L4,21 L4,9 Z" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>
+</svg>
