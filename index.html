@@ -3295,6 +3295,50 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
     </div>
 
+    <!-- Co-owner inbox — primary admin only -->
+    <div class="admin-section" id="co-inbox-section" style="display:none">
+      <div class="admin-section-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Co-Owner Inbox <span id="co-inbox-badge" style="display:none;background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.3);color:#22d3ee;border-radius:999px;padding:1px 8px;font-size:.65rem;margin-left:6px">0</span></span>
+        <button class="admin-btn ghost" onclick="adminLoadCoMessages()" style="white-space:nowrap">↻ Refresh</button>
+      </div>
+      <div id="co-inbox-list" style="margin-top:14px"><p style="color:var(--dim);font-size:.85rem">Loading…</p></div>
+    </div>
+
+    <!-- Co-owner compose — co-owner only -->
+    <div class="admin-section" id="co-compose-section" style="display:none">
+      <div class="admin-section-title">Send to Owner</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Request Type</div>
+          <select class="admin-input" id="co-msg-type" onchange="coMsgTypeChange()" style="max-width:280px">
+            <option value="dm">💬 General Message</option>
+            <option value="add-dev">➕ Add a Developer</option>
+            <option value="remove-dev">➖ Remove a Developer</option>
+          </select>
+        </div>
+        <div id="co-dev-email-row" style="display:none">
+          <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Developer Email</div>
+          <input class="admin-input" id="co-dev-email" type="email" placeholder="dev@email.com" style="max-width:320px">
+        </div>
+        <div id="co-dev-remove-row" style="display:none">
+          <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Developer to Remove</div>
+          <select class="admin-input" id="co-dev-remove-select" style="max-width:320px"><option value="">— select —</option></select>
+        </div>
+        <div>
+          <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Message</div>
+          <textarea class="admin-input" id="co-msg-text" rows="4" placeholder="Write your message or request…" style="resize:vertical;min-height:90px"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="admin-btn primary" onclick="coOwnerSend()">Send to Owner</button>
+          <span id="co-send-msg" style="font-size:.8rem;color:var(--cyan2)"></span>
+        </div>
+      </div>
+      <div style="margin-top:24px" id="co-my-msgs-section">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:10px">Sent Messages</div>
+        <div id="co-my-msgs-list"><p style="color:var(--dim);font-size:.82rem">Loading…</p></div>
+      </div>
+    </div>
+
     <div class="admin-section">
       <div class="admin-section-title" style="display:flex;align-items:center;justify-content:space-between">
         <span>Support Requests</span>
@@ -5036,8 +5080,24 @@ function adminLoadData() {
       if (_title) _title.textContent = _isCO ? 'Precision Workz — Co-Owner Panel' : 'Precision Workz — Control Panel';
       var _cleanBtn = document.querySelector('[onclick="adminCleanDB()"]');
       if (_cleanBtn) _cleanBtn.style.display = _isCO ? 'none' : '';
+      var _isPrimary = _myEml === (d.primaryAdmin||'').toLowerCase();
+      // Show co-owner compose section for co-owner, inbox for primary admin
+      var inboxEl = document.getElementById('co-inbox-section');
+      var composeEl = document.getElementById('co-compose-section');
+      if (inboxEl) inboxEl.style.display = _isPrimary ? '' : 'none';
+      if (composeEl) composeEl.style.display = _isCO ? '' : 'none';
       adminRenderStats(d.clients);
       adminRenderDevs(d.admins, d.primaryAdmin, d.coOwner);
+      // Populate remove-dev dropdown for co-owner
+      if (_isCO) {
+        var remSel = document.getElementById('co-dev-remove-select');
+        if (remSel) {
+          var devs = (d.admins||[]).filter(function(e){ return e.toLowerCase() !== d.coOwner.toLowerCase() && e.toLowerCase() !== d.primaryAdmin.toLowerCase(); });
+          remSel.innerHTML = '<option value="">— select —</option>' + devs.map(function(e){ return '<option value="'+escHtml(e)+'">'+escHtml(e)+'</option>'; }).join('');
+        }
+        coOwnerLoadMyMessages();
+      }
+      if (_isPrimary) adminLoadCoMessages();
       adminRenderTable(d.clients);
       adminLoadRequests();
       adminLoadReports();
@@ -5402,6 +5462,148 @@ function adminDeleteRequest(id) {
     body: JSON.stringify({ adminEmail: adminGetEmail(), id: id })
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (!d.error) adminLoadRequests();
+  });
+}
+
+/* ── CO-OWNER MESSAGING ───────────────────────────────── */
+
+function coMsgTypeChange() {
+  var t = (document.getElementById('co-msg-type')||{}).value;
+  var addRow = document.getElementById('co-dev-email-row');
+  var remRow = document.getElementById('co-dev-remove-row');
+  if (addRow) addRow.style.display = t === 'add-dev' ? '' : 'none';
+  if (remRow) remRow.style.display = t === 'remove-dev' ? '' : 'none';
+}
+
+function coOwnerSend() {
+  var type = (document.getElementById('co-msg-type')||{}).value || 'dm';
+  var message = ((document.getElementById('co-msg-text')||{}).value||'').trim();
+  var devEmail = type === 'add-dev' ? ((document.getElementById('co-dev-email')||{}).value||'').trim()
+    : type === 'remove-dev' ? ((document.getElementById('co-dev-remove-select')||{}).value||'').trim() : '';
+  var statusEl = document.getElementById('co-send-msg');
+  if (!message) { if(statusEl){statusEl.style.color='#f87171';statusEl.textContent='Please write a message.';} return; }
+  if ((type==='add-dev'||type==='remove-dev') && !devEmail) { if(statusEl){statusEl.style.color='#f87171';statusEl.textContent='Please enter the developer email.';} return; }
+  if (statusEl) { statusEl.style.color='var(--cyan2)'; statusEl.textContent='Sending…'; }
+  fetch('/api/co-message', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ coOwnerEmail: adminGetEmail(), type: type, message: message, devEmail: devEmail||null })
+  }).then(function(r){return r.json();}).then(function(d){
+    if (d.ok) {
+      if(statusEl){statusEl.style.color='#4ade80';statusEl.textContent='Sent!';}
+      document.getElementById('co-msg-text').value='';
+      if(document.getElementById('co-dev-email'))document.getElementById('co-dev-email').value='';
+      setTimeout(function(){if(statusEl)statusEl.textContent='';},3000);
+      coOwnerLoadMyMessages();
+    } else {
+      if(statusEl){statusEl.style.color='#f87171';statusEl.textContent=d.error||'Failed to send.';}
+    }
+  }).catch(function(){if(statusEl){statusEl.style.color='#f87171';statusEl.textContent='Network error.';}});
+}
+
+function coOwnerLoadMyMessages() {
+  var email = adminGetEmail();
+  if (!email) return;
+  fetch('/api/co-messages/mine?coOwnerEmail=' + encodeURIComponent(email))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var list = document.getElementById('co-my-msgs-list');
+      if (!list) return;
+      var msgs = d.messages || [];
+      if (!msgs.length) { list.innerHTML='<p style="color:var(--dim);font-size:.82rem">No messages sent yet.</p>'; return; }
+      var typeMap={'add-dev':'➕ Add Dev','remove-dev':'➖ Remove Dev','dm':'💬 Message'};
+      list.innerHTML = msgs.map(function(m){
+        var replies = m.replies||[];
+        var adminReplies = replies.filter(function(r){return r.from==='admin';});
+        var date = m.createdAt ? new Date(m.createdAt).toLocaleString() : '';
+        var statusColor = m.status==='resolved' ? '#4ade80' : '#fbbf24';
+        return '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:14px 16px;margin-bottom:8px">'
+          + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
+          + '<span style="font-size:.7rem;font-weight:700;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.25);color:var(--purple2);padding:2px 8px;border-radius:999px">'+(typeMap[m.type]||m.type)+'</span>'
+          + '<span style="font-size:.68rem;color:'+statusColor+';font-weight:700">'+m.status+'</span>'
+          + '<span style="font-size:.68rem;color:var(--dim)">'+date+'</span>'
+          + '</div>'
+          + '<div style="font-size:.85rem;color:var(--muted);white-space:pre-wrap;word-break:break-word;margin-bottom:'+(adminReplies.length?'10px':'0')+'">'+escHtml(m.message)+'</div>'
+          + (adminReplies.length ? adminReplies.map(function(r){
+              return '<div style="background:rgba(6,182,212,.07);border:1px solid rgba(6,182,212,.15);border-radius:8px;padding:10px 12px;font-size:.82rem;color:var(--text)">'
+                + '<span style="font-size:.62rem;color:var(--cyan2);font-weight:700;display:block;margin-bottom:3px">Owner replied</span>'
+                + escHtml(r.text)+'</div>';
+            }).join('') : '')
+          + '</div>';
+      }).join('');
+    }).catch(function(){});
+}
+
+function adminLoadCoMessages() {
+  var email = adminGetEmail();
+  if (!email) return;
+  fetch('/api/admin/co-messages?adminEmail=' + encodeURIComponent(email))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var msgs = d.messages || [];
+      var open = msgs.filter(function(m){return m.status==='open';}).length;
+      var badge = document.getElementById('co-inbox-badge');
+      if (badge) { badge.textContent=open; badge.style.display=open?'':'none'; }
+      adminRenderCoMessages(msgs);
+    }).catch(function(){});
+}
+
+function adminRenderCoMessages(msgs) {
+  var list = document.getElementById('co-inbox-list');
+  if (!list) return;
+  if (!msgs.length) { list.innerHTML='<p style="color:var(--dim);font-size:.85rem">No messages from co-owner yet.</p>'; return; }
+  var typeMap={'add-dev':'➕ Add Developer','remove-dev':'➖ Remove Developer','dm':'💬 Message'};
+  list.innerHTML = msgs.map(function(m){
+    var isOpen = m.status==='open';
+    var date = m.createdAt ? new Date(m.createdAt).toLocaleString() : '';
+    var replies = m.replies||[];
+    var borderColor = isOpen ? 'rgba(6,182,212,.3)' : 'rgba(255,255,255,.06)';
+    return '<div id="co-msg-card-'+m.id+'" style="background:rgba(6,182,212,.03);border:1px solid '+borderColor+';border-radius:12px;padding:16px 18px;margin-bottom:10px">'
+      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">'
+      + '<span style="font-size:.7rem;font-weight:800;background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.25);color:#22d3ee;padding:2px 9px;border-radius:999px">'+(typeMap[m.type]||m.type)+'</span>'
+      + '<span style="font-size:.7rem;font-weight:700;color:'+(isOpen?'#fbbf24':'var(--dim)')+'">'+m.status+'</span>'
+      + '<span style="font-size:.7rem;color:var(--dim)">'+date+'</span>'
+      + '</div>'
+      + (m.devEmail?'<div style="font-size:.78rem;color:#22d3ee;margin-bottom:6px">Dev: <b>'+escHtml(m.devEmail)+'</b></div>':'')
+      + '<div style="font-size:.88rem;color:var(--text);white-space:pre-wrap;word-break:break-word;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:8px">'+escHtml(m.message)+'</div>'
+      + (replies.length?'<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px">'+replies.map(function(r){
+          return '<div style="padding:8px 11px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);border-radius:8px;font-size:.82rem;color:var(--text)">'
+            +'<span style="font-size:.62rem;color:var(--purple2);font-weight:700;display:block;margin-bottom:2px">You replied</span>'+escHtml(r.text)+'</div>';
+        }).join('')+'</div>':'')
+      + '<div class="adm-reply-form" id="co-arf-'+m.id+'">'
+      + '<textarea class="adm-reply-inp" id="co-ari-'+m.id+'" rows="2" placeholder="Type your reply…"></textarea>'
+      + '<div style="display:flex;gap:8px;margin-top:6px">'
+      + '<button class="admin-btn primary" style="padding:6px 14px;font-size:.78rem" onclick="adminCoReply(\''+m.id+'\',null)">Send Reply</button>'
+      + '<button class="admin-btn ghost" style="padding:6px 14px;font-size:.78rem;color:#4ade80;border-color:rgba(74,222,128,.3)" onclick="adminCoReply(\''+m.id+'\',\'Yes\')">✓ Yes</button>'
+      + '<button class="admin-btn ghost" style="padding:6px 14px;font-size:.78rem;color:#f87171;border-color:rgba(248,113,113,.3)" onclick="adminCoReply(\''+m.id+'\',\'No\')">✗ No</button>'
+      + '</div></div>'
+      + '</div>'
+      + '<div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">'
+      + '<button class="admin-btn primary" style="padding:7px 14px;font-size:.78rem" onclick="adminCoToggleReply(\''+m.id+'\')">Reply</button>'
+      + '</div>'
+      + '</div></div>';
+  }).join('');
+}
+
+function adminCoToggleReply(id) {
+  var form = document.getElementById('co-arf-'+id);
+  if (!form) return;
+  form.classList.toggle('open');
+  if (form.classList.contains('open')) { var inp=document.getElementById('co-ari-'+id); if(inp)inp.focus(); }
+}
+
+function adminCoReply(id, quickText) {
+  var inp = document.getElementById('co-ari-'+id);
+  var text = quickText || ((inp ? inp.value : '') || '').trim();
+  if (!text) return;
+  fetch('/api/admin/co-message-reply', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminEmail: adminGetEmail(), id: id, replyText: text })
+  }).then(function(r){return r.json();}).then(function(d){
+    if (d.ok) adminLoadCoMessages();
   });
 }
 

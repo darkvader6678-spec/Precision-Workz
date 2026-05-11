@@ -307,6 +307,11 @@ const writeClients  = (v) => kvWrite('clients',  v);
 const writeRequests = (v) => kvWrite('requests', v);
 const writeReports  = (v) => kvWrite('reports',  v);
 const writeUsers    = (v) => kvWrite('users',    v);
+async function readCoMessages() {
+  const raw = _parseKV(await kvRead('co-messages', []), []);
+  return Array.isArray(raw) ? raw : [];
+}
+const writeCoMessages = (v) => kvWrite('co-messages', v);
 
 async function isAdmin(email) {
   if (!email) return false;
@@ -570,6 +575,38 @@ async function handleAPI(req, res, urlPath) {
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
+  // Co-owner → send message / request to primary admin
+  if (urlPath === '/api/co-message' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { coOwnerEmail, type, message, devEmail } = body;
+      if (!coOwnerEmail || !type || !message) return json(res, 400, { error: 'Missing fields' });
+      if (!CO_OWNER_EMAIL || coOwnerEmail.toLowerCase().trim() !== CO_OWNER_EMAIL) return json(res, 403, { error: 'Forbidden' });
+      const msgs = await readCoMessages();
+      const newMsg = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), type, message, devEmail: devEmail||null, from: CO_OWNER_EMAIL, status: 'open', createdAt: new Date().toISOString(), replies: [] };
+      msgs.unshift(newMsg);
+      await writeCoMessages(msgs);
+      const typeLabel = type==='add-dev'?'Add Developer Request':type==='remove-dev'?'Remove Developer Request':'Message from Co-Owner';
+      const adminHtml = emailHeader(typeLabel, new Date().toLocaleString())
+        + '<div style="padding:28px 32px">'
+        + (devEmail?'<div style="font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#475569;margin-bottom:8px">Developer Email</div><div style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);border-radius:8px;padding:10px 14px;font-size:14px;color:#22d3ee;margin-bottom:16px">'+esc(devEmail)+'</div>':'')
+        + '<div style="font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#475569;margin-bottom:8px">Message</div>'
+        + '<div style="background:rgba(255,255,255,.04);border:1px solid #1e293b;border-radius:10px;padding:16px;font-size:14px;color:#cbd5e1;white-space:pre-wrap;word-break:break-word;line-height:1.7;margin-bottom:28px">'+esc(message)+'</div>'
+        + emailBtn(SITE_URL+'/?coMsg='+newMsg.id,'View &amp; Reply in Admin Panel &#8594;')
+        + '</div>'+emailFooter();
+      await sendEmail(GMAIL_USER, typeLabel+' — Oscar', adminHtml);
+      return json(res, 200, { ok: true, id: newMsg.id });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  // Co-owner → get own messages (to see replies)
+  if (urlPath === '/api/co-messages/mine' && req.method === 'GET') {
+    const qs = new URLSearchParams(req.url.split('?')[1]||'');
+    const coEmail = (qs.get('coOwnerEmail')||'').toLowerCase().trim();
+    if (!CO_OWNER_EMAIL || coEmail !== CO_OWNER_EMAIL) return json(res, 403, { error: 'Forbidden' });
+    return json(res, 200, { messages: await readCoMessages() });
+  }
+
   // Admin routes
   if (urlPath.startsWith('/api/admin/')) {
     let body = {};
@@ -591,6 +628,48 @@ async function handleAPI(req, res, urlPath) {
 
     if (urlPath === '/api/admin/requests') {
       return json(res, 200, { requests: await readRequests(), ownerEmail: OWNER_EMAIL });
+    }
+
+    if (urlPath === '/api/admin/co-messages') {
+      if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Forbidden' });
+      return json(res, 200, { messages: await readCoMessages() });
+    }
+
+    if (urlPath === '/api/admin/co-message-reply' && req.method === 'POST') {
+      if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Forbidden' });
+      try {
+        const { id, replyText } = body;
+        if (!id || !replyText) return json(res, 400, { error: 'Missing fields' });
+        const msgs = await readCoMessages();
+        const idx = msgs.findIndex(m => m.id === id);
+        if (idx < 0) return json(res, 404, { error: 'Not found' });
+        if (!msgs[idx].replies) msgs[idx].replies = [];
+        msgs[idx].replies.push({ text: replyText, from: 'admin', createdAt: new Date().toISOString() });
+        msgs[idx].status = 'resolved';
+        await writeCoMessages(msgs);
+        if (CO_OWNER_EMAIL) {
+          const typeLabel = msgs[idx].type==='add-dev'?'Add Developer Request':msgs[idx].type==='remove-dev'?'Remove Developer Request':'Your Message';
+          const replyHtml = emailHeader('Reply from the Owner', '')
+            + '<div style="padding:28px 32px">'
+            + '<p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 20px">Hi Oscar, here\'s a reply to your <b style="color:#f1f5f9">'+typeLabel+'</b>:</p>'
+            + '<div style="background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.2);border-radius:10px;padding:18px;font-size:14px;color:#cbd5e1;white-space:pre-wrap;word-break:break-word;line-height:1.7;margin-bottom:28px">'+esc(replyText)+'</div>'
+            + emailBtn(SITE_URL,'Open Co-Owner Panel &#8594;')
+            + '</div>'+emailFooter();
+          await sendEmail(CO_OWNER_EMAIL, 'Reply from owner — Precision Workz', replyHtml);
+        }
+        return json(res, 200, { ok: true });
+      } catch(e) { return json(res, 500, { error: e.message }); }
+    }
+
+    if (urlPath === '/api/admin/co-message-resolve' && req.method === 'POST') {
+      if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Forbidden' });
+      try {
+        const { id, status } = body;
+        const msgs = await readCoMessages();
+        const idx = msgs.findIndex(m => m.id === id);
+        if (idx >= 0) { msgs[idx].status = status || 'resolved'; await writeCoMessages(msgs); }
+        return json(res, 200, { ok: true });
+      } catch(e) { return json(res, 500, { error: e.message }); }
     }
 
     if (urlPath === '/api/admin/reports') {
