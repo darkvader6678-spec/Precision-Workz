@@ -165,27 +165,14 @@ const OWNER_EMAIL = 'precizionworkz@gmail.com';
 
 // ── PROFANITY FILTER ──────────────────────────────────────
 const _PW_WORDS = ['nigger','nigga','faggot','kike','chink','spic','wetback','coon','beaner','gook','cunt','twat','motherfucker','fuck','shit','bitch','asshole','retard','whore','slut','dickhead','prick','bastard'];
-function _buildPwPattern(w) {
-  const chars = w.split('');
-  let pat = '';
-  for (let i = 0; i < chars.length; i++) {
-    pat += chars[i];
-    if (i < chars.length - 1) {
-      const rest = [...new Set(chars.slice(i + 1))].join('');
-      pat += `[^${rest}]*`;
-    }
-  }
-  return new RegExp(pat, 'i');
-}
-const _PW_PATTERNS = _PW_WORDS.map(_buildPwPattern);
+const _PW_PATTERNS = _PW_WORDS.map(w => new RegExp(w.split('').map(c => c + '+').join('[^a-z]*'), 'i'));
 function containsProfanity(text) {
   if (!text) return false;
-  const stripped = text.toLowerCase()
+  const lo = text.toLowerCase()
     .replace(/4/g,'a').replace(/@/g,'a').replace(/3/g,'e')
     .replace(/1/g,'i').replace(/!/g,'i').replace(/0/g,'o')
-    .replace(/\$/g,'s').replace(/5/g,'s').replace(/7/g,'t')
-    .replace(/[^a-z]/g,'');
-  return _PW_PATTERNS.some(re => re.test(stripped));
+    .replace(/\$/g,'s').replace(/5/g,'s').replace(/7/g,'t');
+  return _PW_PATTERNS.some(re => re.test(lo));
 }
 
 // ── PERSISTENT STORAGE (Vercel KV with local file fallback) ─

@@ -4284,18 +4284,9 @@ function applyContactPromo(){
 /* ── PROFANITY FILTER ─────────────────────────────────── */
 (function(){
   var WORDS=['nigger','nigga','faggot','kike','chink','spic','wetback','coon','beaner','gook','cunt','twat','motherfucker','fuck','shit','bitch','asshole','retard','whore','slut','dickhead','prick','bastard'];
-  function _build(w){
-    var c=w.split(''),p='';
-    for(var i=0;i<c.length;i++){
-      p+=c[i];
-      if(i<c.length-1){
-        var rest=c.slice(i+1).filter(function(x,j,a){return a.indexOf(x)===j;}).join('');
-        p+='[^'+rest+']*';
-      }
-    }
-    return new RegExp(p,'i');
-  }
-  var PATTERNS=WORDS.map(_build);
+  var PATTERNS=WORDS.map(function(w){
+    return new RegExp(w.split('').map(function(c){return c+'+'}).join('[^a-z]*'),'i');
+  });
   function _leet(s){
     return s.replace(/4/g,'a').replace(/@/g,'a').replace(/3/g,'e')
             .replace(/1/g,'i').replace(/!/g,'i').replace(/0/g,'o')
@@ -4303,8 +4294,8 @@ function applyContactPromo(){
   }
   window.pwFilter=function(text){
     if(!text)return false;
-    var stripped=_leet(text.toLowerCase()).replace(/[^a-z]/g,'');
-    for(var i=0;i<PATTERNS.length;i++){if(PATTERNS[i].test(stripped))return true;}
+    var lo=_leet(text.toLowerCase());
+    for(var i=0;i<PATTERNS.length;i++){if(PATTERNS[i].test(lo))return true;}
     return false;
   };
 })();
