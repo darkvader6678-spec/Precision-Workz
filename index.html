@@ -5285,14 +5285,19 @@ function adminLoadRequests() {
         setTimeout(function() {
           var card = document.getElementById('adm-req-card-' + _rl);
           if (card) {
-            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            var adminBody = document.querySelector('.admin-body');
+            if (adminBody) {
+              var bodyRect = adminBody.getBoundingClientRect();
+              var cardRect = card.getBoundingClientRect();
+              adminBody.scrollTop = adminBody.scrollTop + (cardRect.top - bodyRect.top) - 80;
+            }
             card.style.boxShadow = '0 0 0 3px rgba(124,58,237,.55)';
             setTimeout(function() {
               adminToggleReply(_rl);
               setTimeout(function() { card.style.boxShadow = ''; }, 2500);
             }, 400);
           }
-        }, 150);
+        }, 300);
       }
     })
     .catch(function(e) { console.warn('Requests fetch failed:', e); });
@@ -5907,6 +5912,8 @@ function checkAdminBtn(user) {
         var isCO = !!(d.coOwner && user.email.toLowerCase() === d.coOwner.toLowerCase());
         window._isCoOwner = isCO;
         if (isCO) adminBtn.innerHTML = '<i class="ph-bold ph-shield-star" style="font-size:.85rem"></i> Co-Owner';
+        // Auto-open panel when arriving via email deep link
+        if (new URLSearchParams(window.location.search).get('req')) openAdmin();
       } else {
         window._isCoOwner = false;
       }
