@@ -4284,9 +4284,18 @@ function applyContactPromo(){
 /* ── PROFANITY FILTER ─────────────────────────────────── */
 (function(){
   var WORDS=['nigger','nigga','faggot','kike','chink','spic','wetback','coon','beaner','gook','cunt','twat','motherfucker','fuck','shit','bitch','asshole','retard','whore','slut','dickhead','prick','bastard'];
-  var PATTERNS=WORDS.map(function(w){
-    return new RegExp(w.split('').join('.{0,2}'),'i');
-  });
+  function _build(w){
+    var c=w.split(''),p='';
+    for(var i=0;i<c.length;i++){
+      p+=c[i];
+      if(i<c.length-1){
+        var rest=c.slice(i+1).filter(function(x,j,a){return a.indexOf(x)===j;}).join('');
+        p+='[^'+rest+']*';
+      }
+    }
+    return new RegExp(p,'i');
+  }
+  var PATTERNS=WORDS.map(_build);
   function _leet(s){
     return s.replace(/4/g,'a').replace(/@/g,'a').replace(/3/g,'e')
             .replace(/1/g,'i').replace(/!/g,'i').replace(/0/g,'o')
@@ -5868,6 +5877,8 @@ function checkAdminBtn(user) {
       var isAdmin = !d.error;
       window._userIsAdmin = isAdmin;
       adminBtn.style.display = isAdmin ? 'flex' : 'none';
+      var ctaBanner = document.querySelector('.cta-banner');
+      if (ctaBanner) ctaBanner.style.display = isAdmin ? 'none' : '';
     })
     .catch(function() { window._userIsAdmin = false; adminBtn.style.display = 'none'; });
 }

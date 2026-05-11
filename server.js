@@ -165,7 +165,19 @@ const OWNER_EMAIL = 'precizionworkz@gmail.com';
 
 // ── PROFANITY FILTER ──────────────────────────────────────
 const _PW_WORDS = ['nigger','nigga','faggot','kike','chink','spic','wetback','coon','beaner','gook','cunt','twat','motherfucker','fuck','shit','bitch','asshole','retard','whore','slut','dickhead','prick','bastard'];
-const _PW_PATTERNS = _PW_WORDS.map(w => new RegExp(w.split('').join('.{0,2}'), 'i'));
+function _buildPwPattern(w) {
+  const chars = w.split('');
+  let pat = '';
+  for (let i = 0; i < chars.length; i++) {
+    pat += chars[i];
+    if (i < chars.length - 1) {
+      const rest = [...new Set(chars.slice(i + 1))].join('');
+      pat += `[^${rest}]*`;
+    }
+  }
+  return new RegExp(pat, 'i');
+}
+const _PW_PATTERNS = _PW_WORDS.map(_buildPwPattern);
 function containsProfanity(text) {
   if (!text) return false;
   const stripped = text.toLowerCase()
