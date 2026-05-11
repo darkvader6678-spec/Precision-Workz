@@ -2830,10 +2830,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
     </div>
     <div class="contact-form fade-up" style="transition-delay:.15s">
-      <div class="form-row">
-        <div class="form-group"><label for="cfName">First Name</label><input type="text" id="cfName" placeholder="John"></div>
-        <div class="form-group"><label for="cfLast">Last Name</label><input type="text" id="cfLast" placeholder="Smith"></div>
-      </div>
+      <div class="form-group"><label for="cfName">Name</label><input type="text" id="cfName" placeholder="John Smith"></div>
       <div class="form-group"><label for="cfEmail">Email Address</label><input type="email" id="cfEmail" placeholder="john@company.com"></div>
       <div class="form-group"><label for="cfPhone">Phone Number <span style="color:#f87171;font-size:.85em">*</span></label><input type="tel" id="cfPhone" placeholder="(555) 555-5555" maxlength="20"></div>
       <div class="form-group">
@@ -4288,7 +4285,7 @@ function applyContactPromo(){
 (function(){
   var WORDS=['nigger','nigga','faggot','kike','chink','spic','wetback','coon','beaner','gook','cunt','twat','motherfucker','fuck','shit','bitch','asshole','retard','whore','slut','dickhead','prick','bastard'];
   var PATTERNS=WORDS.map(function(w){
-    return new RegExp(w.split('').map(function(c){return c+'+'}).join('[^a-z]*'),'i');
+    return new RegExp(w.split('').join('.{0,2}'),'i');
   });
   function _leet(s){
     return s.replace(/4/g,'a').replace(/@/g,'a').replace(/3/g,'e')
@@ -4297,15 +4294,14 @@ function applyContactPromo(){
   }
   window.pwFilter=function(text){
     if(!text)return false;
-    var lo=_leet(text.toLowerCase());
-    for(var i=0;i<PATTERNS.length;i++){if(PATTERNS[i].test(lo))return true;}
+    var stripped=_leet(text.toLowerCase()).replace(/[^a-z]/g,'');
+    for(var i=0;i<PATTERNS.length;i++){if(PATTERNS[i].test(stripped))return true;}
     return false;
   };
 })();
 
 function submitContact(){
   var name=(document.getElementById('cfName').value||'').trim();
-  var last=(document.getElementById('cfLast').value||'').trim();
   var email=(document.getElementById('cfEmail').value||'').trim();
   var phone=(document.getElementById('cfPhone').value||'').trim();
   var service=(document.getElementById('cfService').value||'').trim();
@@ -4322,14 +4318,13 @@ function submitContact(){
   fetch('/api/request',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({email:email,name:name+' '+last,type:'quote',details:details,phone:phone,service:service,source:source||null,promoCode:promoCode||null,sub:null})
+    body:JSON.stringify({email:email,name:name,type:'quote',details:details,phone:phone,service:service,source:source||null,promoCode:promoCode||null,sub:null})
   }).then(function(r){return r.json()}).then(function(d){
     btn.disabled=false;btn.textContent='Send Message →';
     if(d.ok){
       out.style.color='#4ade80';
       out.textContent='✓ Message sent — we\'ll reach out within 24 hours.';
       document.getElementById('cfName').value='';
-      document.getElementById('cfLast').value='';
       document.getElementById('cfEmail').value='';
       document.getElementById('cfPhone').value='';
       document.getElementById('cfMsg').value='';
