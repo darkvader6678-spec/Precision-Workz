@@ -593,6 +593,16 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .m-pill-2{font-size:.74rem;font-weight:500;color:rgba(255,255,255,.17);white-space:nowrap;padding:13px 22px;border-right:1px solid rgba(255,255,255,.04);transition:color .2s;cursor:default;user-select:none;letter-spacing:.5px;text-transform:uppercase}
 .m-pill-2:hover{color:var(--dim)}
 @keyframes marquee-run-r{0%{transform:translateX(-50%)}100%{transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){.marquee-row,.marquee-row-2{animation:none;overflow:hidden}}
+@keyframes gold-wave{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.admin-title-gold{background:linear-gradient(90deg,#f59e0b,#fbbf24,#d97706,#fbbf24,#f59e0b);background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gold-wave 3s ease infinite;font-weight:800}
+#adm-projects-view{display:none;padding-top:20px}
+.proj-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;position:relative}
+.proj-card.locked{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.03)}
+.proj-id{font-size:.6rem;letter-spacing:1.5px;color:var(--dim);font-family:'Orbitron',monospace;text-transform:uppercase}
+.proj-name{font-weight:700;font-size:.95rem;color:var(--text)}
+.proj-meta{font-size:.75rem;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.proj-lock-badge{font-size:.58rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
 
 /* Pre-footer CTA banner */
 .cta-banner{padding:160px 5%;text-align:center;position:relative;overflow:hidden;background:linear-gradient(180deg,var(--bg),rgba(124,58,237,.05),var(--bg));border-top:1px solid var(--border)}
@@ -1450,7 +1460,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <div class="hero-btns">
       <a href="#pricing" class="btn-primary">View Packages</a>
       <a href="#services" class="btn-ghost">See What We Do</a>
-      <button class="btn-ghost" onclick="openDemoModal()" style="border-color:rgba(34,211,238,.35);color:var(--cyan2);display:flex;align-items:center;gap:8px;cursor:pointer;background:rgba(6,182,212,.06);font-family:inherit">
+      <button id="hero-demo-btn" class="btn-ghost" onclick="openDemoModal()" style="border-color:rgba(34,211,238,.35);color:var(--cyan2);display:flex;align-items:center;gap:8px;cursor:pointer;background:rgba(6,182,212,.06);font-family:inherit">
         <span style="width:7px;height:7px;border-radius:50%;background:var(--cyan2);box-shadow:0 0 8px var(--cyan2);flex-shrink:0;display:inline-block"></span>
         Schedule Free Demo
       </button>
@@ -1477,12 +1487,12 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   <div class="stat fade-up"><div class="stat-num" data-target="4">0</div><div class="stat-label">Projects Delivered</div></div>
   <div class="stat fade-up" style="transition-delay:.1s"><div class="stat-num" data-target="100">0</div><div class="stat-label">Client Satisfaction</div></div>
   <div class="stat fade-up stat-clickable" id="stat-age" style="transition-delay:.2s" onclick="toggleStatNote('age-note')">
-    <div class="stat-num" id="stat-num-age" data-suffix=" days">0</div>
+    <div class="stat-num" id="stat-num-age" data-suffix=" mo">0</div>
     <div class="stat-label">In Business <span class="stat-click-hint">↑</span></div>
     <div class="stat-note" id="age-note">
       <button class="stat-note-close" onclick="event.stopPropagation();toggleStatNote('age-note')">×</button>
-      <strong style="display:block;margin-bottom:6px;color:var(--text);font-size:.85rem">Just Getting Started.</strong>
-      Precision Workz launched <span id="age-note-days">a few</span> days ago — and we're already building full-stack platforms that agencies charge 5× more for. New doesn't mean less. It means hungrier, faster, and more committed to getting it right.
+      <strong style="display:block;margin-bottom:6px;color:var(--text);font-size:.85rem">Early Access. Full Commitment.</strong>
+      Precision Workz has been delivering full-stack platforms for <span id="age-note-days">over a year</span> — and we charge a fraction of what agencies do for the same quality. You get our full focus, not the divided attention of a shop juggling hundreds of accounts.
     </div>
   </div>
   <div class="stat fade-up" style="transition-delay:.3s"><div class="stat-num" data-target="24">0</div><div class="stat-label">Hour Support</div></div>
@@ -1503,22 +1513,18 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <div class="risk-card fade-up">
       <div class="risk-num">43%</div>
       <div class="risk-desc">of cyberattacks specifically target small and mid-sized businesses</div>
-      <div class="risk-source">Verizon Data Breach Investigations Report</div>
     </div>
     <div class="risk-card fade-up" style="transition-delay:.08s">
       <div class="risk-num">88%</div>
       <div class="risk-desc">of users won't return to a website after a poor experience</div>
-      <div class="risk-source">Google / Gomez Consumer Study</div>
     </div>
     <div class="risk-card fade-up" style="transition-delay:.16s">
       <div class="risk-num">53%</div>
       <div class="risk-desc">of mobile visitors leave a site that takes more than 3 seconds to load</div>
-      <div class="risk-source">Google Research</div>
     </div>
     <div class="risk-card fade-up" style="transition-delay:.24s">
       <div class="risk-num">60%</div>
       <div class="risk-desc">of small businesses that suffer a serious breach shut down within 6 months</div>
-      <div class="risk-source">Cybersecurity Alliance</div>
     </div>
   </div>
 </section>
@@ -1624,7 +1630,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
               <div class="wv-prop-body">
                 <div class="wv-prop-loc">Tucson, Arizona</div>
                 <div class="wv-prop-name">Hidden Jewel</div>
-                <div class="wv-prop-rating">★★★★★ <span style="font-size:.48rem;color:rgba(192,192,192,.4);font-weight:500">4.97 · 214 reviews</span></div>
+                <div class="wv-prop-rating">★★★★★ <span style="font-size:.48rem;color:rgba(192,192,192,.4);font-weight:500">4.97 · 28 reviews</span></div>
                 <div class="wv-prop-sep"></div>
                 <div class="wv-prop-book-row">
                   <div class="wv-prop-price-wrap">
@@ -1847,9 +1853,9 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
             </div>
             <!-- Social proof strip -->
             <div style="display:flex;justify-content:center;gap:12px;padding:5px 0 6px;border-top:1px solid rgba(255,255,255,.05)">
-              <div style="text-align:center"><div style="font-size:.34rem;font-weight:800;color:rgba(34,211,238,.9)">50+</div><div style="font-size:.23rem;color:rgba(255,255,255,.28);margin-top:1px">Clients</div></div>
+              <div style="text-align:center"><div style="font-size:.34rem;font-weight:800;color:rgba(34,211,238,.9)">From</div><div style="font-size:.23rem;color:rgba(255,255,255,.28);margin-top:1px">Scratch</div></div>
               <div style="width:1px;background:rgba(255,255,255,.08)"></div>
-              <div style="text-align:center"><div style="font-size:.34rem;font-weight:800;color:rgba(168,85,247,.9)">100%</div><div style="font-size:.23rem;color:rgba(255,255,255,.28);margin-top:1px">Satisfaction</div></div>
+              <div style="text-align:center"><div style="font-size:.34rem;font-weight:800;color:rgba(168,85,247,.9)">5★</div><div style="font-size:.23rem;color:rgba(255,255,255,.28);margin-top:1px">Service</div></div>
               <div style="width:1px;background:rgba(255,255,255,.08)"></div>
               <div style="text-align:center"><div style="font-size:.34rem;font-weight:800;color:rgba(74,222,128,.9)">2 wk</div><div style="font-size:.23rem;color:rgba(255,255,255,.28);margin-top:1px">Delivery</div></div>
             </div>
@@ -2614,7 +2620,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <div class="sub-tier-label gold">Gold Managed</div>
       <div class="sub-price-row">
         <span class="sub-currency">$</span>
-        <span class="sub-amount gold" id="sub-gold-amt">89</span>
+        <span class="sub-amount gold" id="sub-gold-amt">149</span>
         <span class="sub-per">/mo</span>
       </div>
       <div class="sub-annual-save" id="sub-gold-save">&nbsp;</div>
@@ -2631,7 +2637,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         <div class="pf"><span class="pf-check">✓</span><strong>4-hour emergency response SLA</strong></div>
         <div class="pf"><span class="pf-check">✓</span>Dedicated point-of-contact</div>
       </div>
-      <button class="sub-btn sub-gold-btn" onclick="openPayModal('gold','Gold Managed',89)">Get Started →</button>
+      <button class="sub-btn sub-gold-btn" onclick="openPayModal('gold','Gold Managed',149)">Get Started →</button>
     </div>
 
   </div>
@@ -3076,7 +3082,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <div>
       <span class="loc-eyebrow">Service Area</span>
       <h2 class="loc-title">Based in<br><span class="grad-text">Tucson, AZ</span></h2>
-      <p class="loc-desc">Precision Workz is proudly headquartered in Tucson, Arizona — serving clients across the Southwest and nationwide. Every project is built with the same precision and care, whether you're local or across the country.</p>
+      <p class="loc-desc">Precision Workz is proudly headquartered in Tucson, Arizona — serving clients nationwide. Every project is built with the same precision and care, whether you're local or across the country.</p>
       <div class="loc-coords">
         <span class="loc-coords-dot"></span>
         32.2226° N &nbsp;/&nbsp; 110.9747° W
@@ -3339,7 +3345,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   <div class="admin-topbar">
     <div class="admin-topbar-left">
       <span class="admin-badge">Admin</span>
-      <span class="admin-title">Precision Workz — Control Panel</span>
+      <span class="admin-title"><span class="admin-title-gold">Precision Workz</span> <span id="admin-panel-subtitle">— Control Panel</span></span>
       <span id="adm-level-badge" style="display:none;font-size:.6rem;font-weight:800;letter-spacing:1px;padding:3px 10px;border-radius:6px;text-transform:uppercase"></span>
     </div>
     <button class="admin-close-btn" onclick="closeAdmin()">✕ Close</button>
@@ -3350,6 +3356,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <button class="admin-tab-btn" id="atab-progress" onclick="adminTab('progress')">Progress</button>
       <button class="admin-tab-btn" id="atab-reports" onclick="adminTab('reports')">Reports <span id="atab-reports-badge" style="display:none;background:rgba(239,68,68,.18);color:#f87171;border-radius:999px;padding:1px 7px;font-size:.65rem;margin-left:4px">0</span></button>
       <button class="admin-tab-btn" id="atab-monitor" onclick="adminTab('monitor')">Monitor</button>
+      <button class="admin-tab-btn" id="atab-projects" onclick="adminTab('projects')">Projects</button>
     </div>
     <div id="adm-clients-view">
 
@@ -3412,6 +3419,10 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
           </select>
         </div>
       </div>
+      <div>
+        <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Project Name <span style="font-weight:400;color:rgba(255,255,255,.25)">(creates a linked project)</span></div>
+        <input class="admin-input" id="adm-proj-name" type="text" placeholder="e.g. E-Commerce Redesign 2026">
+      </div>
       <div style="margin-top:10px;display:flex;gap:10px;align-items:flex-end">
         <div style="flex:1">
           <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Internal Notes</div>
@@ -3458,18 +3469,52 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
     </div>
 
-    <!-- Co-owner inbox — primary admin only -->
+    <!-- Projects view -->
+    <div id="adm-projects-view">
+      <div class="admin-section" id="adm-add-project-section">
+        <div class="admin-section-title">New Project</div>
+        <div class="admin-form-grid">
+          <div>
+            <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Project Name *</div>
+            <input class="admin-input" id="proj-new-name" type="text" placeholder="e.g. Website Redesign 2026">
+          </div>
+          <div>
+            <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Client Email (optional)</div>
+            <input class="admin-input" id="proj-new-client" type="email" placeholder="client@email.com">
+          </div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:10px;align-items:flex-end">
+          <div style="flex:1">
+            <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Notes</div>
+            <input class="admin-input" id="proj-new-notes" type="text" placeholder="Any internal notes…">
+          </div>
+          <button class="admin-btn primary" onclick="adminAddProject()">Create Project</button>
+        </div>
+        <div class="admin-msg" id="proj-form-msg"></div>
+      </div>
+      <div class="admin-section">
+        <div class="admin-section-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>All Projects</span>
+          <button class="admin-btn ghost" onclick="adminLoadData()" style="font-size:.72rem">↻ Refresh</button>
+        </div>
+        <div id="adm-projects-list" style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+          <p style="color:var(--dim);font-size:.85rem">Loading…</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Team inbox — primary admin only -->
     <div class="admin-section" id="co-inbox-section" style="display:none">
       <div class="admin-section-title" style="display:flex;align-items:center;justify-content:space-between">
-        <span>Co-Owner Inbox <span id="co-inbox-badge" style="display:none;background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.3);color:#22d3ee;border-radius:999px;padding:1px 8px;font-size:.65rem;margin-left:6px">0</span></span>
+        <span>Team Inbox <span id="co-inbox-badge" style="display:none;background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.3);color:#22d3ee;border-radius:999px;padding:1px 8px;font-size:.65rem;margin-left:6px">0</span></span>
         <button class="admin-btn ghost" onclick="adminLoadCoMessages()" style="white-space:nowrap">↻ Refresh</button>
       </div>
       <div id="co-inbox-list" style="margin-top:14px"><p style="color:var(--dim);font-size:.85rem">Loading…</p></div>
     </div>
 
-    <!-- Co-owner compose — co-owner only -->
+    <!-- Dev compose — all non-primary admins -->
     <div class="admin-section" id="co-compose-section" style="display:none">
-      <div class="admin-section-title">Send to Owner</div>
+      <div class="admin-section-title">Message the Owner</div>
       <div style="display:flex;flex-direction:column;gap:12px">
         <div>
           <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Request Type</div>
@@ -3679,9 +3724,9 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
           <div class="mon-big-label">all time</div>
         </div>
         <div class="mon-card">
-          <div class="mon-card-title">Co-Owner Messages</div>
+          <div class="mon-card-title">Team Messages</div>
           <div class="mon-big-num" style="color:#22d3ee" id="mon-stat-co-msgs">—</div>
-          <div class="mon-big-label">from Oscar</div>
+          <div class="mon-big-label">from team</div>
         </div>
       </div>
 
@@ -3704,6 +3749,28 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
           <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px 14px"><div style="font-size:.68rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">RSS Memory</div><div style="font-size:.9rem;font-weight:700;color:var(--text)" id="mon-env-rss">—</div></div>
           <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px 14px"><div style="font-size:.68rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Behind Cloudflare</div><div style="font-size:.9rem;font-weight:700;color:var(--text)" id="mon-env-cf">—</div></div>
           <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px 14px"><div style="font-size:.68rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Requests / Session</div><div style="font-size:.9rem;font-weight:700;color:var(--purple2)" id="mon-env-reqs">—</div></div>
+        </div>
+      </div>
+
+      <!-- Site Analytics -->
+      <div class="mon-card" style="margin-top:12px">
+        <div class="mon-card-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span>Site Analytics</span>
+          <span style="font-size:.68rem;color:var(--dim)" id="mon-analytics-updated">—</span>
+        </div>
+        <div id="mon-analytics-content" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <div style="font-size:.68rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Section Views</div>
+            <div id="mon-analytics-sections" style="display:flex;flex-direction:column;gap:5px"><span style="color:var(--dim);font-size:.8rem">No data yet</span></div>
+          </div>
+          <div>
+            <div style="font-size:.68rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Button Clicks</div>
+            <div id="mon-analytics-clicks" style="display:flex;flex-direction:column;gap:5px"><span style="color:var(--dim);font-size:.8rem">No data yet</span></div>
+          </div>
+        </div>
+        <div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.06);padding-top:10px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <span style="font-size:.75rem;color:var(--dim)">Total pageviews: <b style="color:var(--text)" id="mon-analytics-pv">—</b></span>
+          <button class="admin-btn ghost" style="font-size:.7rem;padding:4px 12px;margin-left:auto;color:#f87171;border-color:rgba(239,68,68,.3)" onclick="monResetAnalytics()">Reset Analytics</button>
         </div>
       </div>
 
@@ -3906,7 +3973,7 @@ function submitDemo(){
 
 /* ── SUBSCRIPTION BILLING TOGGLE ─────────────────── */
 var subIsAnnual=false;
-var SUB_PRICES={basic:{mo:49,yr:39},gold:{mo:89,yr:71}};
+var SUB_PRICES={basic:{mo:49,yr:39},gold:{mo:149,yr:119}};
 
 function subSetBilling(annual){
   if(annual===undefined)annual=!subIsAnnual;
@@ -4380,15 +4447,16 @@ async function submitPayment(){
   document.querySelectorAll('.fade-up').forEach(function(el){io.observe(el)});
 })();
 
-/* ── DAYS IN BUSINESS — dynamic counter ─────────────────── */
+/* ── TIME IN BUSINESS — dynamic counter ─────────────────── */
 (function(){
-  var launch=new Date('2026-04-29T00:00:00');
-  var days=Math.floor((Date.now()-launch.getTime())/(1000*60*60*24));
-  if(days<1)days=1;
+  var launch=new Date('2025-03-01T00:00:00');
+  var ms=Date.now()-launch.getTime();
+  var months=Math.floor(ms/(1000*60*60*24*30.44));
+  if(months<1)months=1;
   var ageEl=document.getElementById('stat-num-age');
-  if(ageEl)ageEl.dataset.target=days;
+  if(ageEl){ ageEl.dataset.target=months; ageEl.dataset.suffix=' mo'; }
   var noteSpan=document.getElementById('age-note-days');
-  if(noteSpan)noteSpan.textContent=days;
+  if(noteSpan)noteSpan.textContent='over a year';
 })();
 
 function sgVerified(){
@@ -5300,13 +5368,12 @@ function adminLoadData() {
       if (d.error) { console.warn('Admin load error:', d.error); return; }
       _adminData = d;
       window._adminClients = d.clients;
+      window._adminProjects = d.projects || {};
       var _myEml = adminGetEmail().toLowerCase();
       var _isCO = !!(d.coOwner && _myEml === d.coOwner.toLowerCase());
       window._isCoOwner = _isCO;
-      var _badge = document.querySelector('.admin-badge');
-      var _title = document.querySelector('.admin-title');
-      if (_badge) _badge.textContent = _isCO ? 'Co-Owner' : 'Admin';
-      if (_title) _title.textContent = _isCO ? 'Precision Workz — Co-Owner Panel' : 'Precision Workz — Control Panel';
+      var _subtitle = document.getElementById('admin-panel-subtitle');
+      if (_subtitle) _subtitle.textContent = _isCO ? '— Co-Owner Panel' : '— Control Panel';
       var _cleanBtn = document.querySelector('[onclick="adminCleanDB()"]');
       if (_cleanBtn) _cleanBtn.style.display = _isCO ? 'none' : '';
       var _isPrimary = _myEml === (d.primaryAdmin||'').toLowerCase();
@@ -5316,11 +5383,11 @@ function adminLoadData() {
       // Apply / remove co-owner theme
       var overlay = document.getElementById('admin-overlay');
       if (overlay) overlay.classList.toggle('co-theme', _isCO);
-      // Show co-owner compose section for co-owner, inbox for primary admin
+      // Show inbox for primary, compose for all non-primary admins
       var inboxEl = document.getElementById('co-inbox-section');
       var composeEl = document.getElementById('co-compose-section');
       if (inboxEl) inboxEl.style.display = _isPrimary ? '' : 'none';
-      if (composeEl) composeEl.style.display = _isCO ? '' : 'none';
+      if (composeEl) composeEl.style.display = !_isPrimary ? '' : 'none';
       adminRenderStats(d.clients);
       adminRenderDevs(d.admins, d.primaryAdmin, d.coOwner, d.adminLevels || {});
       // Populate remove-dev dropdown for co-owner
@@ -5330,8 +5397,8 @@ function adminLoadData() {
           var devs = (d.admins||[]).filter(function(e){ return e.toLowerCase() !== d.coOwner.toLowerCase() && e.toLowerCase() !== d.primaryAdmin.toLowerCase(); });
           remSel.innerHTML = '<option value="">— select —</option>' + devs.map(function(e){ return '<option value="'+escHtml(e)+'">'+escHtml(e)+'</option>'; }).join('');
         }
-        coOwnerLoadMyMessages();
       }
+      if (!_isPrimary) coOwnerLoadMyMessages();
       if (_isPrimary) adminLoadCoMessages();
       adminRenderTable(d.clients);
       adminLoadRequests();
@@ -5446,7 +5513,7 @@ function adminEditRow(email) {
 }
 
 function adminClearForm() {
-  ['adm-email','adm-name','adm-notes'].forEach(function(id) { document.getElementById(id).value = ''; });
+  ['adm-email','adm-name','adm-notes','adm-proj-name'].forEach(function(id) { var el=document.getElementById(id); if(el) el.value=''; });
   document.getElementById('adm-sub').value     = '';
   document.getElementById('adm-billing').value = 'monthly';
   document.getElementById('adm-package').value = '';
@@ -5454,14 +5521,15 @@ function adminClearForm() {
 }
 
 function adminSaveClient() {
-  var email   = (document.getElementById('adm-email').value || '').trim();
-  var name    = (document.getElementById('adm-name').value || '').trim();
-  var sub     = document.getElementById('adm-sub').value;
-  var billing = document.getElementById('adm-billing').value;
-  var pkg     = document.getElementById('adm-package').value;
-  var notes   = (document.getElementById('adm-notes').value || '').trim();
-  var msgEl   = document.getElementById('adm-form-msg');
-  var btn     = document.getElementById('adm-save-btn');
+  var email    = (document.getElementById('adm-email').value || '').trim();
+  var name     = (document.getElementById('adm-name').value || '').trim();
+  var sub      = document.getElementById('adm-sub').value;
+  var billing  = document.getElementById('adm-billing').value;
+  var pkg      = document.getElementById('adm-package').value;
+  var notes    = (document.getElementById('adm-notes').value || '').trim();
+  var projName = (document.getElementById('adm-proj-name') ? (document.getElementById('adm-proj-name').value||'').trim() : '');
+  var msgEl    = document.getElementById('adm-form-msg');
+  var btn      = document.getElementById('adm-save-btn');
 
   function showMsg(color, text) {
     msgEl.style.color = color;
@@ -5492,12 +5560,20 @@ function adminSaveClient() {
     if (btn) { btn.disabled = false; btn.textContent = 'Save Client'; }
     if (d.error) { showMsg('#f87171', d.error); return; }
     showMsg('#4ade80', '✓ Saved — ' + email);
-    /* if saving own record, sync localStorage so dashboard reflects immediately */
     var me = getUserData();
     if (me && me.email && me.email.toLowerCase() === email.toLowerCase()) {
       me.sub = sub || null;
       me.packageType = pkg || null;
       setUserData(me);
+    }
+    // Auto-create linked project if a project name was provided
+    if (projName) {
+      fetch('/api/admin/add-project', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ adminEmail: adminGetEmail(), name: projName, clientEmail: email, notes: '' })
+      }).then(function(r){ return r.json(); }).then(function(pd) {
+        if (!pd.error) { window._adminProjects = pd.projects; adminRenderProjects(pd.projects); }
+      });
     }
     adminClearForm();
     adminLoadData();
@@ -5835,7 +5911,7 @@ function adminLoadCoMessages() {
 function adminRenderCoMessages(msgs) {
   var list = document.getElementById('co-inbox-list');
   if (!list) return;
-  if (!msgs.length) { list.innerHTML='<p style="color:var(--dim);font-size:.85rem">No messages from co-owner yet.</p>'; return; }
+  if (!msgs.length) { list.innerHTML='<p style="color:var(--dim);font-size:.85rem">No team messages yet.</p>'; return; }
   var typeMap={'add-dev':'➕ Add Developer','remove-dev':'➖ Remove Developer','dm':'💬 Message'};
   list.innerHTML = msgs.map(function(m){
     var isOpen = m.status==='open';
@@ -5863,6 +5939,7 @@ function adminRenderCoMessages(msgs) {
       + '<div style="flex:1;min-width:0">'
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">'
       + '<span style="font-size:.7rem;font-weight:800;background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.25);color:#22d3ee;padding:2px 9px;border-radius:999px">'+(typeMap[m.type]||m.type)+'</span>'
+      + '<span style="font-size:.68rem;font-weight:700;color:var(--purple2);background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);padding:2px 8px;border-radius:999px">'+escHtml(m.from||'')+'</span>'
       + '<span style="font-size:.7rem;font-weight:700;color:'+(isOpen?'#fbbf24':'#4ade80')+'">'+m.status+'</span>'
       + '<span style="font-size:.7rem;color:var(--dim)">'+date+'</span>'
       + '</div>'
@@ -5958,20 +6035,51 @@ function adminApplyLevelRestrictions() {
   var isMed = ['medium','max','primary','co-owner'].includes(level);
   var isMax = ['max','primary'].includes(level);
   var isPrimary = level === 'primary';
-  // Tabs: low can only see Clients
-  var tabs = { progress: !isLow, reports: !isLow, monitor: !isLow };
+  var isCoOwner = level === 'co-owner';
+
+  // Admin badge — level-specific label
+  var badge = document.querySelector('.admin-badge');
+  if (badge && !isCoOwner) {
+    var badgeLabels = { low: 'Low Privileges Admin', medium: 'Admin', max: 'Senior Admin', primary: 'Primary Admin' };
+    var badgeColors = { low: 'linear-gradient(135deg,#15803d,#16a34a)', medium: 'linear-gradient(135deg,var(--purple),var(--cyan))', max: 'linear-gradient(135deg,#b91c1c,#dc2626)', primary: 'linear-gradient(135deg,var(--purple),var(--cyan))' };
+    badge.textContent = badgeLabels[level] || 'Admin';
+    badge.style.background = badgeColors[level] || 'linear-gradient(135deg,var(--purple),var(--cyan))';
+  }
+
+  var isCoOwnerPlus = isPrimary || isCoOwner;
+
+  // Tabs visibility
+  var tabs = { progress: isCoOwnerPlus, reports: !isLow, monitor: !isLow, projects: isMed };
   Object.keys(tabs).forEach(function(t) {
     var btn = document.getElementById('atab-' + t);
     if (btn) btn.style.display = tabs[t] ? '' : 'none';
   });
-  // Add-client section hidden for low
-  if (isLow) {
-    var addSec = document.getElementById('adm-add-client-section');
-    if (addSec) addSec.style.display = 'none';
-  }
+
+  // Add-client section: co-owner and primary only
+  var addSec = document.getElementById('adm-add-client-section');
+  if (addSec) addSec.style.display = isCoOwnerPlus ? '' : 'none';
+
+  // Add-project section: medium+ only
+  var addProjSec = document.getElementById('adm-add-project-section');
+  if (addProjSec) addProjSec.style.display = isMed ? '' : 'none';
+
   // Dev management row: primary only
   var devRow = document.getElementById('adm-add-dev-row');
   if (devRow) devRow.style.display = isPrimary ? 'flex' : 'none';
+
+  // Hide public-facing CTAs for non-primary devs
+  if (!isPrimary) {
+    var navCta = document.getElementById('nav-cta-btn');
+    if (navCta) navCta.style.display = 'none';
+    var heroDemo = document.getElementById('hero-demo-btn');
+    if (heroDemo) heroDemo.style.display = 'none';
+    document.querySelectorAll('.demo-fab').forEach(function(el){ el.style.display = 'none'; });
+    var ctaBanner = document.querySelector('.cta-banner');
+    if (ctaBanner) ctaBanner.style.display = 'none';
+    var contactSec = document.getElementById('contact');
+    if (contactSec) contactSec.style.display = 'none';
+  }
+
   // Level badge in header
   var lvlBadge = document.getElementById('adm-level-badge');
   if (lvlBadge && level !== 'primary') {
@@ -5986,46 +6094,40 @@ function adminApplyLevelRestrictions() {
   } else if (lvlBadge) {
     lvlBadge.style.display = 'none';
   }
+
+  // Render projects if already loaded
+  if (window._adminProjects) adminRenderProjects(window._adminProjects);
 }
 
 function adminTab(tab) {
   var level = window._myLevel || 'low';
-  var restricted = { progress: level === 'low', reports: level === 'low', monitor: level === 'low' };
+  var isMed = ['medium','max','primary','co-owner'].includes(level);
+  var isCoOwnerPlus = level === 'primary' || level === 'co-owner';
+  var restricted = { progress: !isCoOwnerPlus, reports: level === 'low', monitor: level === 'low', projects: !isMed };
+  var allViews = ['adm-clients-view','adm-progress-view','adm-reports-view','adm-monitor-view','adm-projects-view'];
+  var allTabs = ['clients','progress','reports','monitor','projects'];
   if (restricted[tab]) {
-    // Show access-denied message in the relevant view area
-    var viewMap = { progress: 'adm-progress-view', reports: 'adm-reports-view', monitor: 'adm-monitor-view' };
-    ['adm-clients-view','adm-progress-view','adm-reports-view','adm-monitor-view'].forEach(function(id) {
-      var el = document.getElementById(id); if (el) el.style.display = 'none';
-    });
+    allViews.forEach(function(id){ var el = document.getElementById(id); if(el) el.style.display='none'; });
+    var viewMap = { progress:'adm-progress-view', reports:'adm-reports-view', monitor:'adm-monitor-view', projects:'adm-projects-view' };
     var vEl = document.getElementById(viewMap[tab]);
     if (vEl) {
       vEl.style.display = '';
       vEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:16px;text-align:center">'
         + '<div style="font-size:2rem">🔒</div>'
         + '<div style="font-weight:800;color:var(--text)">Access Restricted</div>'
-        + '<div style="color:var(--muted);font-size:.88rem">Your current access level (Low) does not permit viewing this section.<br>Contact the primary admin to upgrade your access.</div>'
+        + '<div style="color:var(--muted);font-size:.88rem">Your current access level does not permit viewing this section.<br>Contact the primary admin to upgrade your access.</div>'
         + '</div>';
     }
-    ['clients','progress','reports','monitor'].forEach(function(t) {
-      var btn = document.getElementById('atab-' + t); if (btn) btn.classList.toggle('active', t === tab);
-    });
+    allTabs.forEach(function(t){ var btn=document.getElementById('atab-'+t); if(btn) btn.classList.toggle('active', t===tab); });
     return;
   }
-  ['clients','progress','reports','monitor'].forEach(function(t) {
-    var btn = document.getElementById('atab-' + t);
-    if (btn) btn.classList.toggle('active', t === tab);
-  });
-  var cv = document.getElementById('adm-clients-view');
-  var pv = document.getElementById('adm-progress-view');
-  var rv = document.getElementById('adm-reports-view');
-  var mv = document.getElementById('adm-monitor-view');
-  if (cv) cv.style.display = tab === 'clients' ? '' : 'none';
-  if (pv) pv.style.display = tab === 'progress' ? '' : 'none';
-  if (rv) rv.style.display = tab === 'reports' ? '' : 'none';
-  if (mv) mv.style.display = tab === 'monitor' ? '' : 'none';
+  allTabs.forEach(function(t){ var btn=document.getElementById('atab-'+t); if(btn) btn.classList.toggle('active', t===tab); });
+  allViews.forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; });
+  var targetView = { clients:'adm-clients-view', progress:'adm-progress-view', reports:'adm-reports-view', monitor:'adm-monitor-view', projects:'adm-projects-view' }[tab];
+  var tv = document.getElementById(targetView);
+  if (tv) tv.style.display = '';
   if (tab === 'monitor') {
     if (!_monUnlocked) {
-      // Show gate, hide content
       var gate = document.getElementById('mon-gate');
       var content = document.getElementById('mon-content');
       if (gate) gate.style.display = 'flex';
@@ -6042,6 +6144,108 @@ function adminTab(tab) {
   }
   if (tab === 'reports') adminLoadReports();
   if (tab === 'progress') adminProgressPopulateClients();
+  if (tab === 'projects') adminRenderProjects(window._adminProjects || {});
+}
+
+/* ── PROJECT MANAGEMENT ─────────────────────────────── */
+function adminRenderProjects(projects) {
+  var list = document.getElementById('adm-projects-list');
+  if (!list) return;
+  var isPrimary = (window._myLevel || '') === 'primary';
+  var isMed = ['medium','max','primary'].includes(window._myLevel || '');
+  var arr = Object.values(projects || {}).sort(function(a,b){ return (b.created||0)-(a.created||0); });
+  if (!arr.length) { list.innerHTML = '<p style="color:var(--dim);font-size:.85rem">No projects yet.</p>'; return; }
+  list.innerHTML = arr.map(function(p) {
+    var locked = p.locked;
+    var canEdit = isMed && (!locked || isPrimary);
+    var createdDate = p.created ? new Date(p.created).toLocaleDateString() : '—';
+    var statusOpts = ['active','in-progress','on-hold','completed'].map(function(s){
+      return '<option value="'+s+'"'+(p.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>';
+    }).join('');
+    return '<div class="proj-card'+(locked?' locked':'')+'" id="pcard-'+p.id+'">'
+      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">'
+      + '<div>'
+      + (locked ? '<span class="proj-lock-badge">🔒 Protected</span> ' : '')
+      + '<div class="proj-id">ID: '+p.id+'</div>'
+      + '<div class="proj-name" id="pname-'+p.id+'">' + escHtml(p.name) + '</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:7px;flex-shrink:0">'
+      + (isPrimary ? '<button class="admin-btn ghost" style="font-size:.7rem;padding:4px 10px" onclick="adminLockProject(\''+p.id+'\','+(!locked)+')">'+(locked?'Unlock':'Lock')+'</button>' : '')
+      + (canEdit ? '<button class="admin-btn ghost" style="font-size:.7rem;padding:4px 10px" onclick="adminEditProject(\''+p.id+'\')">Edit</button>' : '')
+      + (isPrimary ? '<button class="admin-btn ghost" style="font-size:.7rem;padding:4px 10px;border-color:rgba(239,68,68,.35);color:#f87171" onclick="adminDeleteProject(\''+p.id+'\')">Delete</button>' : '')
+      + '</div></div>'
+      + '<div class="proj-meta">'
+      + (p.clientEmail ? '<span>Client: '+escHtml(p.clientEmail)+'</span>' : '')
+      + '<span>Created: '+createdDate+'</span>'
+      + '<span>By: '+escHtml(p.createdBy||'')+'</span>'
+      + (p.updatedAt ? '<span>Updated: '+new Date(p.updatedAt).toLocaleDateString()+'</span>' : '')
+      + '</div>'
+      + (p.notes ? '<div style="font-size:.78rem;color:var(--dim);margin-top:4px;padding:6px 10px;background:rgba(255,255,255,.03);border-radius:6px">'+escHtml(p.notes)+'</div>' : '')
+      + '</div>';
+  }).join('');
+}
+
+function adminAddProject() {
+  var name = (document.getElementById('proj-new-name').value || '').trim();
+  var clientEmail = (document.getElementById('proj-new-client').value || '').trim();
+  var notes = (document.getElementById('proj-new-notes').value || '').trim();
+  var msgEl = document.getElementById('proj-form-msg');
+  if (!name) { msgEl.style.color='#f87171'; msgEl.textContent='Project name is required.'; return; }
+  fetch('/api/admin/add-project', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ adminEmail: adminGetEmail(), name: name, clientEmail: clientEmail, notes: notes })
+  }).then(function(r){ return r.json(); }).then(function(d) {
+    if (d.error) { msgEl.style.color='#f87171'; msgEl.textContent=d.error; return; }
+    msgEl.style.color='#4ade80'; msgEl.textContent='✓ Project created — ID: '+d.project.id;
+    document.getElementById('proj-new-name').value='';
+    document.getElementById('proj-new-client').value='';
+    document.getElementById('proj-new-notes').value='';
+    window._adminProjects = d.projects;
+    adminRenderProjects(d.projects);
+  }).catch(function(){ msgEl.style.color='#f87171'; msgEl.textContent='Network error.'; });
+}
+
+function adminDeleteProject(id) {
+  if (!confirm('Delete this project permanently? This cannot be undone.')) return;
+  fetch('/api/admin/delete-project', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ adminEmail: adminGetEmail(), id: id })
+  }).then(function(r){ return r.json(); }).then(function(d) {
+    if (d.error) { alert(d.error); return; }
+    window._adminProjects = d.projects;
+    adminRenderProjects(d.projects);
+  }).catch(function(){ alert('Network error.'); });
+}
+
+function adminLockProject(id, locked) {
+  fetch('/api/admin/lock-project', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ adminEmail: adminGetEmail(), id: id, locked: locked })
+  }).then(function(r){ return r.json(); }).then(function(d) {
+    if (d.error) { alert(d.error); return; }
+    window._adminProjects = d.projects;
+    adminRenderProjects(d.projects);
+  }).catch(function(){ alert('Network error.'); });
+}
+
+function adminEditProject(id) {
+  var projects = window._adminProjects || {};
+  var p = projects[id];
+  if (!p) return;
+  var newName = prompt('Project name:', p.name);
+  if (newName === null) return;
+  var newClient = prompt('Client email:', p.clientEmail || '');
+  if (newClient === null) return;
+  var newNotes = prompt('Notes:', p.notes || '');
+  if (newNotes === null) return;
+  fetch('/api/admin/update-project', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ adminEmail: adminGetEmail(), id: id, name: newName, clientEmail: newClient, notes: newNotes })
+  }).then(function(r){ return r.json(); }).then(function(d) {
+    if (d.error) { alert(d.error); return; }
+    window._adminProjects = d.projects;
+    adminRenderProjects(d.projects);
+  }).catch(function(){ alert('Network error.'); });
 }
 
 /* ── ADMIN PROJECT PROGRESS ─────────────────────────── */
@@ -6374,9 +6578,45 @@ function monRender(d) {
   el = document.getElementById('mon-env-cf'); if(el) el.textContent = d.behindCloudflare ? '✓ Yes' : '✗ No';
   el = document.getElementById('mon-env-reqs'); if(el) el.textContent = (d.reqTotal||0).toLocaleString();
 
+  // Analytics
+  if (d.analytics) {
+    var events = d.analytics.events || {};
+    var pv = document.getElementById('mon-analytics-pv');
+    if (pv) pv.textContent = (d.analytics.totalPageviews || 0).toLocaleString();
+    var updEl = document.getElementById('mon-analytics-updated');
+    if (updEl && d.analytics.lastUpdated) updEl.textContent = 'Updated: ' + new Date(d.analytics.lastUpdated).toLocaleTimeString();
+    var sectionEntries = Object.entries(events).filter(function(kv){ return kv[0].startsWith('section:'); }).sort(function(a,b){ return b[1]-a[1]; }).slice(0,8);
+    var clickEntries  = Object.entries(events).filter(function(kv){ return kv[0].startsWith('click:'); }).sort(function(a,b){ return b[1]-a[1]; }).slice(0,8);
+    function renderAnalyticRows(entries, strip) {
+      if (!entries.length) return '<span style="color:var(--dim);font-size:.8rem">No data yet</span>';
+      var maxVal = entries[0][1];
+      return entries.map(function(kv){
+        var label = kv[0].replace(strip,'');
+        var count = kv[1];
+        var pct = Math.round(count/maxVal*100);
+        return '<div style="display:flex;align-items:center;gap:8px;font-size:.78rem">'
+          + '<div style="flex:1;min-width:0;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(label)+'</div>'
+          + '<div style="width:80px;height:5px;border-radius:3px;background:rgba(255,255,255,.07);flex-shrink:0"><div style="height:100%;border-radius:3px;background:linear-gradient(90deg,var(--purple2),var(--cyan2));width:'+pct+'%"></div></div>'
+          + '<div style="width:28px;text-align:right;color:var(--dim);flex-shrink:0">'+count+'</div></div>';
+      }).join('');
+    }
+    var secEl = document.getElementById('mon-analytics-sections');
+    if (secEl) secEl.innerHTML = renderAnalyticRows(sectionEntries, 'section:');
+    var clkEl = document.getElementById('mon-analytics-clicks');
+    if (clkEl) clkEl.innerHTML = renderAnalyticRows(clickEntries, 'click:');
+  }
+
   // Last refresh time
   el = document.getElementById('mon-last-refresh');
   if (el) el.textContent = 'Last refresh: ' + new Date().toLocaleTimeString();
+}
+
+function monResetAnalytics() {
+  if (!confirm('Reset all site analytics data?')) return;
+  fetch('/api/admin/analytics-reset', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ adminEmail: adminGetEmail() }) })
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if (!d.error) monRefresh(); else alert(d.error); })
+    .catch(function(){});
 }
 
 function monRefreshIPs() {
@@ -6848,6 +7088,45 @@ function cookieReject(){
     p.style.cursor='pointer';
     p.title='Click for details';
   });
+})();
+</script>
+<script>
+/* ── SITE ANALYTICS TRACKING ─────────────────────────── */
+(function(){
+  function track(event, label) {
+    fetch('/api/track',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({event:event,label:label}) }).catch(function(){});
+  }
+  // Track a pageview
+  track('pageview', location.pathname || '/');
+  // Section view tracking via IntersectionObserver
+  var seen = {};
+  if ('IntersectionObserver' in window) {
+    var sio = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting && e.intersectionRatio >= 0.35 && e.target.id && !seen[e.target.id]) {
+          seen[e.target.id] = true;
+          track('section', e.target.id);
+        }
+      });
+    }, { threshold: 0.35 });
+    ['hero','services','portfolio','pricing','subscription','process','why','contact','location'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) sio.observe(el);
+    });
+  }
+  // CTA click tracking (passive capture)
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    if (!t) return;
+    var id = t.id || (t.closest ? (t.closest('[id]')||{}).id : '');
+    var cls = t.className || '';
+    if (id === 'nav-cta-btn' || (t.closest && t.closest('#nav-cta-btn'))) track('click', 'Start a Project (nav)');
+    else if (id === 'hero-demo-btn' || (t.closest && t.closest('.demo-fab'))) track('click', 'Schedule Free Demo');
+    else if (cls.indexOf && cls.indexOf('price-btn') !== -1) track('click', 'Get a Quote');
+    else if (cls.indexOf && cls.indexOf('sub-btn') !== -1) track('click', 'Managed Plan CTA');
+    else if (cls.indexOf && cls.indexOf('work-cta') !== -1) track('click', 'Portfolio CTA');
+    else if (id === 'hero-demo-btn') track('click', 'Schedule Free Demo');
+  }, true);
 })();
 </script>
 </body>

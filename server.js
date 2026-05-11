@@ -317,6 +317,16 @@ async function readAdminLevels() {
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
 }
 const writeAdminLevels = (v) => kvWrite('admin-levels', v);
+async function readProjects() {
+  const raw = _parseKV(await kvRead('projects', {}), {});
+  return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+}
+const writeProjects = (v) => kvWrite('projects', v);
+async function readAnalytics() {
+  const raw = _parseKV(await kvRead('analytics', {}), {});
+  return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+}
+const writeAnalytics = (v) => kvWrite('analytics', v);
 async function getAdminLevel(email) {
   if (!email) return null;
   const e = email.toLowerCase().trim();
@@ -328,6 +338,10 @@ async function getAdminLevel(email) {
 const _LVL = { low: 0, medium: 1, max: 2, 'co-owner': 1, primary: 99 };
 function levelAtLeast(userLevel, minLevel) {
   return (_LVL[userLevel] || 0) >= (_LVL[minLevel] || 0);
+}
+function isCoOwnerOrPrimary(email) {
+  const e = (email || '').toLowerCase().trim();
+  return e === PRIMARY_ADMIN.toLowerCase() || !!(CO_OWNER_EMAIL && e === CO_OWNER_EMAIL.toLowerCase());
 }
 
 async function isAdmin(email) {
@@ -593,35 +607,56 @@ async function handleAPI(req, res, urlPath) {
   }
 
   // Co-owner → send message / request to primary admin
+  if (urlPath === '/api/track' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { event, label } = body;
+      if (!event || !label) return json(res, 200, { ok: false });
+      const analytics = await readAnalytics();
+      if (!analytics.events) analytics.events = {};
+      const key = String(event + ':' + label).slice(0, 100);
+      analytics.events[key] = (analytics.events[key] || 0) + 1;
+      if (event === 'pageview') analytics.totalPageviews = (analytics.totalPageviews || 0) + 1;
+      analytics.lastUpdated = Date.now();
+      await writeAnalytics(analytics);
+      return json(res, 200, { ok: true });
+    } catch(e) { return json(res, 200, { ok: false }); }
+  }
+
   if (urlPath === '/api/co-message' && req.method === 'POST') {
     try {
       const body = await parseBody(req);
       const { coOwnerEmail, type, message, devEmail } = body;
-      if (!coOwnerEmail || !type || !message) return json(res, 400, { error: 'Missing fields' });
-      if (!CO_OWNER_EMAIL || coOwnerEmail.toLowerCase().trim() !== CO_OWNER_EMAIL) return json(res, 403, { error: 'Forbidden' });
+      const senderEmail = (coOwnerEmail || '').toLowerCase().trim();
+      if (!senderEmail || !type || !message) return json(res, 400, { error: 'Missing fields' });
+      if (!await isAdmin(senderEmail)) return json(res, 403, { error: 'Forbidden' });
       const msgs = await readCoMessages();
-      const newMsg = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), type, message, devEmail: devEmail||null, from: CO_OWNER_EMAIL, status: 'open', createdAt: new Date().toISOString(), replies: [] };
+      const newMsg = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), type, message, devEmail: devEmail||null, from: senderEmail, status: 'open', createdAt: new Date().toISOString(), replies: [] };
       msgs.unshift(newMsg);
       await writeCoMessages(msgs);
-      const typeLabel = type==='add-dev'?'Add Developer Request':type==='remove-dev'?'Remove Developer Request':'Message from Co-Owner';
+      const isCoO = CO_OWNER_EMAIL && senderEmail === CO_OWNER_EMAIL.toLowerCase();
+      const typeLabel = type==='add-dev'?'Add Developer Request':type==='remove-dev'?'Remove Developer Request':(isCoO?'Message from Co-Owner':'Message from Dev: '+senderEmail);
       const adminHtml = emailHeader(typeLabel, new Date().toLocaleString())
         + '<div style="padding:28px 32px">'
+        + '<div style="font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#475569;margin-bottom:8px">From</div><div style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--purple2,#a78bfa);margin-bottom:16px">'+esc(senderEmail)+'</div>'
         + (devEmail?'<div style="font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#475569;margin-bottom:8px">Developer Email</div><div style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);border-radius:8px;padding:10px 14px;font-size:14px;color:#22d3ee;margin-bottom:16px">'+esc(devEmail)+'</div>':'')
         + '<div style="font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#475569;margin-bottom:8px">Message</div>'
         + '<div style="background:rgba(255,255,255,.04);border:1px solid #1e293b;border-radius:10px;padding:16px;font-size:14px;color:#cbd5e1;white-space:pre-wrap;word-break:break-word;line-height:1.7;margin-bottom:28px">'+esc(message)+'</div>'
         + emailBtn(SITE_URL+'/?coMsg='+newMsg.id,'View &amp; Reply in Admin Panel &#8594;')
         + '</div>'+emailFooter();
-      await sendEmail(GMAIL_USER, typeLabel+' — Oscar', adminHtml);
+      await sendEmail(GMAIL_USER, typeLabel, adminHtml);
       return json(res, 200, { ok: true, id: newMsg.id });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
-  // Co-owner → get own messages (to see replies)
+  // Any admin → get own sent messages (to see replies)
   if (urlPath === '/api/co-messages/mine' && req.method === 'GET') {
     const qs = new URLSearchParams(req.url.split('?')[1]||'');
-    const coEmail = (qs.get('coOwnerEmail')||'').toLowerCase().trim();
-    if (!CO_OWNER_EMAIL || coEmail !== CO_OWNER_EMAIL) return json(res, 403, { error: 'Forbidden' });
-    return json(res, 200, { messages: await readCoMessages() });
+    const senderEmail = (qs.get('coOwnerEmail')||'').toLowerCase().trim();
+    if (!senderEmail || !await isAdmin(senderEmail)) return json(res, 403, { error: 'Forbidden' });
+    const all = await readCoMessages();
+    const mine = all.filter(m => (m.from||'').toLowerCase() === senderEmail);
+    return json(res, 200, { messages: mine });
   }
 
   // Admin routes
@@ -637,11 +672,11 @@ async function handleAPI(req, res, urlPath) {
     if (!await isAdmin(body.adminEmail)) return json(res, 403, { error: 'Forbidden' });
 
     if (urlPath === '/api/admin/data') {
-      const [clients, admins, adminLevels] = await Promise.all([readClients(), readAdmins(), readAdminLevels()]);
+      const [clients, admins, adminLevels, projects] = await Promise.all([readClients(), readAdmins(), readAdminLevels(), readProjects()]);
       const coLow = (CO_OWNER_EMAIL || '').toLowerCase();
       const allAdmins = [...new Set([PRIMARY_ADMIN, ...(CO_OWNER_EMAIL ? [CO_OWNER_EMAIL] : []), ...admins.filter(a => a.toLowerCase() !== PRIMARY_ADMIN.toLowerCase() && a.toLowerCase() !== coLow)])];
       const myLevel = await getAdminLevel(body.adminEmail);
-      return json(res, 200, { clients, admins: allAdmins, primaryAdmin: PRIMARY_ADMIN, coOwner: CO_OWNER_EMAIL || null, adminLevels, myLevel });
+      return json(res, 200, { clients, admins: allAdmins, primaryAdmin: PRIMARY_ADMIN, coOwner: CO_OWNER_EMAIL || null, adminLevels, myLevel, projects });
     }
 
     if (urlPath === '/api/admin/requests') {
@@ -813,7 +848,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/set-client' && req.method === 'POST') {
-      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'medium')) return json(res, 403, { error: 'Medium access or higher required', permissionDenied: true });
+      if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Co-owner or primary admin access required', permissionDenied: true });
       try {
         const { targetEmail, name, sub, billing, packageType, notes } = body;
         if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
@@ -843,7 +878,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/set-progress' && req.method === 'POST') {
-      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'medium')) return json(res, 403, { error: 'Medium access or higher required', permissionDenied: true });
+      if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Co-owner or primary admin access required', permissionDenied: true });
       try {
         const { targetEmail, stages, currentTask } = body;
         if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
@@ -916,6 +951,60 @@ async function handleAPI(req, res, urlPath) {
         await writeAdmins(admins);
         return json(res, 200, { ok: true, admins });
       } catch(e) { return json(res, 500, { error: e.message }); }
+    }
+
+    // Project management endpoints
+    if (urlPath === '/api/admin/add-project' && req.method === 'POST') {
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'medium')) return json(res, 403, { error: 'Medium access or higher required', permissionDenied: true });
+      const { name, clientEmail, notes } = body;
+      if (!name) return json(res, 400, { error: 'Project name required' });
+      const id = 'proj_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const projects = await readProjects();
+      projects[id] = { id, name: name.trim(), clientEmail: (clientEmail||'').trim(), notes: (notes||'').trim(), created: Date.now(), createdBy: body.adminEmail, locked: false, status: 'active' };
+      await writeProjects(projects);
+      return json(res, 200, { ok: true, project: projects[id], projects });
+    }
+
+    if (urlPath === '/api/admin/update-project' && req.method === 'POST') {
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'medium')) return json(res, 403, { error: 'Medium access or higher required', permissionDenied: true });
+      const { id, name, clientEmail, notes, status } = body;
+      if (!id) return json(res, 400, { error: 'Project ID required' });
+      const projects = await readProjects();
+      if (!projects[id]) return json(res, 404, { error: 'Project not found' });
+      if (projects[id].locked && body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) {
+        return json(res, 403, { error: 'Project is locked — only the primary admin can edit' });
+      }
+      if (name !== undefined) projects[id].name = name.trim();
+      if (clientEmail !== undefined) projects[id].clientEmail = clientEmail.trim();
+      if (notes !== undefined) projects[id].notes = notes.trim();
+      if (status) projects[id].status = status;
+      projects[id].updatedAt = Date.now();
+      projects[id].updatedBy = body.adminEmail;
+      await writeProjects(projects);
+      return json(res, 200, { ok: true, project: projects[id], projects });
+    }
+
+    if (urlPath === '/api/admin/lock-project' && req.method === 'POST') {
+      if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Only the primary admin can lock/unlock projects' });
+      const { id, locked } = body;
+      if (!id) return json(res, 400, { error: 'Project ID required' });
+      const projects = await readProjects();
+      if (!projects[id]) return json(res, 404, { error: 'Project not found' });
+      projects[id].locked = !!locked;
+      projects[id].lockedAt = locked ? Date.now() : null;
+      await writeProjects(projects);
+      return json(res, 200, { ok: true, project: projects[id], projects });
+    }
+
+    if (urlPath === '/api/admin/delete-project' && req.method === 'POST') {
+      if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Only the primary admin can delete projects' });
+      const { id } = body;
+      if (!id) return json(res, 400, { error: 'Project ID required' });
+      const projects = await readProjects();
+      if (!projects[id]) return json(res, 404, { error: 'Project not found' });
+      delete projects[id];
+      await writeProjects(projects);
+      return json(res, 200, { ok: true, projects });
     }
 
     // IP management endpoints
@@ -995,6 +1084,7 @@ async function handleAPI(req, res, urlPath) {
         });
       });
       ipList.sort((a, b) => b.lastSeen - a.lastSeen);
+      const analytics = await readAnalytics();
       return json(res, 200, {
         uptime:           process.uptime(),
         memory:           { heapUsed: mem.heapUsed, heapTotal: mem.heapTotal, rss: mem.rss },
@@ -1008,7 +1098,14 @@ async function handleAPI(req, res, urlPath) {
         behindCloudflare: !!req.headers['cf-connecting-ip'],
         platform:         process.platform,
         ips:              ipList.slice(0, 100),
+        analytics:        { events: analytics.events || {}, totalPageviews: analytics.totalPageviews || 0, lastUpdated: analytics.lastUpdated || null },
       });
+    }
+
+    if (urlPath === '/api/admin/analytics-reset' && req.method === 'POST') {
+      if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Co-owner or primary admin access required' });
+      await writeAnalytics({});
+      return json(res, 200, { ok: true });
     }
 
     return json(res, 404, { error: 'admin route not found' });
