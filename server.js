@@ -341,7 +341,7 @@ function sendVerificationEmail(toEmail, token) {
     console.warn('[Email] GMAIL_USER/GMAIL_PASS not set — cannot send verification email');
     return Promise.resolve();
   }
-  const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: GMAIL_USER, pass: GMAIL_PASS } });
+  const transporter = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: GMAIL_USER, pass: GMAIL_PASS } });
   const link = SITE_URL + '/verify-email?token=' + token;
   return transporter.sendMail({
     from: '"Precision Workz" <' + GMAIL_USER + '>',
@@ -370,7 +370,7 @@ async function sendEmail(to, subject, html) {
     console.warn('[Email] Skipped — GMAIL_USER or GMAIL_PASS not configured');
     return;
   }
-  const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: GMAIL_USER, pass: GMAIL_PASS } });
+  const transporter = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: GMAIL_USER, pass: GMAIL_PASS } });
   const recipients = Array.isArray(to) ? to.filter(Boolean).join(',') : to;
   try {
     await transporter.sendMail({ from: '"Precision Workz" <' + GMAIL_USER + '>', to: recipients, subject, html });
