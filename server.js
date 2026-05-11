@@ -317,6 +317,18 @@ async function readAdminLevels() {
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
 }
 const writeAdminLevels = (v) => kvWrite('admin-levels', v);
+async function getAdminLevel(email) {
+  if (!email) return null;
+  const e = email.toLowerCase().trim();
+  if (e === PRIMARY_ADMIN.toLowerCase()) return 'primary';
+  if (CO_OWNER_EMAIL && e === CO_OWNER_EMAIL.toLowerCase()) return 'co-owner';
+  const lvls = await readAdminLevels();
+  return lvls[e] || 'low';
+}
+const _LVL = { low: 0, medium: 1, max: 2, 'co-owner': 1, primary: 99 };
+function levelAtLeast(userLevel, minLevel) {
+  return (_LVL[userLevel] || 0) >= (_LVL[minLevel] || 0);
+}
 
 async function isAdmin(email) {
   if (!email) return false;
@@ -628,7 +640,8 @@ async function handleAPI(req, res, urlPath) {
       const [clients, admins, adminLevels] = await Promise.all([readClients(), readAdmins(), readAdminLevels()]);
       const coLow = (CO_OWNER_EMAIL || '').toLowerCase();
       const allAdmins = [...new Set([PRIMARY_ADMIN, ...(CO_OWNER_EMAIL ? [CO_OWNER_EMAIL] : []), ...admins.filter(a => a.toLowerCase() !== PRIMARY_ADMIN.toLowerCase() && a.toLowerCase() !== coLow)])];
-      return json(res, 200, { clients, admins: allAdmins, primaryAdmin: PRIMARY_ADMIN, coOwner: CO_OWNER_EMAIL || null, adminLevels });
+      const myLevel = await getAdminLevel(body.adminEmail);
+      return json(res, 200, { clients, admins: allAdmins, primaryAdmin: PRIMARY_ADMIN, coOwner: CO_OWNER_EMAIL || null, adminLevels, myLevel });
     }
 
     if (urlPath === '/api/admin/requests') {
@@ -689,10 +702,12 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/reports') {
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'medium')) return json(res, 403, { error: 'Medium access or higher required', permissionDenied: true });
       return json(res, 200, { reports: await readReports() });
     }
 
     if (urlPath === '/api/admin/report-read' && req.method === 'POST') {
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'medium')) return json(res, 403, { error: 'Medium access or higher required', permissionDenied: true });
       try {
         const { id } = body;
         const reports = await readReports();
@@ -703,6 +718,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/report-delete' && req.method === 'POST') {
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'max')) return json(res, 403, { error: 'Max access or higher required', permissionDenied: true });
       try {
         const { id } = body;
         const reports = (await readReports()).filter(r => r.id !== id);
@@ -712,6 +728,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/update-request' && req.method === 'POST') {
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'medium')) return json(res, 403, { error: 'Medium access or higher required', permissionDenied: true });
       try {
         const { id, status } = body;
         const reqs = await readRequests();
@@ -722,6 +739,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/delete-request' && req.method === 'POST') {
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'max')) return json(res, 403, { error: 'Max access or higher required', permissionDenied: true });
       try {
         const { id } = body;
         if (!id) return json(res, 400, { error: 'id required' });
@@ -758,6 +776,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/clean-clients' && req.method === 'POST') {
+      if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Primary admin only' });
       try {
         let clients = await readClients();
         // If stored as array, convert to object
@@ -782,6 +801,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/raw-clients' && req.method === 'GET') {
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'medium')) return json(res, 403, { error: 'Medium access or higher required', permissionDenied: true });
       try {
         const raw = await readClients();
         const type = Array.isArray(raw) ? 'array' : typeof raw;
@@ -793,6 +813,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/set-client' && req.method === 'POST') {
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'medium')) return json(res, 403, { error: 'Medium access or higher required', permissionDenied: true });
       try {
         const { targetEmail, name, sub, billing, packageType, notes } = body;
         if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
@@ -822,6 +843,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/set-progress' && req.method === 'POST') {
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'medium')) return json(res, 403, { error: 'Medium access or higher required', permissionDenied: true });
       try {
         const { targetEmail, stages, currentTask } = body;
         if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
@@ -844,6 +866,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/remove-client' && req.method === 'POST') {
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'medium')) return json(res, 403, { error: 'Medium access or higher required', permissionDenied: true });
       try {
         const { targetEmail } = body;
         if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
@@ -897,6 +920,7 @@ async function handleAPI(req, res, urlPath) {
 
     // IP management endpoints
     if (urlPath === '/api/admin/ip-bypass' && req.method === 'POST') {
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'max')) return json(res, 403, { error: 'Max access or higher required', permissionDenied: true });
       const { targetIP, bypass } = body;
       if (!targetIP) return json(res, 400, { error: 'targetIP required' });
       await ensureIPKVLoaded();
@@ -907,6 +931,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/ip-force' && req.method === 'POST') {
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'max')) return json(res, 403, { error: 'Max access or higher required', permissionDenied: true });
       const { targetIP, risk } = body;
       if (!targetIP) return json(res, 400, { error: 'targetIP required' });
       await ensureIPKVLoaded();
@@ -918,6 +943,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/ip-reset' && req.method === 'POST') {
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'max')) return json(res, 403, { error: 'Max access or higher required', permissionDenied: true });
       const { targetIP } = body;
       if (!targetIP) return json(res, 400, { error: 'targetIP required' });
       await ensureIPKVLoaded();
@@ -954,6 +980,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/metrics') {
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'medium')) return json(res, 403, { error: 'Medium access or higher required', permissionDenied: true });
       await ensureIPKVLoaded();
       const mem = process.memoryUsage();
       const now = Date.now();

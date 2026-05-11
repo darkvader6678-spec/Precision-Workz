@@ -3340,6 +3340,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <div class="admin-topbar-left">
       <span class="admin-badge">Admin</span>
       <span class="admin-title">Precision Workz — Control Panel</span>
+      <span id="adm-level-badge" style="display:none;font-size:.6rem;font-weight:800;letter-spacing:1px;padding:3px 10px;border-radius:6px;text-transform:uppercase"></span>
     </div>
     <button class="admin-close-btn" onclick="closeAdmin()">✕ Close</button>
   </div>
@@ -5237,6 +5238,7 @@ var _adminData = { clients: {}, admins: [] };
 var _allClientRows = [];
 
 function openAdmin() {
+  window._myLevel = window._myLevel || 'low';
   document.getElementById('admin-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
   adminTab('clients');
@@ -5308,7 +5310,9 @@ function adminLoadData() {
       var _cleanBtn = document.querySelector('[onclick="adminCleanDB()"]');
       if (_cleanBtn) _cleanBtn.style.display = _isCO ? 'none' : '';
       var _isPrimary = _myEml === (d.primaryAdmin||'').toLowerCase();
+      window._myLevel = d.myLevel || (_isPrimary ? 'primary' : _isCO ? 'co-owner' : 'low');
       if (_isPrimary) adminCheckKV();
+      adminApplyLevelRestrictions();
       // Apply / remove co-owner theme
       var overlay = document.getElementById('admin-overlay');
       if (overlay) overlay.classList.toggle('co-theme', _isCO);
@@ -5418,8 +5422,8 @@ function adminFilterTable() {
       + '<td style="color:var(--dim);font-size:.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + (c.notes||'') + '">' + (c.notes || '—') + '</td>'
       + '<td style="color:var(--dim);font-size:.8rem">' + added + '</td>'
       + '<td style="display:flex;gap:6px">'
-        + '<button class="admin-btn ghost" style="padding:5px 10px;font-size:.75rem" onclick="adminEditRow(\'' + k + '\')">Edit</button>'
-        + (window._isCoOwner ? '' : '<button class="admin-btn danger" style="padding:5px 10px;font-size:.75rem" onclick="adminRemoveClient(\'' + k + '\')">Remove</button>')
+        + (['medium','max','primary'].includes(window._myLevel) && !window._isCoOwner ? '<button class="admin-btn ghost" style="padding:5px 10px;font-size:.75rem" onclick="adminEditRow(\'' + k + '\')">Edit</button>' : '')
+        + (['medium','max','primary'].includes(window._myLevel) && !window._isCoOwner ? '<button class="admin-btn danger" style="padding:5px 10px;font-size:.75rem" onclick="adminRemoveClient(\'' + k + '\')">Remove</button>' : '')
       + '</td>'
       + '</tr>';
   }).join('');
@@ -5647,10 +5651,14 @@ function adminRenderRequests() {
         + '</div>'
         + '<div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">'
           + '<button class="admin-btn primary" style="padding:7px 14px;font-size:.78rem" onclick="adminToggleReply(\''+r.id+'\')">Reply</button>'
-          + (isOpen
-            ? '<button class="admin-btn ghost" style="padding:7px 14px;font-size:.78rem" onclick="adminResolveRequest(\''+r.id+'\')">Mark Resolved</button>'
-            : '<button class="admin-btn ghost" style="padding:7px 14px;font-size:.78rem;opacity:.5" onclick="adminResolveRequest(\''+r.id+'\')">Reopen</button>')
-          + (window._isCoOwner ? '' : '<button class="admin-btn danger" style="padding:7px 14px;font-size:.78rem" onclick="adminDeleteRequest(\''+r.id+'\')">Delete</button>')
+          + ((!window._isCoOwner && ['medium','max','primary'].includes(window._myLevel))
+            ? (isOpen
+              ? '<button class="admin-btn ghost" style="padding:7px 14px;font-size:.78rem" onclick="adminResolveRequest(\''+r.id+'\')">Mark Resolved</button>'
+              : '<button class="admin-btn ghost" style="padding:7px 14px;font-size:.78rem;opacity:.5" onclick="adminResolveRequest(\''+r.id+'\')">Reopen</button>')
+            : '')
+          + ((!window._isCoOwner && ['max','primary'].includes(window._myLevel))
+            ? '<button class="admin-btn danger" style="padding:7px 14px;font-size:.78rem" onclick="adminDeleteRequest(\''+r.id+'\')">Delete</button>'
+            : '')
         + '</div>'
       + '</div>'
     + '</div>';
@@ -5915,7 +5923,65 @@ function adminCoAction(id, type, devEmail) {
 /* ── ADMIN TABS + MONITOR ─────────────────────────────── */
 var _monTimer = null;
 
+function adminApplyLevelRestrictions() {
+  var level = window._myLevel || 'low';
+  var isLow = level === 'low';
+  var isMed = ['medium','max','primary','co-owner'].includes(level);
+  var isMax = ['max','primary'].includes(level);
+  var isPrimary = level === 'primary';
+  // Tabs: low can only see Clients
+  var tabs = { progress: !isLow, reports: !isLow, monitor: !isLow };
+  Object.keys(tabs).forEach(function(t) {
+    var btn = document.getElementById('atab-' + t);
+    if (btn) btn.style.display = tabs[t] ? '' : 'none';
+  });
+  // Add-client section hidden for low
+  if (isLow) {
+    var addSec = document.getElementById('adm-add-client-section');
+    if (addSec) addSec.style.display = 'none';
+  }
+  // Dev management row: primary only
+  var devRow = document.getElementById('adm-add-dev-row');
+  if (devRow) devRow.style.display = isPrimary ? 'flex' : 'none';
+  // Level badge in header
+  var lvlBadge = document.getElementById('adm-level-badge');
+  if (lvlBadge && level !== 'primary') {
+    var labels = { low: 'Low Access', medium: 'Medium Access', max: 'Max Access', 'co-owner': 'Co-Owner' };
+    var colors = { low: '#4ade80', medium: '#fb923c', max: '#f87171', 'co-owner': '#f59e0b' };
+    var bgs    = { low: 'rgba(74,222,128,.1)', medium: 'rgba(251,146,60,.1)', max: 'rgba(239,68,68,.1)', 'co-owner': 'rgba(245,158,11,.1)' };
+    lvlBadge.textContent = labels[level] || level;
+    lvlBadge.style.color = colors[level] || '#fff';
+    lvlBadge.style.background = bgs[level] || 'rgba(255,255,255,.05)';
+    lvlBadge.style.border = '1px solid ' + (colors[level] || '#fff') + '33';
+    lvlBadge.style.display = '';
+  } else if (lvlBadge) {
+    lvlBadge.style.display = 'none';
+  }
+}
+
 function adminTab(tab) {
+  var level = window._myLevel || 'low';
+  var restricted = { progress: level === 'low', reports: level === 'low', monitor: level === 'low' };
+  if (restricted[tab]) {
+    // Show access-denied message in the relevant view area
+    var viewMap = { progress: 'adm-progress-view', reports: 'adm-reports-view', monitor: 'adm-monitor-view' };
+    ['adm-clients-view','adm-progress-view','adm-reports-view','adm-monitor-view'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+    var vEl = document.getElementById(viewMap[tab]);
+    if (vEl) {
+      vEl.style.display = '';
+      vEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:16px;text-align:center">'
+        + '<div style="font-size:2rem">🔒</div>'
+        + '<div style="font-weight:800;color:var(--text)">Access Restricted</div>'
+        + '<div style="color:var(--muted);font-size:.88rem">Your current access level (Low) does not permit viewing this section.<br>Contact the primary admin to upgrade your access.</div>'
+        + '</div>';
+    }
+    ['clients','progress','reports','monitor'].forEach(function(t) {
+      var btn = document.getElementById('atab-' + t); if (btn) btn.classList.toggle('active', t === tab);
+    });
+    return;
+  }
   ['clients','progress','reports','monitor'].forEach(function(t) {
     var btn = document.getElementById('atab-' + t);
     if (btn) btn.classList.toggle('active', t === tab);
