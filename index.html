@@ -1016,6 +1016,64 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .admin-tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:var(--dim);font-size:.82rem;font-weight:700;padding:12px 20px;cursor:pointer;font-family:inherit;transition:all .18s;letter-spacing:.3px}
 .admin-tab-btn.active{color:var(--text);border-bottom-color:var(--purple2)}
 .admin-tab-btn:hover:not(.active){color:var(--muted)}
+/* ── CO-OWNER THEME ─────────────────────────────────────── */
+.admin-overlay.co-theme{background:#000;backdrop-filter:none}
+.admin-overlay.co-theme .admin-topbar{background:#050505;border-bottom:1px solid #141414;position:relative}
+.admin-overlay.co-theme .admin-topbar::after{content:'';position:absolute;bottom:-1px;left:0;width:220px;height:1px;background:linear-gradient(90deg,#f59e0b,transparent)}
+.admin-overlay.co-theme .admin-badge{background:linear-gradient(135deg,#f59e0b,#d97706);letter-spacing:3px;font-size:.58rem}
+.admin-overlay.co-theme .admin-title{color:#fff;font-size:.92rem;font-weight:800;letter-spacing:.3px}
+.admin-overlay.co-theme .admin-close-btn{background:transparent;border:1px solid #1c1c1c;color:#444}
+.admin-overlay.co-theme .admin-close-btn:hover{border-color:#fff;color:#fff;background:transparent}
+.admin-overlay.co-theme .admin-body{background:#000;gap:20px}
+.admin-overlay.co-theme .admin-tabs-row{background:#000;border-bottom:1px solid #111}
+.admin-overlay.co-theme .admin-tab-btn{color:#333;letter-spacing:.5px}
+.admin-overlay.co-theme .admin-tab-btn.active{color:#fff;border-bottom-color:#f59e0b}
+.admin-overlay.co-theme .admin-tab-btn:hover:not(.active){color:#666}
+.admin-overlay.co-theme .admin-stats-row .admin-stat-card,.admin-overlay.co-theme .admin-section{background:#080808;border:1px solid #131313;border-radius:10px}
+.admin-overlay.co-theme .admin-section-title{color:#fff;font-size:.62rem;letter-spacing:2.5px;padding-left:12px;border-left:2px solid #f59e0b;margin-bottom:18px}
+.admin-overlay.co-theme .admin-stat-num{background:none;-webkit-background-clip:unset;background-clip:unset;-webkit-text-fill-color:#fff;color:#fff;font-size:2.1rem}
+.admin-overlay.co-theme .admin-stat-label{color:#333;font-size:.7rem}
+.admin-overlay.co-theme .admin-btn.primary{background:#fff;color:#000;box-shadow:none;font-weight:800;letter-spacing:.3px}
+.admin-overlay.co-theme .admin-btn.primary:hover{background:#f59e0b;color:#000;transform:none;opacity:1}
+.admin-overlay.co-theme .admin-btn.ghost{background:transparent;border:1px solid #1c1c1c;color:#555}
+.admin-overlay.co-theme .admin-btn.ghost:hover{border-color:#fff;color:#fff;background:transparent}
+.admin-overlay.co-theme .admin-btn.danger{background:transparent;border:1px solid #1a0000;color:#4a0000;opacity:.5}
+.admin-overlay.co-theme .admin-input{background:#050505;border:1px solid #1a1a1a;color:#fff}
+.admin-overlay.co-theme .admin-input:focus{border-color:#f59e0b;background:#080808}
+.admin-overlay.co-theme .admin-input::placeholder{color:#2a2a2a}
+.admin-overlay.co-theme .admin-input option{background:#080808}
+.admin-overlay.co-theme .admin-table th{color:#2a2a2a;border-bottom-color:#111}
+.admin-overlay.co-theme .admin-table td{border-bottom-color:#0d0d0d;color:#888;font-size:.82rem}
+.admin-overlay.co-theme .admin-table td b,.admin-overlay.co-theme .admin-table td [style*="color:var(--text)"]{color:#ccc}
+.admin-overlay.co-theme .admin-table tr:hover td{background:#050505}
+.admin-overlay.co-theme .admin-dev-row{background:#050505;border:1px solid #111}
+.admin-overlay.co-theme .admin-dev-email{color:#666}
+.admin-overlay.co-theme .admin-msg{color:#555}
+.admin-overlay.co-theme .admin-search-row .admin-input{max-width:260px}
+/* Hide admin-only UI elements for co-owner */
+.admin-overlay.co-theme #adm-add-client-section{display:none!important}
+.admin-overlay.co-theme #atab-monitor{display:none!important}
+.admin-overlay.co-theme [onclick="adminDebugDB()"]{display:none!important}
+.admin-overlay.co-theme #adm-kv-banner{display:none!important}
+.admin-overlay.co-theme #co-hero-banner{display:flex!important;flex-direction:column}
+/* Co-compose hero section */
+.admin-overlay.co-theme #co-compose-section{border-color:#1e1500;background:#050300;order:-1}
+.admin-overlay.co-theme #co-compose-section .admin-section-title{border-left-color:#f59e0b;font-size:.7rem;letter-spacing:3px}
+.admin-overlay.co-theme .adm-reply-inp{background:#050505;border:1px solid #1a1a1a;color:#fff}
+.admin-overlay.co-theme .adm-reply-inp:focus{border-color:#f59e0b}
+/* Sub pills stay their colors */
+.admin-overlay.co-theme .admin-sub-pill.basic{background:rgba(255,255,255,.06);border-color:#1a1a1a;color:#555}
+.admin-overlay.co-theme .admin-sub-pill.gold{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2);color:#9a6a00}
+.admin-overlay.co-theme .admin-sub-pill.none{color:#222}
+.admin-overlay.co-theme .admin-pkg-pill{background:transparent;border-color:#1a1a1a;color:#444}
+/* Co-owner sent messages */
+.admin-overlay.co-theme #co-my-msgs-list [style*="rgba(255,255,255,.03)"]{background:#050505;border:1px solid #111}
+.admin-overlay.co-theme #co-my-msgs-section>div:first-child{color:#2a2a2a;border-bottom:1px solid #111;padding-bottom:8px;margin-bottom:10px}
+/* Req thread (support requests client view) hidden for co-owner since they have no requests */
+.admin-overlay.co-theme .req-thread-panel{border-color:#111;background:#050505}
+/* KV banner hidden */
+.admin-overlay.co-theme #adm-kv-banner{display:none!important}
+
 /* ── MONITOR PANEL ──────────────────────────────────────── */
 #adm-monitor-view{padding:20px 0 0}
 #adm-clients-view{display:flex;flex-direction:column;gap:28px;padding-top:20px}
@@ -3207,6 +3265,18 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     </div>
     <div id="adm-clients-view">
 
+    <!-- Co-owner hero — only visible in co-theme mode -->
+    <div id="co-hero-banner" style="display:none;margin-bottom:4px">
+      <div style="display:flex;align-items:center;gap:16px;padding:20px 0 4px">
+        <div style="width:44px;height:44px;border-radius:12px;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">◆</div>
+        <div>
+          <div style="font-size:1.25rem;font-weight:900;color:#fff;letter-spacing:-.3px">Co-Owner Dashboard</div>
+          <div style="font-size:.78rem;color:#555;margin-top:2px">Precision Workz · Oscar Valenzuela</div>
+        </div>
+      </div>
+      <div style="height:1px;background:linear-gradient(90deg,#f59e0b 0%,transparent 50%);margin:12px 0 0"></div>
+    </div>
+
     <div id="adm-kv-banner" style="display:none;margin-bottom:16px;padding:12px 16px;border-radius:10px;font-size:.8rem;font-weight:600;line-height:1.55"></div>
 
     <div class="admin-stats-row">
@@ -3217,7 +3287,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <div class="admin-stat-card"><div class="admin-stat-num" id="adm-stat-reqs" style="color:var(--cyan2)">0</div><div class="admin-stat-label">Open Requests</div></div>
     </div>
 
-    <div class="admin-section">
+    <div class="admin-section" id="adm-add-client-section">
       <div class="admin-section-title">Add / Update Client</div>
       <div class="admin-form-grid">
         <div>
@@ -5081,7 +5151,9 @@ function openAdmin() {
   adminLoadData();
 }
 function closeAdmin() {
-  document.getElementById('admin-overlay').classList.remove('open');
+  var overlay = document.getElementById('admin-overlay');
+  overlay.classList.remove('open');
+  overlay.classList.remove('co-theme');
   document.body.style.overflow = '';
   if (_monTimer) { clearInterval(_monTimer); _monTimer = null; }
   _monUnlocked = false;
@@ -5145,6 +5217,9 @@ function adminLoadData() {
       var _cleanBtn = document.querySelector('[onclick="adminCleanDB()"]');
       if (_cleanBtn) _cleanBtn.style.display = _isCO ? 'none' : '';
       var _isPrimary = _myEml === (d.primaryAdmin||'').toLowerCase();
+      // Apply / remove co-owner theme
+      var overlay = document.getElementById('admin-overlay');
+      if (overlay) overlay.classList.toggle('co-theme', _isCO);
       // Show co-owner compose section for co-owner, inbox for primary admin
       var inboxEl = document.getElementById('co-inbox-section');
       var composeEl = document.getElementById('co-compose-section');
