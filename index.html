@@ -1052,7 +1052,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .admin-overlay.co-theme .admin-search-row .admin-input{max-width:260px}
 /* Hide admin-only UI elements for co-owner */
 .admin-overlay.co-theme #adm-add-client-section{display:none!important}
-.admin-overlay.co-theme #atab-monitor{display:none!important}
+/* monitor tab visible for co-owner — password protected */
 .admin-overlay.co-theme [onclick="adminDebugDB()"]{display:none!important}
 .admin-overlay.co-theme #adm-kv-banner{display:none!important}
 .admin-overlay.co-theme #co-hero-banner{display:flex!important;flex-direction:column}
@@ -5734,7 +5734,10 @@ function adminRenderCoMessages(msgs) {
       + '<button class="admin-btn primary" style="padding:6px 14px;font-size:.78rem" onclick="adminCoReply(\''+safeId+'\',null)">Send Reply</button>'
       + '</div></div>'
       + '</div>'
-      + (isOpen ? '<div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0"><button class="admin-btn ghost" style="padding:7px 14px;font-size:.78rem" onclick="adminCoToggleReply(\''+safeId+'\')">Custom Reply</button></div>' : '')
+      + '<div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">'
+      + (isOpen ? '<button class="admin-btn ghost" style="padding:7px 14px;font-size:.78rem" onclick="adminCoToggleReply(\''+safeId+'\')">Custom Reply</button>' : '')
+      + '<button class="admin-btn danger" style="padding:7px 14px;font-size:.78rem" onclick="adminCoDelete(\''+safeId+'\')">Delete</button>'
+      + '</div>'
       + '</div></div>';
   }).join('');
 }
@@ -5755,6 +5758,17 @@ function adminCoReply(id, quickText) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ adminEmail: adminGetEmail(), id: id, replyText: text })
   }).then(function(r){return r.json();}).then(function(d){
+    if (d.ok) adminLoadCoMessages();
+  });
+}
+
+function adminCoDelete(id) {
+  if (!confirm('Delete this co-owner message? This cannot be undone.')) return;
+  fetch('/api/admin/co-message-delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminEmail: adminGetEmail(), id: id })
+  }).then(function(r){ return r.json(); }).then(function(d){
     if (d.ok) adminLoadCoMessages();
   });
 }

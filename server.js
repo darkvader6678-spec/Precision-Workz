@@ -661,6 +661,17 @@ async function handleAPI(req, res, urlPath) {
       } catch(e) { return json(res, 500, { error: e.message }); }
     }
 
+    if (urlPath === '/api/admin/co-message-delete' && req.method === 'POST') {
+      if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Forbidden' });
+      try {
+        const { id } = body;
+        if (!id) return json(res, 400, { error: 'id required' });
+        const msgs = (await readCoMessages()).filter(m => m.id !== id);
+        await writeCoMessages(msgs);
+        return json(res, 200, { ok: true });
+      } catch(e) { return json(res, 500, { error: e.message }); }
+    }
+
     if (urlPath === '/api/admin/co-message-resolve' && req.method === 'POST') {
       if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Forbidden' });
       try {
