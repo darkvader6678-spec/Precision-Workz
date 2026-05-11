@@ -5353,14 +5353,15 @@ function adminRenderStats(clients) {
 
 function adminRenderDevs(admins, primary, coOwner, levels) {
   var list = document.getElementById('adm-devs-list');
-  var myEmail = adminGetEmail();
-  var isPrimary = myEmail.toLowerCase() === (primary || '').toLowerCase();
+  var myEmail = adminGetEmail().toLowerCase();
+  var isPrimary = myEmail === (primary || '').toLowerCase();
   var addRow = document.getElementById('adm-add-dev-row');
   if (addRow) addRow.style.display = isPrimary ? 'flex' : 'none';
 
   list.innerHTML = admins.map(function(email) {
     var isP = email.toLowerCase() === (primary || '').toLowerCase();
     var isCO = coOwner && email.toLowerCase() === coOwner.toLowerCase();
+    var isMe = email.toLowerCase() === myEmail;
     var removeBtn = (!isP && !isCO && isPrimary)
       ? '<button class="admin-btn danger" style="padding:5px 12px;font-size:.75rem" onclick="adminRemoveDev(\''+email+'\')">Remove</button>'
       : '';
@@ -5377,8 +5378,9 @@ function adminRenderDevs(admins, primary, coOwner, levels) {
       var lvlTxt = lvl === 'max' ? 'Max Access' : lvl === 'medium' ? 'Medium' : 'Low';
       lvlBadge = '<span style="font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:6px;background:'+lvlBg+';color:'+lvlClr+';text-transform:uppercase;letter-spacing:.5px;margin-left:4px">'+lvlTxt+'</span>';
     }
+    var displayEmail = isPrimary ? email : (isMe ? email + ' <span style="font-size:.65rem;color:var(--cyan2)">(you)</span>' : maskEmail(email));
     return '<div class="admin-dev-row">'
-      + '<span class="admin-dev-email">' + email + '</span>'
+      + '<span class="admin-dev-email">' + displayEmail + '</span>'
       + badge
       + lvlBadge
       + removeBtn
@@ -5413,8 +5415,9 @@ function adminFilterTable() {
       ? '<span class="admin-pkg-pill">' + c.packageType.charAt(0).toUpperCase() + c.packageType.slice(1) + '</span>'
       : '<span style="color:var(--dim);font-size:.8rem">—</span>';
     var added = c.addedAt ? new Date(c.addedAt).toLocaleDateString() : '—';
+    var _showEmail = _canSeeSensitive();
     return '<tr>'
-      + '<td style="color:var(--text)">' + c.email + '</td>'
+      + '<td style="color:var(--text)">' + (_showEmail ? c.email : maskEmail(c.email)) + '</td>'
       + '<td style="color:var(--muted)">' + (c.name || '—') + '</td>'
       + '<td>' + subPill + '</td>'
       + '<td style="color:var(--dim);font-size:.8rem">' + (c.billing || 'monthly') + '</td>'
@@ -5641,7 +5644,8 @@ function adminRenderRequests() {
             + '<span style="font-size:.78rem;font-weight:600;color:var(--muted)">'+typeLabel+'</span>'
             + '<span style="font-size:.72rem;color:var(--dim)">'+date+'</span>'
           + '</div>'
-          + '<div style="font-size:.82rem;color:var(--muted);margin-bottom:4px"><b style="color:var(--text)">'+escHtml(r.name||r.email)+'</b> &lt;'+escHtml(r.email)+'&gt;'+(r.phone?' · <span style="color:var(--cyan2)">📞 '+escHtml(r.phone)+'</span>':'')+'</div>'
+          + (function(){var _ss=_canSeeSensitive();var _dn=r.name||((_ss?r.email:maskEmail(r.email)));var _de=_ss?r.email:maskEmail(r.email);var _ph=r.phone?(' · <span style="color:var(--cyan2)">📞 '+escHtml(_ss?r.phone:maskPhone(r.phone))+'</span>'):'';return '<div style="font-size:.82rem;color:var(--muted);margin-bottom:4px"><b style="color:var(--text)">'+escHtml(_dn)+'</b> &lt;'+escHtml(_de)+'&gt;'+_ph+'</div>';})()
+
           + '<div style="font-size:.88rem;color:var(--text);white-space:pre-wrap;word-break:break-word;margin-top:8px;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:8px">'+escHtml(r.details)+'</div>'
           + (r.replies&&r.replies.length ? '<div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">'+(r.replies.map(function(rep){var bg=rep.from==='admin'?'rgba(6,182,212,.07)':'rgba(124,58,237,.07)';var lbl=rep.from==='admin'?'<span style="font-size:.63rem;color:var(--cyan2);font-weight:700;display:block;margin-bottom:2px">Precision Workz</span>':'<span style="font-size:.63rem;color:var(--purple2);font-weight:700;display:block;margin-bottom:2px">Client</span>';return '<div style="padding:7px 10px;background:'+bg+';border-radius:7px;font-size:.82rem;color:var(--text)">'+lbl+escHtml(rep.text)+'<div style="font-size:.6rem;color:var(--dim);margin-top:2px;text-align:right">'+new Date(rep.createdAt).toLocaleString()+'</div></div>'}).join(''))+'</div>' : '')
           + '<div class="adm-reply-form" id="arf-'+r.id+'">'
@@ -5667,6 +5671,24 @@ function adminRenderRequests() {
 
 function escHtml(s){
   return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function maskEmail(e) {
+  if (!e) return '•••@•••.•••';
+  var parts = e.split('@');
+  var loc = parts[0] || '';
+  var dom = parts[1] || '';
+  var domSplit = dom.split('.');
+  var tld = domSplit.pop();
+  var domName = domSplit.join('.');
+  return loc.slice(0,2) + '•'.repeat(Math.max(3,loc.length-2)) + '@' + (domName.slice(0,2)||'••') + '•'.repeat(Math.max(2,(domName||'').length-2)) + '.' + tld;
+}
+function maskPhone(p) {
+  if (!p) return '';
+  var d = (p||'').replace(/\D/g,'');
+  return d.length >= 10 ? '(' + d.slice(0,3) + ') •••-••••' : '•'.repeat(Math.min(p.length,10));
+}
+function _canSeeSensitive() {
+  return ['max','primary'].includes(window._myLevel) && !window._isCoOwner;
 }
 
 function adminToggleReply(id) {
