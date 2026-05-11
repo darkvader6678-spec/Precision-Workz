@@ -4320,7 +4320,7 @@ function submitContact(){
   if(!name||!email||!msg){out.style.color='#f87171';out.textContent='Please fill in your name, email, and message.';return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){out.style.color='#f87171';out.textContent='Please enter a valid email address.';return}
   if(!phone){out.style.color='#f87171';out.textContent='Phone number is required.';return}
-  if(pwFilter(msg)||pwFilter(name)){out.style.color='#f87171';out.textContent='Your message contains language we do not allow. Please revise and try again.';return}
+  if(pwFilter(msg)){out.style.color='#f87171';out.textContent='Your message contains language we do not allow. Please revise and try again.';return}
   var btn=document.querySelector('.form-submit');btn.disabled=true;btn.textContent='Sending…';
   var source=(document.getElementById('cfSource').value||'').trim();
   var details='Package: '+(service||'Not specified')+'\nPhone: '+phone+(source?'\nHeard via: '+source:'')+(promoCode?'\nPromo: '+promoCode:'')+'\n\n'+msg;

@@ -458,7 +458,7 @@ async function handleAPI(req, res, urlPath) {
       const body = await parseBody(req);
       const { email, name, type, details, sub, phone, service, promoCode } = body;
       if (!email || !details) return json(res, 400, { error: 'Missing fields' });
-      if (containsProfanity(details) || containsProfanity(name)) {
+      if (containsProfanity(details)) {
         return json(res, 400, { error: 'Your message contains language we do not allow. Please revise and try again.' });
       }
       const newReq = {
