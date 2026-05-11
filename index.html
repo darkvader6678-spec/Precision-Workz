@@ -5646,7 +5646,7 @@ function adminRenderRequests() {
           + '</div>'
           + (function(){var _ss=_canSeeSensitive();var _dn=r.name||((_ss?r.email:maskEmail(r.email)));var _de=_ss?r.email:maskEmail(r.email);var _ph=r.phone?(' · <span style="color:var(--cyan2)">📞 '+escHtml(_ss?r.phone:maskPhone(r.phone))+'</span>'):'';return '<div style="font-size:.82rem;color:var(--muted);margin-bottom:4px"><b style="color:var(--text)">'+escHtml(_dn)+'</b> &lt;'+escHtml(_de)+'&gt;'+_ph+'</div>';})()
 
-          + '<div style="font-size:.88rem;color:var(--text);white-space:pre-wrap;word-break:break-word;margin-top:8px;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:8px">'+escHtml(r.details)+'</div>'
+          + '<div style="font-size:.88rem;color:var(--text);white-space:pre-wrap;word-break:break-word;margin-top:8px;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:8px">'+escHtml(_canSeeSensitive()?r.details:maskDetails(r.details))+'</div>'
           + (r.replies&&r.replies.length ? '<div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">'+(r.replies.map(function(rep){var bg=rep.from==='admin'?'rgba(6,182,212,.07)':'rgba(124,58,237,.07)';var lbl=rep.from==='admin'?'<span style="font-size:.63rem;color:var(--cyan2);font-weight:700;display:block;margin-bottom:2px">Precision Workz</span>':'<span style="font-size:.63rem;color:var(--purple2);font-weight:700;display:block;margin-bottom:2px">Client</span>';return '<div style="padding:7px 10px;background:'+bg+';border-radius:7px;font-size:.82rem;color:var(--text)">'+lbl+escHtml(rep.text)+'<div style="font-size:.6rem;color:var(--dim);margin-top:2px;text-align:right">'+new Date(rep.createdAt).toLocaleString()+'</div></div>'}).join(''))+'</div>' : '')
           + '<div class="adm-reply-form" id="arf-'+r.id+'">'
           + '<textarea class="adm-reply-inp" id="ari-'+r.id+'" placeholder="Type your reply to the client…" rows="2"></textarea>'
@@ -5689,6 +5689,13 @@ function maskPhone(p) {
 }
 function _canSeeSensitive() {
   return ['max','primary'].includes(window._myLevel) && !window._isCoOwner;
+}
+function maskDetails(details) {
+  if (!details) return details;
+  var s = details;
+  s = s.replace(/(Phone:\s*)([^\n]+)/gi, function(_, p, n){ return p + maskPhone(n.trim()); });
+  s = s.replace(/[^\s@,<>]+@[^\s@,<>]+\.[^\s@,<>]+/g, function(e){ return maskEmail(e); });
+  return s;
 }
 
 function adminToggleReply(id) {
