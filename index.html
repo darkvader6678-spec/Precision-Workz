@@ -4286,8 +4286,10 @@ function applyContactPromo(){
 
 /* ── PROFANITY FILTER ─────────────────────────────────── */
 (function(){
-  var SEVERE=['nigger','nigga','faggot','kike','chink','spic','wetback','coon','beaner','gook','cunt','twat','motherfucker'];
-  var MILD=['fuck','shit','bitch','asshole','retard','whore','slut','dickhead','prick'];
+  var WORDS=['nigger','nigga','faggot','kike','chink','spic','wetback','coon','beaner','gook','cunt','twat','motherfucker','fuck','shit','bitch','asshole','retard','whore','slut','dickhead','prick','bastard'];
+  var PATTERNS=WORDS.map(function(w){
+    return new RegExp(w.split('').map(function(c){return c+'+'}).join('[^a-z]*'),'i');
+  });
   function _leet(s){
     return s.replace(/4/g,'a').replace(/@/g,'a').replace(/3/g,'e')
             .replace(/1/g,'i').replace(/!/g,'i').replace(/0/g,'o')
@@ -4296,21 +4298,7 @@ function applyContactPromo(){
   window.pwFilter=function(text){
     if(!text)return false;
     var lo=_leet(text.toLowerCase());
-    lo=lo.replace(/\s+/g,' '); // collapse multiple spaces → catches "f             u                 c                k"
-    // Fully stripped — catches "n i g g e r", "n.i.g.g.e.r", n*i*g*g*e*r, etc.
-    var stripped=lo.replace(/[^a-z]/g,'');
-    // Space-collapsed — catches "f u c k" style spacing for mild words
-    var collapsed=lo.replace(/\b([a-z] ){2,}[a-z]\b/g,function(m){return m.replace(/ /g,'');});
-    // Non-alpha stripped (keeps spaces) for word-boundary mild check
-    var mild=lo.replace(/[^a-z\s]/g,'');
-    for(var i=0;i<SEVERE.length;i++){
-      if(stripped.indexOf(SEVERE[i])>=0)return true;
-      if(collapsed.indexOf(SEVERE[i])>=0)return true;
-    }
-    for(var j=0;j<MILD.length;j++){
-      var re=new RegExp('\\b'+MILD[j]+'s?\\b');
-      if(re.test(collapsed)||re.test(mild))return true;
-    }
+    for(var i=0;i<PATTERNS.length;i++){if(PATTERNS[i].test(lo))return true;}
     return false;
   };
 })();
@@ -4647,11 +4635,12 @@ function renderDashboard(user){
     pkgHtml='<div><div class="acct-section-label">Project Package</div><div class="acct-pkg-card '+pkgClass+'"><div class="acct-sub-name" style="'+pkgNameStyle+'">'+pkgLabel+' Package</div><div class="acct-sub-detail" style="margin-bottom:0">'+pkgDetail+'</div></div></div>';
   }
 
-  /* request panel */
-  var reqHtml;
-  if(!sub){
+  /* request panel — hidden for owners/co-owners */
+  var reqHtml='';
+  var _isAdminUser=window._userIsAdmin||false;
+  if(!_isAdminUser&&!sub){
     reqHtml='<div class="acct-req-panel"><div class="acct-section-label" style="margin-bottom:12px">Support Requests</div><p style="font-size:.84rem;color:var(--dim);line-height:1.65">Subscribe to a managed plan to submit support requests.</p></div>';
-  } else {
+  } else if(!_isAdminUser){
     var btns='';
     btns+='<button class="req-btn" onclick="closeDashboard();openReqModal(\'bug-fix\')"><span class="req-icon">🐛</span>Bug Fix Request</button>';
     btns+='<button class="req-btn" onclick="closeDashboard();openReqModal(\'security-issue\')"><span class="req-icon">🔒</span>Security Issue Report</button>';
@@ -4702,10 +4691,10 @@ function renderDashboard(user){
     pkgHtml+
     progressHtml+
     reqHtml+
-    '<div><div class="acct-section-label" style="margin-bottom:8px">My Requests</div><div id="client-req-list"><p style="color:var(--dim);font-size:.82rem;text-align:center;padding:16px">Loading…</p></div></div>'+
+    (_isAdminUser?'':'<div><div class="acct-section-label" style="margin-bottom:8px">My Requests</div><div id="client-req-list"><p style="color:var(--dim);font-size:.82rem;text-align:center;padding:16px">Loading…</p></div></div>')+
     '<button class="acct-signout-btn" onclick="signOut()">Sign Out</button>';
 
-  loadClientRequests(user.email);
+  if(!_isAdminUser) loadClientRequests(user.email);
 }
 
 function signOut(){clearUserData();updateAuthUI(null);closeDashboard()}
@@ -5877,11 +5866,15 @@ function adminDeleteReport(id) {
 function checkAdminBtn(user) {
   var adminBtn = document.getElementById('nav-admin-btn');
   if (!adminBtn) return;
-  if (!user) { adminBtn.style.display = 'none'; return; }
+  if (!user) { window._userIsAdmin = false; adminBtn.style.display = 'none'; return; }
   fetch('/api/admin/data?adminEmail=' + encodeURIComponent(user.email))
     .then(function(r) { return r.json(); })
-    .then(function(d) { adminBtn.style.display = d.error ? 'none' : 'flex'; })
-    .catch(function() { adminBtn.style.display = 'none'; });
+    .then(function(d) {
+      var isAdmin = !d.error;
+      window._userIsAdmin = isAdmin;
+      adminBtn.style.display = isAdmin ? 'flex' : 'none';
+    })
+    .catch(function() { window._userIsAdmin = false; adminBtn.style.display = 'none'; });
 }
 
 /* ── INIT ON LOAD ─────────────────────────────────────────── */

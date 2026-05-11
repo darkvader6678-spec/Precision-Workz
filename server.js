@@ -164,26 +164,15 @@ const PRICES = {
 const OWNER_EMAIL = 'precizionworkz@gmail.com';
 
 // ── PROFANITY FILTER ──────────────────────────────────────
-const _PW_SEVERE = ['nigger','nigga','faggot','kike','chink','spic','wetback','coon','beaner','gook','cunt','twat','motherfucker'];
-const _PW_MILD   = ['fuck','shit','bitch','asshole','retard','whore','slut','dickhead','prick'];
+const _PW_WORDS = ['nigger','nigga','faggot','kike','chink','spic','wetback','coon','beaner','gook','cunt','twat','motherfucker','fuck','shit','bitch','asshole','retard','whore','slut','dickhead','prick','bastard'];
+const _PW_PATTERNS = _PW_WORDS.map(w => new RegExp(w.split('').map(c => c + '+').join('[^a-z]*'), 'i'));
 function containsProfanity(text) {
   if (!text) return false;
-  let lo = text.toLowerCase()
+  const lo = text.toLowerCase()
     .replace(/4/g,'a').replace(/@/g,'a').replace(/3/g,'e')
     .replace(/1/g,'i').replace(/!/g,'i').replace(/0/g,'o')
     .replace(/\$/g,'s').replace(/5/g,'s').replace(/7/g,'t');
-  lo = lo.replace(/\s+/g, ' '); // collapse multiple spaces → catches "f             u                 c                k"
-  const stripped  = lo.replace(/[^a-z]/g, '');
-  const collapsed = lo.replace(/\b([a-z] ){2,}[a-z]\b/g, m => m.replace(/ /g, ''));
-  const mild      = lo.replace(/[^a-z\s]/g, '');
-  for (const w of _PW_SEVERE) {
-    if (stripped.includes(w) || collapsed.includes(w)) return true;
-  }
-  for (const w of _PW_MILD) {
-    const re = new RegExp(`\\b${w}s?\\b`);
-    if (re.test(collapsed) || re.test(mild)) return true;
-  }
-  return false;
+  return _PW_PATTERNS.some(re => re.test(lo));
 }
 
 // ── PERSISTENT STORAGE (Vercel KV with local file fallback) ─
