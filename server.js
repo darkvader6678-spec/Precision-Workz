@@ -366,10 +366,18 @@ function sendVerificationEmail(toEmail, token) {
 }
 
 async function sendEmail(to, subject, html) {
-  if (!nodemailer || !GMAIL_USER || !GMAIL_PASS) return;
+  if (!nodemailer || !GMAIL_USER || !GMAIL_PASS) {
+    console.warn('[Email] Skipped — GMAIL_USER or GMAIL_PASS not configured');
+    return;
+  }
   const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: GMAIL_USER, pass: GMAIL_PASS } });
   const recipients = Array.isArray(to) ? to.filter(Boolean).join(',') : to;
-  await transporter.sendMail({ from: '"Precision Workz" <' + GMAIL_USER + '>', to: recipients, subject, html });
+  try {
+    await transporter.sendMail({ from: '"Precision Workz" <' + GMAIL_USER + '>', to: recipients, subject, html });
+    console.log('[Email] Sent to', recipients, '| Subject:', subject);
+  } catch (e) {
+    console.error('[Email] Failed to send to', recipients, '—', e.message);
+  }
 }
 
 function serveVerifyPage(res, token, user) {

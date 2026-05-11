@@ -2820,13 +2820,8 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <div class="c-item"><div class="c-icon">⏱️</div><div><div class="c-label">Response Time</div><div class="c-val">Under 24 Hours</div></div></div>
       <div class="c-item"><div class="c-icon">🇺🇸</div><div><div class="c-label">Serving</div><div class="c-val">United States Only</div></div></div>
       <div style="margin-top:16px;padding:24px;background:var(--card);border:1px solid var(--border);border-radius:16px">
-        <div style="font-size:.75rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">What to Include</div>
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
-          <li style="font-size:.88rem;color:var(--muted);display:flex;gap:8px"><span style="color:var(--cyan2)">→</span>What your business does</li>
-          <li style="font-size:.88rem;color:var(--muted);display:flex;gap:8px"><span style="color:var(--cyan2)">→</span>What you need built</li>
-          <li style="font-size:.88rem;color:var(--muted);display:flex;gap:8px"><span style="color:var(--cyan2)">→</span>Timeline if you have one</li>
-          <li style="font-size:.88rem;color:var(--muted);display:flex;gap:8px"><span style="color:var(--cyan2)">→</span>Budget range (optional)</li>
-        </ul>
+        <div style="font-size:.75rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">What to Include</div>
+        <p style="font-size:.84rem;color:var(--dim);line-height:1.65;margin:0">Fill in each field on the form — the more detail you give us, the faster we can put together exactly what you need.</p>
       </div>
     </div>
     <div class="contact-form fade-up" style="transition-delay:.15s">
@@ -2915,7 +2910,13 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         <div class="sub-upsell-note">Managed plans start after launch — no commitment needed now. We'll discuss details during your discovery call.</div>
       </div>
 
-      <div class="form-group"><label for="cfMsg">Tell Us About Your Project</label><textarea id="cfMsg" placeholder="Describe what you need — the more detail, the better we can help…"></textarea></div>
+      <div class="form-group"><label for="cfBusiness">What does your business do?</label><input type="text" id="cfBusiness" placeholder="e.g. We sell custom furniture online"></div>
+      <div class="form-group"><label for="cfNeeds">What do you need built?</label><input type="text" id="cfNeeds" placeholder="e.g. E-commerce store with a client booking portal"></div>
+      <div class="form-row">
+        <div class="form-group"><label for="cfTimeline">Timeline</label><input type="text" id="cfTimeline" placeholder="e.g. 2 months, ASAP"></div>
+        <div class="form-group"><label for="cfBudget">Budget range (optional)</label><input type="text" id="cfBudget" placeholder="e.g. $1,000 – $3,000"></div>
+      </div>
+      <div class="form-group"><label for="cfMsg">Anything else?</label><textarea id="cfMsg" placeholder="Any other details, questions, or context…"></textarea></div>
       <div class="form-group">
         <label for="cfSource">Where Did You Hear About Us?</label>
         <select id="cfSource" class="admin-input" style="width:100%;padding:11px 14px;border-radius:10px;font-size:.88rem;font-family:inherit;outline:none">
@@ -4305,16 +4306,20 @@ function submitContact(){
   var email=(document.getElementById('cfEmail').value||'').trim();
   var phone=(document.getElementById('cfPhone').value||'').trim();
   var service=(document.getElementById('cfService').value||'').trim();
+  var business=(document.getElementById('cfBusiness').value||'').trim();
+  var needs=(document.getElementById('cfNeeds').value||'').trim();
+  var timeline=(document.getElementById('cfTimeline').value||'').trim();
+  var budget=(document.getElementById('cfBudget').value||'').trim();
   var msg=(document.getElementById('cfMsg').value||'').trim();
   var promoCode=(document.getElementById('cfPromo').value||'').trim().toUpperCase();
   var out=document.getElementById('cfMsg2');
-  if(!name||!email||!msg){out.style.color='#f87171';out.textContent='Please fill in your name, email, and message.';return}
+  if(!name||!email||!business||!needs){out.style.color='#f87171';out.textContent='Please fill in your name, email, what your business does, and what you need built.';return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){out.style.color='#f87171';out.textContent='Please enter a valid email address.';return}
   if(!phone){out.style.color='#f87171';out.textContent='Phone number is required.';return}
-  if(pwFilter(msg)){out.style.color='#f87171';out.textContent='Your message contains language we do not allow. Please revise and try again.';return}
+  if(pwFilter(business)||pwFilter(needs)||pwFilter(msg)){out.style.color='#f87171';out.textContent='Your message contains language we do not allow. Please revise and try again.';return}
   var btn=document.querySelector('.form-submit');btn.disabled=true;btn.textContent='Sending…';
   var source=(document.getElementById('cfSource').value||'').trim();
-  var details='Package: '+(service||'Not specified')+'\nPhone: '+phone+(source?'\nHeard via: '+source:'')+(promoCode?'\nPromo: '+promoCode:'')+'\n\n'+msg;
+  var details='Package: '+(service||'Not specified')+'\nPhone: '+phone+(source?'\nHeard via: '+source:'')+(promoCode?'\nPromo: '+promoCode:'')+'\n\nBusiness: '+business+'\nNeeds: '+needs+(timeline?'\nTimeline: '+timeline:'')+(budget?'\nBudget: '+budget:'')+(msg?'\n\nAdditional details: '+msg:'');
   fetch('/api/request',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -4327,6 +4332,10 @@ function submitContact(){
       document.getElementById('cfName').value='';
       document.getElementById('cfEmail').value='';
       document.getElementById('cfPhone').value='';
+      document.getElementById('cfBusiness').value='';
+      document.getElementById('cfNeeds').value='';
+      document.getElementById('cfTimeline').value='';
+      document.getElementById('cfBudget').value='';
       document.getElementById('cfMsg').value='';
       document.getElementById('cfPromo').value='';
       document.getElementById('cfSource').value='';
@@ -5018,6 +5027,15 @@ function adminLoadData() {
       if (d.error) { console.warn('Admin load error:', d.error); return; }
       _adminData = d;
       window._adminClients = d.clients;
+      var _myEml = adminGetEmail().toLowerCase();
+      var _isCO = !!(d.coOwner && _myEml === d.coOwner.toLowerCase());
+      window._isCoOwner = _isCO;
+      var _badge = document.querySelector('.admin-badge');
+      var _title = document.querySelector('.admin-title');
+      if (_badge) _badge.textContent = _isCO ? 'Co-Owner' : 'Admin';
+      if (_title) _title.textContent = _isCO ? 'Precision Workz — Co-Owner Panel' : 'Precision Workz — Control Panel';
+      var _cleanBtn = document.querySelector('[onclick="adminCleanDB()"]');
+      if (_cleanBtn) _cleanBtn.style.display = _isCO ? 'none' : '';
       adminRenderStats(d.clients);
       adminRenderDevs(d.admins, d.primaryAdmin, d.coOwner);
       adminRenderTable(d.clients);
@@ -5101,7 +5119,7 @@ function adminFilterTable() {
       + '<td style="color:var(--dim);font-size:.8rem">' + added + '</td>'
       + '<td style="display:flex;gap:6px">'
         + '<button class="admin-btn ghost" style="padding:5px 10px;font-size:.75rem" onclick="adminEditRow(\'' + k + '\')">Edit</button>'
-        + '<button class="admin-btn danger" style="padding:5px 10px;font-size:.75rem" onclick="adminRemoveClient(\'' + k + '\')">Remove</button>'
+        + (window._isCoOwner ? '' : '<button class="admin-btn danger" style="padding:5px 10px;font-size:.75rem" onclick="adminRemoveClient(\'' + k + '\')">Remove</button>')
       + '</td>'
       + '</tr>';
   }).join('');
@@ -5870,8 +5888,15 @@ function checkAdminBtn(user) {
       adminBtn.style.display = isAdmin ? 'flex' : 'none';
       var ctaBanner = document.querySelector('.cta-banner');
       if (ctaBanner) ctaBanner.style.display = isAdmin ? 'none' : '';
+      if (isAdmin) {
+        var isCO = !!(d.coOwner && user.email.toLowerCase() === d.coOwner.toLowerCase());
+        window._isCoOwner = isCO;
+        if (isCO) adminBtn.innerHTML = '<i class="ph-bold ph-shield-star" style="font-size:.85rem"></i> Co-Owner';
+      } else {
+        window._isCoOwner = false;
+      }
     })
-    .catch(function() { window._userIsAdmin = false; adminBtn.style.display = 'none'; });
+    .catch(function() { window._userIsAdmin = false; window._isCoOwner = false; adminBtn.style.display = 'none'; });
 }
 
 /* ── INIT ON LOAD ─────────────────────────────────────────── */
