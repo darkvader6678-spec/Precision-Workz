@@ -3396,6 +3396,21 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     </div>
 
     <div id="adm-monitor-view" style="display:none">
+
+      <!-- Password gate -->
+      <div id="mon-gate" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:340px;gap:18px">
+        <div style="font-size:1.8rem">🔒</div>
+        <div style="font-weight:800;font-size:1.1rem;color:var(--text)">Monitor Access</div>
+        <div style="font-size:.85rem;color:var(--dim)">Enter the monitor password to continue</div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input id="mon-gate-pw" type="password" class="admin-input" placeholder="Password" style="max-width:200px;font-size:1rem;letter-spacing:3px;text-align:center" onkeydown="if(event.key==='Enter')monUnlock()">
+          <button class="admin-btn primary" onclick="monUnlock()">Unlock</button>
+        </div>
+        <div id="mon-gate-err" style="font-size:.8rem;color:#f87171;display:none">Incorrect password</div>
+      </div>
+
+      <!-- Monitor content (hidden until unlocked) -->
+      <div id="mon-content" style="display:none">
       <div class="mon-header">
         <div class="mon-live-badge"><span class="mon-live-dot"></span>LIVE</div>
         <div style="font-size:.95rem;font-weight:800;color:var(--text)">System Monitor</div>
@@ -3482,6 +3497,54 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         </div>
         <div id="mon-captcha-detail" style="margin-top:10px;display:none;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:8px;font-size:.75rem;font-family:monospace;color:var(--muted);word-break:break-all;line-height:1.7"></div>
       </div>
+
+      <!-- Data Overview -->
+      <div class="mon-kpi-grid" style="margin-top:12px">
+        <div class="mon-card">
+          <div class="mon-card-title">Total Clients</div>
+          <div class="mon-big-num" id="mon-stat-clients">—</div>
+          <div class="mon-big-label">in database</div>
+        </div>
+        <div class="mon-card">
+          <div class="mon-card-title">Open Requests</div>
+          <div class="mon-big-num" style="color:#fbbf24" id="mon-stat-open">—</div>
+          <div class="mon-big-label">need attention</div>
+        </div>
+        <div class="mon-card">
+          <div class="mon-card-title">Total Requests</div>
+          <div class="mon-big-num" id="mon-stat-total-reqs">—</div>
+          <div class="mon-big-label">all time</div>
+        </div>
+        <div class="mon-card">
+          <div class="mon-card-title">Co-Owner Messages</div>
+          <div class="mon-big-num" style="color:#22d3ee" id="mon-stat-co-msgs">—</div>
+          <div class="mon-big-label">from Oscar</div>
+        </div>
+      </div>
+
+      <!-- Recent Submissions -->
+      <div class="mon-card" style="margin-top:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="mon-card-title">Recent Submissions</div>
+          <button class="admin-btn ghost" style="padding:4px 10px;font-size:.7rem" onclick="monRefreshActivity()">↻</button>
+        </div>
+        <div id="mon-recent-subs"><div style="color:var(--dim);font-size:.8rem">Loading…</div></div>
+      </div>
+
+      <!-- Environment Info -->
+      <div class="mon-card" style="margin-top:12px">
+        <div class="mon-card-title" style="margin-bottom:12px">Environment</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px" id="mon-env-grid">
+          <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px 14px"><div style="font-size:.68rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Node.js</div><div style="font-size:.9rem;font-weight:700;color:var(--cyan2)" id="mon-env-node">—</div></div>
+          <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px 14px"><div style="font-size:.68rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Platform</div><div style="font-size:.9rem;font-weight:700;color:var(--text)" id="mon-env-platform">—</div></div>
+          <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px 14px"><div style="font-size:.68rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">CPU Cores</div><div style="font-size:.9rem;font-weight:700;color:var(--text)" id="mon-env-cores">—</div></div>
+          <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px 14px"><div style="font-size:.68rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">RSS Memory</div><div style="font-size:.9rem;font-weight:700;color:var(--text)" id="mon-env-rss">—</div></div>
+          <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px 14px"><div style="font-size:.68rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Behind Cloudflare</div><div style="font-size:.9rem;font-weight:700;color:var(--text)" id="mon-env-cf">—</div></div>
+          <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px 14px"><div style="font-size:.68rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Requests / Session</div><div style="font-size:.9rem;font-weight:700;color:var(--purple2)" id="mon-env-reqs">—</div></div>
+        </div>
+      </div>
+
+      </div><!-- end mon-content -->
     </div>
 
   </div>
@@ -5021,6 +5084,7 @@ function closeAdmin() {
   document.getElementById('admin-overlay').classList.remove('open');
   document.body.style.overflow = '';
   if (_monTimer) { clearInterval(_monTimer); _monTimer = null; }
+  _monUnlocked = false;
 }
 
 function adminGetEmail() {
@@ -5403,7 +5467,7 @@ function adminRenderRequests() {
           + (isOpen
             ? '<button class="admin-btn ghost" style="padding:7px 14px;font-size:.78rem" onclick="adminResolveRequest(\''+r.id+'\')">Mark Resolved</button>'
             : '<button class="admin-btn ghost" style="padding:7px 14px;font-size:.78rem;opacity:.5" onclick="adminResolveRequest(\''+r.id+'\')">Reopen</button>')
-          + '<button class="admin-btn danger" style="padding:7px 14px;font-size:.78rem" onclick="adminDeleteRequest(\''+r.id+'\')">Delete</button>'
+          + (window._isCoOwner ? '' : '<button class="admin-btn danger" style="padding:7px 14px;font-size:.78rem" onclick="adminDeleteRequest(\''+r.id+'\')">Delete</button>')
         + '</div>'
       + '</div>'
     + '</div>';
@@ -5624,8 +5688,19 @@ function adminTab(tab) {
   if (rv) rv.style.display = tab === 'reports' ? '' : 'none';
   if (mv) mv.style.display = tab === 'monitor' ? '' : 'none';
   if (tab === 'monitor') {
-    monRefresh();
-    if (!_monTimer) _monTimer = setInterval(monRefresh, 5000);
+    if (!_monUnlocked) {
+      // Show gate, hide content
+      var gate = document.getElementById('mon-gate');
+      var content = document.getElementById('mon-content');
+      if (gate) gate.style.display = 'flex';
+      if (content) content.style.display = 'none';
+      var pwEl = document.getElementById('mon-gate-pw');
+      if (pwEl) { pwEl.value=''; setTimeout(function(){ pwEl.focus(); }, 80); }
+    } else {
+      monRefresh();
+      monRefreshActivity();
+      if (!_monTimer) _monTimer = setInterval(monRefresh, 5000);
+    }
   } else {
     if (_monTimer) { clearInterval(_monTimer); _monTimer = null; }
   }
@@ -5773,13 +5848,71 @@ function monTestRecaptcha() {
   });
 }
 
+var _monUnlocked = false;
+
+function monUnlock() {
+  var pw = (document.getElementById('mon-gate-pw')||{}).value || '';
+  if (pw === '2010') {
+    _monUnlocked = true;
+    var gate = document.getElementById('mon-gate');
+    var content = document.getElementById('mon-content');
+    if (gate) gate.style.display = 'none';
+    if (content) content.style.display = '';
+    monRefresh();
+    monRefreshActivity();
+    if (!_monTimer) _monTimer = setInterval(monRefresh, 5000);
+  } else {
+    var err = document.getElementById('mon-gate-err');
+    if (err) { err.style.display = ''; setTimeout(function(){ err.style.display='none'; }, 2000); }
+  }
+}
+
 function monRefresh() {
   var email = adminGetEmail();
-  if (!email) return;
+  if (!email || !_monUnlocked) return;
   fetch('/api/admin/metrics?adminEmail=' + encodeURIComponent(email))
     .then(function(r) { return r.json(); })
     .then(monRender)
     .catch(function() {});
+}
+
+function monRefreshActivity() {
+  if (!_monUnlocked) return;
+  // Pull from already-loaded data
+  var reqs = _adminRequests || [];
+  var clients = _adminData ? _adminData.clients : {};
+  var open = reqs.filter(function(r){ return r.status==='open'; }).length;
+  var el;
+  el = document.getElementById('mon-stat-clients'); if(el) el.textContent = Object.keys(clients).length;
+  el = document.getElementById('mon-stat-open'); if(el) el.textContent = open;
+  el = document.getElementById('mon-stat-total-reqs'); if(el) el.textContent = reqs.length;
+  // Co-owner messages count
+  var email = adminGetEmail();
+  fetch('/api/admin/co-messages?adminEmail=' + encodeURIComponent(email))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      el = document.getElementById('mon-stat-co-msgs'); if(el) el.textContent = (d.messages||[]).length;
+    }).catch(function(){});
+  // Recent submissions
+  var subsEl = document.getElementById('mon-recent-subs');
+  if (subsEl) {
+    var recent = reqs.slice(0, 8);
+    if (!recent.length) { subsEl.innerHTML='<div style="color:var(--dim);font-size:.8rem">No submissions yet.</div>'; }
+    else {
+      var typeMap={'quote':'Quote','bug-fix':'Bug Fix','feature-request':'Feature Req','maintenance':'Maintenance','emergency':'Emergency','security-audit':'Security Audit','general':'General','dm':'DM'};
+      subsEl.innerHTML = recent.map(function(r){
+        var ago = r.createdAt ? Math.floor((Date.now()-new Date(r.createdAt).getTime())/1000) : 0;
+        var agoStr = ago<60?ago+'s ago':ago<3600?Math.floor(ago/60)+'m ago':Math.floor(ago/3600)+'h ago';
+        var statusColor = r.status==='resolved'?'#4ade80':'#fbbf24';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);flex-wrap:wrap">'
+          +'<span style="font-size:.68rem;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.2);color:var(--purple2);padding:1px 7px;border-radius:999px;white-space:nowrap">'+(typeMap[r.type]||r.type||'?')+'</span>'
+          +'<span style="font-size:.8rem;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(r.name||r.email||'—')+'</span>'
+          +'<span style="font-size:.7rem;color:'+statusColor+';font-weight:700">'+r.status+'</span>'
+          +'<span style="font-size:.68rem;color:var(--dim);white-space:nowrap">'+agoStr+'</span>'
+          +'</div>';
+      }).join('');
+    }
+  }
 }
 
 function monRender(d) {
@@ -5896,6 +6029,14 @@ function monRender(d) {
       }).join('');
     }
   }
+
+  // Environment cards
+  el = document.getElementById('mon-env-node'); if(el&&d.nodeVersion) el.textContent = d.nodeVersion;
+  el = document.getElementById('mon-env-platform'); if(el&&d.platform) el.textContent = d.platform;
+  el = document.getElementById('mon-env-cores'); if(el&&d.cpuCount) el.textContent = d.cpuCount + ' core' + (d.cpuCount!==1?'s':'');
+  el = document.getElementById('mon-env-rss'); if(el&&d.memory) el.textContent = monFmtBytes(d.memory.rss);
+  el = document.getElementById('mon-env-cf'); if(el) el.textContent = d.behindCloudflare ? '✓ Yes' : '✗ No';
+  el = document.getElementById('mon-env-reqs'); if(el) el.textContent = (d.reqTotal||0).toLocaleString();
 
   // Last refresh time
   el = document.getElementById('mon-last-refresh');

@@ -958,6 +958,7 @@ async function handleAPI(req, res, urlPath) {
         reqTotal:         _reqTotal,
         reqLog:           _reqLog.slice(-30),
         behindCloudflare: !!req.headers['cf-connecting-ip'],
+        platform:         process.platform,
         ips:              ipList.slice(0, 100),
       });
     }
