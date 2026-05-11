@@ -312,6 +312,11 @@ async function readCoMessages() {
   return Array.isArray(raw) ? raw : [];
 }
 const writeCoMessages = (v) => kvWrite('co-messages', v);
+async function readAdminLevels() {
+  const raw = _parseKV(await kvRead('admin-levels', {}), {});
+  return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+}
+const writeAdminLevels = (v) => kvWrite('admin-levels', v);
 
 async function isAdmin(email) {
   if (!email) return false;
@@ -620,10 +625,10 @@ async function handleAPI(req, res, urlPath) {
     if (!await isAdmin(body.adminEmail)) return json(res, 403, { error: 'Forbidden' });
 
     if (urlPath === '/api/admin/data') {
-      const [clients, admins] = await Promise.all([readClients(), readAdmins()]);
-      // Build full admin list including permanent co-owner (never removable via UI)
-      const allAdmins = [...new Set([PRIMARY_ADMIN, ...(CO_OWNER_EMAIL ? [CO_OWNER_EMAIL] : []), ...admins.filter(a => a.toLowerCase() !== PRIMARY_ADMIN.toLowerCase() && a.toLowerCase() !== CO_OWNER_EMAIL)])];
-      return json(res, 200, { clients, admins: allAdmins, primaryAdmin: PRIMARY_ADMIN, coOwner: CO_OWNER_EMAIL || null });
+      const [clients, admins, adminLevels] = await Promise.all([readClients(), readAdmins(), readAdminLevels()]);
+      const coLow = (CO_OWNER_EMAIL || '').toLowerCase();
+      const allAdmins = [...new Set([PRIMARY_ADMIN, ...(CO_OWNER_EMAIL ? [CO_OWNER_EMAIL] : []), ...admins.filter(a => a.toLowerCase() !== PRIMARY_ADMIN.toLowerCase() && a.toLowerCase() !== coLow)])];
+      return json(res, 200, { clients, admins: allAdmins, primaryAdmin: PRIMARY_ADMIN, coOwner: CO_OWNER_EMAIL || null, adminLevels });
     }
 
     if (urlPath === '/api/admin/requests') {
@@ -858,13 +863,18 @@ async function handleAPI(req, res, urlPath) {
         if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) {
           return json(res, 403, { error: 'Only the primary admin can add developers' });
         }
-        const { newEmail } = body;
+        const { newEmail, level } = body;
         if (!newEmail) return json(res, 400, { error: 'newEmail required' });
         const admins = await readAdmins();
         const key = newEmail.toLowerCase().trim();
         if (!admins.map(e => e.toLowerCase()).includes(key)) {
           admins.push(newEmail.trim());
           await writeAdmins(admins);
+        }
+        if (level && ['low','medium','max'].includes(level)) {
+          const levels = await readAdminLevels();
+          levels[key] = level;
+          await writeAdminLevels(levels);
         }
         return json(res, 200, { ok: true, admins });
       } catch(e) { return json(res, 500, { error: e.message }); }

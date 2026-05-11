@@ -331,6 +331,23 @@ section{padding:100px 5%}
 .form-submit:hover{opacity:.88;transform:translateY(-1px)}
 .form-msg{font-size:.85rem;text-align:center;margin-top:12px;height:20px}
 
+/* LOCATION MAP */
+.loc-section{padding:100px 5%;position:relative;overflow:hidden;background:var(--bg2)}
+.loc-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(124,58,237,.06),transparent 60%),radial-gradient(ellipse at 75% 50%,rgba(6,182,212,.04),transparent 60%);pointer-events:none}
+.loc-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1.3fr 1fr;gap:80px;align-items:center;position:relative;z-index:1}
+.loc-map-wrap{position:relative}
+.loc-map-svg{width:100%;border-radius:18px;filter:drop-shadow(0 0 40px rgba(124,58,237,.18));cursor:pointer;transition:filter .3s}
+.loc-map-svg:hover{filter:drop-shadow(0 0 55px rgba(124,58,237,.28))}
+.loc-popup{display:none;position:absolute;background:#09090f;border:1px solid rgba(124,58,237,.5);border-radius:12px;padding:10px 18px;font-size:.88rem;font-weight:700;color:#fff;white-space:nowrap;box-shadow:0 4px 28px rgba(124,58,237,.35);z-index:10;pointer-events:none;top:28%;left:18%;transform:translateX(-50%)}
+.loc-popup::after{content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:7px solid rgba(124,58,237,.5)}
+.loc-eyebrow{font-size:.7rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--cyan2);margin-bottom:16px;display:block}
+.loc-title{font-size:clamp(2rem,4vw,3rem);font-weight:800;line-height:1.15;margin-bottom:20px;letter-spacing:-1px}
+.loc-desc{color:var(--muted);line-height:1.75;margin-bottom:28px;font-size:.95rem}
+.loc-coords{display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-family:monospace;font-size:.8rem;color:var(--cyan2)}
+.loc-coords-dot{width:8px;height:8px;background:#7c3aed;border-radius:50%;animation:coord-pulse 2s ease-in-out infinite}
+@keyframes coord-pulse{0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,.5)}50%{box-shadow:0 0 0 6px rgba(124,58,237,0)}}
+@media(max-width:900px){.loc-inner{grid-template-columns:1fr;gap:40px}.loc-map-wrap{order:-1}}
+
 /* FOOTER */
 footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex-direction:column;align-items:center;gap:20px;text-align:center}
 .footer-logo{font-size:1.1rem;font-weight:800;background:linear-gradient(135deg,#fff,var(--cyan2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
@@ -2998,6 +3015,76 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
 </section>
 
+<section class="loc-section fade-up">
+  <div class="loc-inner">
+    <div class="loc-map-wrap">
+      <div class="loc-popup" id="loc-popup">📍&nbsp; Tucson, Arizona</div>
+      <svg class="loc-map-svg" viewBox="0 0 620 280" xmlns="http://www.w3.org/2000/svg" onclick="locTogglePopup()" role="img" aria-label="Map showing Precision Workz location in Tucson, Arizona">
+        <defs>
+          <clipPath id="map-clip"><rect width="620" height="280" rx="16"/></clipPath>
+          <radialGradient id="az-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(124,58,237,0.35)"/>
+            <stop offset="100%" stop-color="rgba(124,58,237,0)"/>
+          </radialGradient>
+        </defs>
+        <g clip-path="url(#map-clip)">
+          <!-- Background -->
+          <rect width="620" height="280" fill="#050a12" rx="16"/>
+          <!-- Subtle grid lines -->
+          <line x1="0" y1="70" x2="620" y2="70" stroke="rgba(6,182,212,0.05)" stroke-width="1"/>
+          <line x1="0" y1="140" x2="620" y2="140" stroke="rgba(6,182,212,0.05)" stroke-width="1"/>
+          <line x1="0" y1="210" x2="620" y2="210" stroke="rgba(6,182,212,0.05)" stroke-width="1"/>
+          <line x1="100" y1="0" x2="100" y2="280" stroke="rgba(6,182,212,0.05)" stroke-width="1"/>
+          <line x1="200" y1="0" x2="200" y2="280" stroke="rgba(6,182,212,0.05)" stroke-width="1"/>
+          <line x1="300" y1="0" x2="300" y2="280" stroke="rgba(6,182,212,0.05)" stroke-width="1"/>
+          <line x1="400" y1="0" x2="400" y2="280" stroke="rgba(6,182,212,0.05)" stroke-width="1"/>
+          <line x1="500" y1="0" x2="500" y2="280" stroke="rgba(6,182,212,0.05)" stroke-width="1"/>
+          <!-- Continental US outline (approximate, Mercator: x=(125-lon)*10+10, y=(50-lat)*10+10) -->
+          <path d="M 13,25 L 100,20 L 290,20 L 420,45 L 505,75 L 590,35 L 590,68 L 553,88 L 521,105 L 515,116 L 503,157 L 455,182 L 458,248 L 432,265 L 425,225 L 380,208 L 369,205 L 350,215 L 308,215 L 276,232 L 275,251 L 241,216 L 195,193 L 160,197 L 120,197 L 103,183 L 88,185 L 77,170 L 35,135 L 15,90 L 20,48 Z"
+            fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.18)" stroke-width="1.5" stroke-linejoin="round"/>
+          <!-- Arizona highlighted (37°N–31.3°N, 114°W–109°W) -->
+          <polygon points="120,140 170,140 170,197 120,197" fill="rgba(124,58,237,0.22)" stroke="rgba(124,58,237,0.65)" stroke-width="2" stroke-linejoin="round"/>
+          <!-- AZ glow -->
+          <ellipse cx="145" cy="168" rx="32" ry="28" fill="url(#az-glow)" opacity="0.6"/>
+          <!-- AZ label -->
+          <text x="140" y="173" fill="rgba(167,139,250,0.8)" font-size="10" font-family="Arial,sans-serif" font-weight="800" text-anchor="middle">AZ</text>
+          <!-- Crosshair lines at Tucson (110.9°W, 32.2°N → x=151, y=188) -->
+          <line x1="151" y1="120" x2="151" y2="165" stroke="rgba(124,58,237,0.25)" stroke-width="1" stroke-dasharray="4,3"/>
+          <line x1="151" y1="207" x2="151" y2="260" stroke="rgba(124,58,237,0.25)" stroke-width="1" stroke-dasharray="4,3"/>
+          <line x1="80" y1="188" x2="132" y2="188" stroke="rgba(124,58,237,0.25)" stroke-width="1" stroke-dasharray="4,3"/>
+          <line x1="170" y1="188" x2="230" y2="188" stroke="rgba(124,58,237,0.25)" stroke-width="1" stroke-dasharray="4,3"/>
+          <!-- Beacon rings (pulsing) -->
+          <circle cx="151" cy="188" r="18" fill="none" stroke="rgba(124,58,237,0.4)" stroke-width="1.5">
+            <animate attributeName="r" from="8" to="28" dur="2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" from="0.9" to="0" dur="2s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="151" cy="188" r="12" fill="none" stroke="rgba(124,58,237,0.5)" stroke-width="1">
+            <animate attributeName="r" from="5" to="20" dur="2s" begin="0.6s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" from="0.7" to="0" dur="2s" begin="0.6s" repeatCount="indefinite"/>
+          </circle>
+          <!-- Dot -->
+          <circle cx="151" cy="188" r="5" fill="rgba(124,58,237,0.9)"/>
+          <circle cx="151" cy="188" r="2.5" fill="#fff"/>
+          <!-- Coordinates label -->
+          <rect x="158" y="196" width="112" height="16" rx="4" fill="rgba(0,0,0,0.55)"/>
+          <text x="214" y="207" fill="rgba(6,182,212,0.7)" font-size="8.5" font-family="monospace" text-anchor="middle">32.22°N  110.97°W</text>
+          <!-- Click hint -->
+          <text x="310" y="272" fill="rgba(255,255,255,0.15)" font-size="8" font-family="Arial,sans-serif" text-anchor="middle">click dot to identify location</text>
+        </g>
+      </svg>
+    </div>
+    <div>
+      <span class="loc-eyebrow">Service Area</span>
+      <h2 class="loc-title">Based in<br><span class="grad-text">Tucson, AZ</span></h2>
+      <p class="loc-desc">Precision Workz is proudly headquartered in Tucson, Arizona — serving clients across the Southwest and nationwide. Every project is built with the same precision and care, whether you're local or across the country.</p>
+      <div class="loc-coords">
+        <span class="loc-coords-dot"></span>
+        32.2226° N &nbsp;/&nbsp; 110.9747° W
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="cta-banner fade-up">
   <span class="cta-banner-eyebrow" id="cta-eyebrow">Ready when you are</span>
   <h2 class="cta-banner-title" id="cta-title">Let's Build<br><span class="grad-text">Something Great</span></h2>
@@ -3338,8 +3425,13 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <div class="admin-section">
       <div class="admin-section-title">Developer Access</div>
       <div id="adm-devs-list" style="margin-bottom:14px"></div>
-      <div style="display:flex;gap:10px;align-items:center" id="adm-add-dev-row">
-        <input class="admin-input" id="adm-dev-email" type="email" placeholder="developer@email.com" style="max-width:320px">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap" id="adm-add-dev-row">
+        <input class="admin-input" id="adm-dev-email" type="email" placeholder="developer@email.com" style="max-width:240px">
+        <select class="admin-input" id="adm-dev-level" style="max-width:150px;cursor:pointer">
+          <option value="low">Low Access</option>
+          <option value="medium">Medium Access</option>
+          <option value="max">Max Access</option>
+        </select>
         <button class="admin-btn primary" onclick="adminAddDev()">Add Developer</button>
       </div>
       <div class="admin-msg" id="adm-dev-msg"></div>
@@ -5200,7 +5292,6 @@ function adminCheckKV() {
 function adminLoadData() {
   var email = adminGetEmail();
   if (!email) return;
-  adminCheckKV();
   fetch('/api/admin/data?adminEmail=' + encodeURIComponent(email))
     .then(function(r) { return r.json(); })
     .then(function(d) {
@@ -5217,6 +5308,7 @@ function adminLoadData() {
       var _cleanBtn = document.querySelector('[onclick="adminCleanDB()"]');
       if (_cleanBtn) _cleanBtn.style.display = _isCO ? 'none' : '';
       var _isPrimary = _myEml === (d.primaryAdmin||'').toLowerCase();
+      if (_isPrimary) adminCheckKV();
       // Apply / remove co-owner theme
       var overlay = document.getElementById('admin-overlay');
       if (overlay) overlay.classList.toggle('co-theme', _isCO);
@@ -5226,7 +5318,7 @@ function adminLoadData() {
       if (inboxEl) inboxEl.style.display = _isPrimary ? '' : 'none';
       if (composeEl) composeEl.style.display = _isCO ? '' : 'none';
       adminRenderStats(d.clients);
-      adminRenderDevs(d.admins, d.primaryAdmin, d.coOwner);
+      adminRenderDevs(d.admins, d.primaryAdmin, d.coOwner, d.adminLevels || {});
       // Populate remove-dev dropdown for co-owner
       if (_isCO) {
         var remSel = document.getElementById('co-dev-remove-select');
@@ -5255,7 +5347,7 @@ function adminRenderStats(clients) {
   document.getElementById('adm-stat-pkgs').textContent  = pkgs;
 }
 
-function adminRenderDevs(admins, primary, coOwner) {
+function adminRenderDevs(admins, primary, coOwner, levels) {
   var list = document.getElementById('adm-devs-list');
   var myEmail = adminGetEmail();
   var isPrimary = myEmail.toLowerCase() === (primary || '').toLowerCase();
@@ -5273,9 +5365,18 @@ function adminRenderDevs(admins, primary, coOwner) {
       : isCO
         ? '<span class="admin-primary-badge" style="background:rgba(6,182,212,.15);color:#22d3ee;border-color:rgba(6,182,212,.3)">Co-Owner</span>'
         : '<span style="font-size:.72rem;color:var(--dim)">Developer</span>';
+    var lvlBadge = '';
+    if (!isP && !isCO && levels) {
+      var lvl = (levels[email.toLowerCase()] || levels[email] || 'low');
+      var lvlClr = lvl === 'max' ? '#f87171' : lvl === 'medium' ? '#fb923c' : '#4ade80';
+      var lvlBg  = lvl === 'max' ? 'rgba(239,68,68,.12)' : lvl === 'medium' ? 'rgba(251,146,60,.12)' : 'rgba(74,222,128,.1)';
+      var lvlTxt = lvl === 'max' ? 'Max Access' : lvl === 'medium' ? 'Medium' : 'Low';
+      lvlBadge = '<span style="font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:6px;background:'+lvlBg+';color:'+lvlClr+';text-transform:uppercase;letter-spacing:.5px;margin-left:4px">'+lvlTxt+'</span>';
+    }
     return '<div class="admin-dev-row">'
       + '<span class="admin-dev-email">' + email + '</span>'
       + badge
+      + lvlBadge
       + removeBtn
       + '</div>';
   }).join('');
@@ -5436,18 +5537,25 @@ function adminRemoveClient(email) {
 
 function adminAddDev() {
   var email  = (document.getElementById('adm-dev-email').value || '').trim();
+  var levelEl = document.getElementById('adm-dev-level');
+  var level  = levelEl ? levelEl.value : 'low';
   var msgEl  = document.getElementById('adm-dev-msg');
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     msgEl.style.color = '#f87171'; msgEl.textContent = 'Enter a valid email address.'; return;
   }
+  if (level === 'max') {
+    var pw = prompt('Enter admin password to grant Max Access:');
+    if (pw !== '2010') { msgEl.style.color = '#f87171'; msgEl.textContent = 'Incorrect password — Max Access not granted.'; return; }
+  }
   fetch('/api/admin/add-admin', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ adminEmail: adminGetEmail(), newEmail: email })
+    body: JSON.stringify({ adminEmail: adminGetEmail(), newEmail: email, level: level })
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.error) { msgEl.style.color = '#f87171'; msgEl.textContent = d.error; return; }
-    msgEl.style.color = '#4ade80'; msgEl.textContent = '✓ Developer access granted to ' + email;
+    msgEl.style.color = '#4ade80'; msgEl.textContent = '✓ Developer added (' + level + ' access)';
     document.getElementById('adm-dev-email').value = '';
+    if (levelEl) levelEl.value = 'low';
     adminLoadData();
   }).catch(function() { msgEl.style.color = '#f87171'; msgEl.textContent = 'Network error.'; });
 }
@@ -5760,6 +5868,13 @@ function adminCoReply(id, quickText) {
   }).then(function(r){return r.json();}).then(function(d){
     if (d.ok) adminLoadCoMessages();
   });
+}
+
+function locTogglePopup() {
+  var popup = document.getElementById('loc-popup');
+  if (!popup) return;
+  var isVisible = popup.style.display !== 'none' && popup.style.display !== '';
+  popup.style.display = isVisible ? 'none' : '';
 }
 
 function adminCoDelete(id) {
