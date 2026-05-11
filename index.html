@@ -5279,6 +5279,21 @@ function adminLoadRequests() {
       var statEl = document.getElementById('adm-stat-reqs');
       if (statEl) statEl.textContent = open;
       adminRenderRequests();
+      // Deep-link: ?req=<id> in URL jumps to that request and opens reply
+      var _rl = new URLSearchParams(window.location.search).get('req');
+      if (_rl) {
+        setTimeout(function() {
+          var card = document.getElementById('adm-req-card-' + _rl);
+          if (card) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.style.boxShadow = '0 0 0 3px rgba(124,58,237,.55)';
+            setTimeout(function() {
+              adminToggleReply(_rl);
+              setTimeout(function() { card.style.boxShadow = ''; }, 2500);
+            }, 400);
+          }
+        }, 150);
+      }
     })
     .catch(function(e) { console.warn('Requests fetch failed:', e); });
 }
@@ -5301,7 +5316,7 @@ function adminRenderRequests() {
     var isQuote = r.type==='quote';
     var borderColor = isQuote?'rgba(245,158,11,.35)':isOpen?'rgba(124,58,237,.3)':'rgba(255,255,255,.06)';
     var typeBadge = isQuote?'<span style="font-size:.65rem;font-weight:800;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:#fbbf24;padding:2px 8px;border-radius:999px;letter-spacing:.5px">QUOTE</span>':'';
-    return '<div style="background:'+(isQuote?'rgba(245,158,11,.03)':'rgba(255,255,255,.03)')+';border:1px solid '+borderColor+';border-radius:12px;padding:16px 18px;margin-bottom:10px">'
+    return '<div id="adm-req-card-'+r.id+'" style="background:'+(isQuote?'rgba(245,158,11,.03)':'rgba(255,255,255,.03)')+';border:1px solid '+borderColor+';border-radius:12px;padding:16px 18px;margin-bottom:10px;transition:box-shadow .3s">'
       + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">'
         + '<div style="flex:1;min-width:0">'
           + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">'

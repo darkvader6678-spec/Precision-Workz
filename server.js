@@ -145,7 +145,7 @@ let nodemailer;
 try { nodemailer = require('nodemailer'); } catch(e) { console.warn('nodemailer not found — npm install nodemailer'); }
 const GMAIL_USER = process.env.GMAIL_USER || '';
 const GMAIL_PASS = process.env.GMAIL_PASS || '';
-const SITE_URL   = process.env.SITE_URL   || 'http://localhost:4000';
+const SITE_URL   = process.env.SITE_URL   || 'https://precisionworkz.net';
 
 const MIME = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript',
@@ -336,6 +336,28 @@ function verifyPassword(password, stored) {
   });
 }
 
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function emailHeader(title, subtitle) {
+  return '<div style="font-family:Arial,sans-serif;max-width:580px;margin:0 auto;background:#09090f;border-radius:20px;overflow:hidden;border:1px solid #1e293b">'
+    + '<div style="background:linear-gradient(135deg,#7c3aed 0%,#0891b2 100%);padding:28px 32px">'
+    + '<div style="font-size:10px;font-weight:800;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:10px">PRECISION WORKZ</div>'
+    + '<div style="font-size:22px;font-weight:800;color:#ffffff;line-height:1.2">' + title + '</div>'
+    + (subtitle ? '<div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:5px">' + subtitle + '</div>' : '')
+    + '</div>';
+}
+function emailFooter() {
+  return '<div style="padding:14px 32px;border-top:1px solid #1e293b">'
+    + '<p style="color:#334155;font-size:11px;margin:0">Precision Workz &middot; Tucson, AZ &middot; precisionworkz.net</p>'
+    + '</div></div>';
+}
+function emailBtn(href, label) {
+  return '<table role="presentation" cellpadding="0" cellspacing="0"><tr>'
+    + '<td style="border-radius:12px;background:linear-gradient(135deg,#7c3aed,#0891b2)">'
+    + '<a href="' + href + '" style="display:inline-block;padding:14px 28px;color:#ffffff;font-weight:700;font-size:14px;text-decoration:none;font-family:Arial,sans-serif">' + label + '</a>'
+    + '</td></tr></table>';
+}
+
 function sendVerificationEmail(toEmail, token) {
   if (!nodemailer || !GMAIL_USER || !GMAIL_PASS) {
     console.warn('[Email] GMAIL_USER/GMAIL_PASS not set — cannot send verification email');
@@ -469,21 +491,36 @@ async function handleAPI(req, res, urlPath) {
       // Email notification to admins
       const typeLabel = newReq.type === 'quote' ? 'Quote Request' : newReq.type.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
       const adminRecipients = [GMAIL_USER, CO_OWNER_EMAIL].filter(Boolean);
-      const adminHtml = '<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#04040d;color:#f1f5f9;border-radius:16px">'
-        + '<div style="font-size:.6rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#94a3b8;margin-bottom:16px">Precision Workz</div>'
-        + '<h2 style="font-size:1.3rem;font-weight:800;margin:0 0 6px">New ' + typeLabel + '</h2>'
-        + '<p style="color:#94a3b8;font-size:.85rem;margin:0 0 24px">' + new Date().toLocaleString() + '</p>'
-        + '<table style="width:100%;border-collapse:collapse;margin-bottom:20px">'
-        + '<tr><td style="padding:8px 0;color:#64748b;font-size:.82rem;width:100px">From</td><td style="padding:8px 0;font-weight:600">' + (newReq.name || '') + '</td></tr>'
-        + '<tr><td style="padding:8px 0;color:#64748b;font-size:.82rem">Email</td><td style="padding:8px 0"><a href="mailto:' + newReq.email + '" style="color:#22d3ee">' + newReq.email + '</a></td></tr>'
-        + (newReq.phone ? '<tr><td style="padding:8px 0;color:#64748b;font-size:.82rem">Phone</td><td style="padding:8px 0;color:#22d3ee">' + newReq.phone + '</td></tr>' : '')
-        + (newReq.service ? '<tr><td style="padding:8px 0;color:#64748b;font-size:.82rem">Package</td><td style="padding:8px 0">' + newReq.service + '</td></tr>' : '')
-        + (newReq.promoCode ? '<tr><td style="padding:8px 0;color:#64748b;font-size:.82rem">Promo</td><td style="padding:8px 0">' + newReq.promoCode + '</td></tr>' : '')
+      const reqLink = SITE_URL + '/?req=' + newReq.id;
+      const hasBorder = (newReq.phone||newReq.service||newReq.promoCode) ? '1px solid #1e293b' : 'none';
+      const adminHtml = emailHeader('New ' + typeLabel, new Date().toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}))
+        + '<div style="padding:28px 32px">'
+        + '<table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin-bottom:22px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid #1e293b">'
+        + '<tr><td style="padding:11px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b;width:80px;border-bottom:1px solid #1e293b">From</td>'
+        + '<td style="padding:11px 16px;color:#f1f5f9;font-weight:700;border-bottom:1px solid #1e293b">' + esc(newReq.name || '') + '</td></tr>'
+        + '<tr><td style="padding:11px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b;border-bottom:' + hasBorder + '">Email</td>'
+        + '<td style="padding:11px 16px;border-bottom:' + hasBorder + '"><a href="mailto:' + esc(newReq.email) + '" style="color:#22d3ee;text-decoration:none;font-weight:600">' + esc(newReq.email) + '</a></td></tr>'
+        + (newReq.phone ? '<tr><td style="padding:11px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b;border-bottom:' + (newReq.service||newReq.promoCode?'1px solid #1e293b':'none') + '">Phone</td><td style="padding:11px 16px;color:#22d3ee;font-weight:600;border-bottom:' + (newReq.service||newReq.promoCode?'1px solid #1e293b':'none') + '">' + esc(newReq.phone) + '</td></tr>' : '')
+        + (newReq.service ? '<tr><td style="padding:11px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b;border-bottom:' + (newReq.promoCode?'1px solid #1e293b':'none') + '">Package</td><td style="padding:11px 16px;color:#a78bfa;font-weight:600;border-bottom:' + (newReq.promoCode?'1px solid #1e293b':'none') + '">' + esc(newReq.service) + '</td></tr>' : '')
+        + (newReq.promoCode ? '<tr><td style="padding:11px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b">Promo</td><td style="padding:11px 16px;color:#fbbf24;font-weight:600">' + esc(newReq.promoCode) + '</td></tr>' : '')
         + '</table>'
-        + '<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;font-size:.88rem;color:#cbd5e1;white-space:pre-wrap;word-break:break-word">' + newReq.details + '</div>'
-        + '<p style="margin-top:24px;font-size:.75rem;color:#475569">Reply directly to this email to respond to the client, or log in to the admin panel.</p>'
-        + '</div>';
+        + '<div style="font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#475569;margin-bottom:8px">Message</div>'
+        + '<div style="background:rgba(255,255,255,.04);border:1px solid #1e293b;border-radius:10px;padding:16px;font-size:14px;color:#cbd5e1;white-space:pre-wrap;word-break:break-word;line-height:1.7;margin-bottom:28px">' + esc(newReq.details) + '</div>'
+        + emailBtn(reqLink, 'View &amp; Reply in Admin Panel &#8594;')
+        + '</div>'
+        + emailFooter();
       await sendEmail(adminRecipients, 'New ' + typeLabel + ' — ' + (newReq.name || newReq.email), adminHtml);
+      // Confirmation email to client
+      const clientFirst = esc((newReq.name || newReq.email).split(' ')[0].split('@')[0]);
+      const clientConfirmHtml = emailHeader('We got your request!', '')
+        + '<div style="padding:28px 32px">'
+        + '<p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 22px">Hey ' + clientFirst + ', thanks for reaching out. We\'ve received your message and will get back to you shortly.</p>'
+        + '<div style="font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#475569;margin-bottom:8px">What you submitted</div>'
+        + '<div style="background:rgba(255,255,255,.04);border:1px solid #1e293b;border-radius:10px;padding:16px;font-size:13px;color:#cbd5e1;white-space:pre-wrap;word-break:break-word;line-height:1.7;margin-bottom:28px">' + esc(newReq.details) + '</div>'
+        + emailBtn(SITE_URL, 'Track on Dashboard &#8594;')
+        + '</div>'
+        + emailFooter();
+      await sendEmail(newReq.email, 'We received your request — Precision Workz', clientConfirmHtml);
       return json(res, 200, { ok: true, id: newReq.id });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
@@ -611,15 +648,14 @@ async function handleAPI(req, res, urlPath) {
       await writeRequests(reqs);
       // Email client + notify co-owner
       const clientEmail = reqs[idx].email;
-      const clientName = reqs[idx].name || clientEmail;
-      const replyHtml = '<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#04040d;color:#f1f5f9;border-radius:16px">'
-        + '<div style="font-size:.6rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#94a3b8;margin-bottom:16px">Precision Workz</div>'
-        + '<h2 style="font-size:1.3rem;font-weight:800;margin:0 0 8px">We replied to your request</h2>'
-        + '<p style="color:#94a3b8;font-size:.85rem;margin:0 0 24px">Hi ' + clientName.split(' ')[0] + ', here\'s our response:</p>'
-        + '<div style="background:rgba(255,255,255,.04);border:1px solid rgba(6,182,212,.2);border-radius:10px;padding:16px;font-size:.88rem;color:#cbd5e1;white-space:pre-wrap;word-break:break-word">' + replyText + '</div>'
-        + '<p style="margin-top:24px;font-size:.82rem;color:#94a3b8">You can reply to this email or visit <a href="' + SITE_URL + '" style="color:#22d3ee">your dashboard</a> to view the full thread.</p>'
-        + '<p style="margin-top:8px;font-size:.75rem;color:#475569">— Precision Workz · Tucson, AZ</p>'
-        + '</div>';
+      const clientFirst = esc((reqs[idx].name || clientEmail).split(' ')[0].split('@')[0]);
+      const replyHtml = emailHeader('You have a reply!', '')
+        + '<div style="padding:28px 32px">'
+        + '<p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 20px">Hi ' + clientFirst + ', here\'s our response to your request:</p>'
+        + '<div style="background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.2);border-radius:10px;padding:18px;font-size:14px;color:#cbd5e1;white-space:pre-wrap;word-break:break-word;line-height:1.7;margin-bottom:28px">' + esc(replyText) + '</div>'
+        + emailBtn(SITE_URL, 'View Full Thread on Dashboard &#8594;')
+        + '</div>'
+        + emailFooter();
       await sendEmail(clientEmail, 'Reply from Precision Workz', replyHtml);
       if (CO_OWNER_EMAIL) await sendEmail(CO_OWNER_EMAIL, 'Reply sent to ' + clientEmail, replyHtml);
       return json(res, 200, { ok: true });
