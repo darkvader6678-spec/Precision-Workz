@@ -483,7 +483,7 @@ async function handleAPI(req, res, urlPath) {
         + '<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;font-size:.88rem;color:#cbd5e1;white-space:pre-wrap;word-break:break-word">' + newReq.details + '</div>'
         + '<p style="margin-top:24px;font-size:.75rem;color:#475569">Reply directly to this email to respond to the client, or log in to the admin panel.</p>'
         + '</div>';
-      sendEmail(adminRecipients, 'New ' + typeLabel + ' — ' + (newReq.name || newReq.email), adminHtml).catch(e => console.warn('[Email notify]', e.message));
+      await sendEmail(adminRecipients, 'New ' + typeLabel + ' — ' + (newReq.name || newReq.email), adminHtml);
       return json(res, 200, { ok: true, id: newReq.id });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
@@ -620,8 +620,8 @@ async function handleAPI(req, res, urlPath) {
         + '<p style="margin-top:24px;font-size:.82rem;color:#94a3b8">You can reply to this email or visit <a href="' + SITE_URL + '" style="color:#22d3ee">your dashboard</a> to view the full thread.</p>'
         + '<p style="margin-top:8px;font-size:.75rem;color:#475569">— Precision Workz · Tucson, AZ</p>'
         + '</div>';
-      sendEmail(clientEmail, 'Reply from Precision Workz', replyHtml).catch(e => console.warn('[Email reply]', e.message));
-      if (CO_OWNER_EMAIL) sendEmail(CO_OWNER_EMAIL, 'Reply sent to ' + clientEmail, replyHtml).catch(e => console.warn('[Email co-owner]', e.message));
+      await sendEmail(clientEmail, 'Reply from Precision Workz', replyHtml);
+      if (CO_OWNER_EMAIL) await sendEmail(CO_OWNER_EMAIL, 'Reply sent to ' + clientEmail, replyHtml);
       return json(res, 200, { ok: true });
       } catch(e) { return json(res, 500, { error: e.message }); }
     }
