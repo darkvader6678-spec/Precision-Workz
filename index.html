@@ -4296,6 +4296,7 @@ function applyContactPromo(){
   window.pwFilter=function(text){
     if(!text)return false;
     var lo=_leet(text.toLowerCase());
+    lo=lo.replace(/\s+/g,' '); // collapse multiple spaces → catches "f             u                 c                k"
     // Fully stripped — catches "n i g g e r", "n.i.g.g.e.r", n*i*g*g*e*r, etc.
     var stripped=lo.replace(/[^a-z]/g,'');
     // Space-collapsed — catches "f u c k" style spacing for mild words

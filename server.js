@@ -172,6 +172,7 @@ function containsProfanity(text) {
     .replace(/4/g,'a').replace(/@/g,'a').replace(/3/g,'e')
     .replace(/1/g,'i').replace(/!/g,'i').replace(/0/g,'o')
     .replace(/\$/g,'s').replace(/5/g,'s').replace(/7/g,'t');
+  lo = lo.replace(/\s+/g, ' '); // collapse multiple spaces → catches "f             u                 c                k"
   const stripped  = lo.replace(/[^a-z]/g, '');
   const collapsed = lo.replace(/\b([a-z] ){2,}[a-z]\b/g, m => m.replace(/ /g, ''));
   const mild      = lo.replace(/[^a-z\s]/g, '');
