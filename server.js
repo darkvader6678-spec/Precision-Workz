@@ -163,6 +163,28 @@ const PRICES = {
 
 const OWNER_EMAIL = 'precizionworkz@gmail.com';
 
+// ── PROFANITY FILTER ──────────────────────────────────────
+const _PW_SEVERE = ['nigger','nigga','faggot','kike','chink','spic','wetback','coon','beaner','gook','cunt','twat','motherfucker'];
+const _PW_MILD   = ['fuck','shit','bitch','asshole','retard','whore','slut','dickhead','prick'];
+function containsProfanity(text) {
+  if (!text) return false;
+  let lo = text.toLowerCase()
+    .replace(/4/g,'a').replace(/@/g,'a').replace(/3/g,'e')
+    .replace(/1/g,'i').replace(/!/g,'i').replace(/0/g,'o')
+    .replace(/\$/g,'s').replace(/5/g,'s').replace(/7/g,'t');
+  const stripped  = lo.replace(/[^a-z]/g, '');
+  const collapsed = lo.replace(/\b([a-z] ){2,}[a-z]\b/g, m => m.replace(/ /g, ''));
+  const mild      = lo.replace(/[^a-z\s]/g, '');
+  for (const w of _PW_SEVERE) {
+    if (stripped.includes(w) || collapsed.includes(w)) return true;
+  }
+  for (const w of _PW_MILD) {
+    const re = new RegExp(`\\b${w}s?\\b`);
+    if (re.test(collapsed) || re.test(mild)) return true;
+  }
+  return false;
+}
+
 // ── PERSISTENT STORAGE (Vercel KV with local file fallback) ─
 // Checks all env var naming variants Vercel creates depending on the storage prefix chosen
 function _pickKVURL() {
@@ -410,6 +432,9 @@ async function handleAPI(req, res, urlPath) {
       if (!category || !description || description.trim().length < 20) {
         return json(res, 400, { error: 'Category and a description of at least 20 characters are required.' });
       }
+      if (containsProfanity(description)) {
+        return json(res, 400, { error: 'Your report contains language we do not allow. Please revise and try again.' });
+      }
       const report = {
         id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
         category, description: description.trim(),
@@ -430,6 +455,9 @@ async function handleAPI(req, res, urlPath) {
       const body = await parseBody(req);
       const { email, name, type, details, sub, phone, service, promoCode } = body;
       if (!email || !details) return json(res, 400, { error: 'Missing fields' });
+      if (containsProfanity(details) || containsProfanity(name)) {
+        return json(res, 400, { error: 'Your message contains language we do not allow. Please revise and try again.' });
+      }
       const newReq = {
         id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
         email, name: name || email, type: type || 'general', details,
