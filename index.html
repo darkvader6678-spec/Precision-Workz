@@ -1488,7 +1488,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <div class="stat-label">In Business <span class="stat-click-hint">↑</span></div>
     <div class="stat-note" id="age-note">
       <button class="stat-note-close" onclick="event.stopPropagation();toggleStatNote('age-note')">×</button>
-      <strong style="display:block;margin-bottom:6px;color:var(--text);font-size:.85rem">Early Access. Full Commitment.</strong>
+      <s`trong style="display:block;margin-bottom:6px;color:var(--text);font-size:.85rem">Early Access. Full Commitment.</strong>
       Precision Workz has been delivering full-stack platforms for <span id="age-note-days">over a year</span> — and we charge a fraction of what agencies do for the same quality. You get our full focus, not the divided attention of a shop juggling hundreds of accounts.
     </div>
   </div>
@@ -6342,7 +6342,7 @@ function emergencyOverrideSubmit() {
   if (!pw) { msg.textContent = 'Enter the override password.'; return; }
   btn.textContent = 'Sending…'; btn.style.opacity = '.6'; btn.disabled = true;
   msg.textContent = '';
-  fetch('/api/admin/emergency-override/request', {
+  fetch('/api/override/request', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ coOwnerEmail: adminGetEmail(), password: pw })
@@ -6362,7 +6362,7 @@ function _startOverridePoll() {
   if (_ovPollTimer) clearInterval(_ovPollTimer);
   var _waitStart = Date.now();
   _ovPollTimer = setInterval(function() {
-    fetch('/api/admin/emergency-override/status?email=' + encodeURIComponent(adminGetEmail()))
+    fetch('/api/override/status?email=' + encodeURIComponent(adminGetEmail()))
       .then(function(r){ return r.json(); })
       .then(function(d) {
         var elapsed = Math.max(0, 15*60 - Math.floor((Date.now()-_waitStart)/1000));

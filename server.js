@@ -1355,7 +1355,7 @@ async function handleAPI(req, res, urlPath) {
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
-  if (urlPath === '/api/admin/emergency-override/request' && req.method === 'POST') {
+  if (urlPath === '/api/override/request' && req.method === 'POST') {
     try {
       const body = await parseBody(req);
       const { coOwnerEmail, password } = body;
@@ -1366,7 +1366,7 @@ async function handleAPI(req, res, urlPath) {
       const token = Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
       const now = Date.now();
       await writeOverride({ token, requestedBy: key2, requestedAt: now, status: 'pending', acceptExpiry: now + 15 * 60 * 1000 });
-      const approvalUrl = 'https://precisionworkz.net/api/admin/emergency-override/approve?token=' + token;
+      const approvalUrl = 'https://precisionworkz.net/api/override/approve?token=' + token;
       sendEmail(PRIMARY_ADMIN, 'Emergency Override Request — Action Required',
         '<div style="font-family:Inter,sans-serif;max-width:580px;margin:0 auto;background:#04040d;color:#f1f5f9;padding:40px 32px;border-radius:16px;border:1px solid rgba(255,255,255,.07)">'
         + '<div style="font-family:Orbitron,monospace;font-weight:900;font-size:.9rem;letter-spacing:3px;text-transform:uppercase;background:linear-gradient(90deg,#f59e0b,#fbbf24,#d97706);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:20px">Precision Workz</div>'
@@ -1381,7 +1381,7 @@ async function handleAPI(req, res, urlPath) {
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
-  if (urlPath === '/api/admin/emergency-override/approve' && req.method === 'GET') {
+  if (urlPath === '/api/override/approve' && req.method === 'GET') {
     try {
       const token = (new URL('https://x' + req.url).searchParams.get('token') || '');
       const override = await readOverride();
@@ -1397,7 +1397,7 @@ async function handleAPI(req, res, urlPath) {
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
-  if (urlPath === '/api/admin/emergency-override/status' && req.method === 'GET') {
+  if (urlPath === '/api/override/status' && req.method === 'GET') {
     try {
       const email = (new URL('https://x' + req.url).searchParams.get('email') || '').toLowerCase();
       const override = await readOverride();
