@@ -1461,10 +1461,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <div class="hero-btns">
       <a href="#pricing" class="btn-primary">View Packages</a>
       <a href="#services" class="btn-ghost">See What We Do</a>
-      <button id="hero-demo-btn" class="btn-ghost" onclick="openDemoModal()" style="border-color:rgba(34,211,238,.35);color:var(--cyan2);display:flex;align-items:center;gap:8px;cursor:pointer;background:rgba(6,182,212,.06);font-family:inherit">
-        <span style="width:7px;height:7px;border-radius:50%;background:var(--cyan2);box-shadow:0 0 8px var(--cyan2);flex-shrink:0;display:inline-block"></span>
-        Schedule Free Demo
-      </button>
     </div>
     <div class="hero-terminal fade-up" style="transition-delay:.5s">
       <div class="term-bar">
@@ -3124,10 +3120,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   <div class="footer-copy">© 2026 Precision Workz · Arizona · Web Design · Security & Development</div>
 </footer>
 
-<button class="demo-fab" onclick="openDemoModal()">
-  <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;flex-shrink:0;animation:pulse-dot 2s infinite"></span>
-  Schedule Free Demo
-</button>
 
 <div class="demo-overlay" id="demo-overlay" onclick="if(event.target===this)closeDemoModal()">
   <div class="demo-box">
@@ -5556,13 +5548,17 @@ function showAccessRevokedPopup() {
 
 function startAccessPoll() {
   if (window._accessPollTimer) clearInterval(window._accessPollTimer);
+  var _failStreak = 0;
   window._accessPollTimer = setInterval(function() {
     var email = adminGetEmail();
     if (!email) return;
     fetch('/api/admin/data?adminEmail=' + encodeURIComponent(email))
       .then(function(r) { return r.json(); })
-      .then(function(d) { if (d.error) showAccessRevokedPopup(); })
-      .catch(function() {});
+      .then(function(d) {
+        if (d.error) { _failStreak++; if (_failStreak >= 2) showAccessRevokedPopup(); }
+        else { _failStreak = 0; }
+      })
+      .catch(function() { /* network hiccup — don't count as revoked */ });
   }, 12000);
 }
 
@@ -5834,7 +5830,7 @@ function adminSaveClient() {
       });
     }
     adminClearForm();
-    adminLoadData();
+    setTimeout(adminLoadData, 700);
   }).catch(function() {
     if (btn) { btn.disabled = false; btn.textContent = 'Save Client'; }
     showMsg('#f87171', 'Network error — check console.');
@@ -5872,7 +5868,7 @@ function adminRemoveClient(email) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ adminEmail: adminGetEmail(), targetEmail: email })
   }).then(function(r) { return r.json(); }).then(function(d) {
-    if (!d.error) adminLoadData();
+    if (!d.error) setTimeout(adminLoadData, 700);
   });
 }
 
@@ -5900,7 +5896,7 @@ function adminAddDev() {
     document.getElementById('adm-dev-email').value = '';
     if (nameEl) nameEl.value = '';
     if (levelEl) levelEl.value = 'low';
-    adminLoadData();
+    setTimeout(adminLoadData, 700);
   }).catch(function() { msgEl.style.color = '#f87171'; msgEl.textContent = 'Network error.'; });
 }
 
@@ -5911,7 +5907,7 @@ function adminRemoveDev(email) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ adminEmail: adminGetEmail(), targetEmail: email })
   }).then(function(r) { return r.json(); }).then(function(d) {
-    if (!d.error) adminLoadData();
+    if (!d.error) setTimeout(adminLoadData, 700);
   });
 }
 
@@ -6283,7 +6279,7 @@ function adminCoAction(id, type, devEmail) {
     if (d.error) { alert('Action failed: ' + d.error); return; }
     // Then send the reply to Oscar
     adminCoReply(id, replyText);
-    adminLoadData(); // refresh dev list
+    setTimeout(adminLoadData, 700);
   }).catch(function(){ alert('Network error — action not completed.'); });
 }
 
@@ -6301,7 +6297,7 @@ function adminApplyLevelRestrictions() {
   // Admin badge — level-specific label
   var badge = document.querySelector('.admin-badge');
   if (badge && !isCoOwner) {
-    var badgeLabels = { low: 'Low Privileges Admin', medium: 'Admin', max: 'Senior Admin', primary: 'Primary Admin' };
+    var badgeLabels = { low: 'Low Privileges Admin', medium: 'Admin', max: 'Senior Admin', primary: 'Owner' };
     var badgeColors = { low: 'linear-gradient(135deg,#15803d,#16a34a)', medium: 'linear-gradient(135deg,var(--purple),var(--cyan))', max: 'linear-gradient(135deg,#b91c1c,#dc2626)', primary: 'linear-gradient(135deg,var(--purple),var(--cyan))' };
     badge.textContent = badgeLabels[level] || 'Admin';
     badge.style.background = badgeColors[level] || 'linear-gradient(135deg,var(--purple),var(--cyan))';
@@ -6379,7 +6375,7 @@ function adminTab(tab) {
       vEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:16px;text-align:center">'
         + '<div style="font-size:2rem">🔒</div>'
         + '<div style="font-weight:800;color:var(--text)">Access Restricted</div>'
-        + '<div style="color:var(--muted);font-size:.88rem">Your current access level does not permit viewing this section.<br>Contact the primary admin to upgrade your access.</div>'
+        + '<div style="color:var(--muted);font-size:.88rem">Your current access level does not permit viewing this section.<br>Contact the owner to upgrade your access.</div>'
         + '</div>';
     }
     allTabs.forEach(function(t){ var btn=document.getElementById('atab-'+t); if(btn) btn.classList.toggle('active', t===tab); });
@@ -7179,8 +7175,17 @@ function checkAdminBtn(user) {
       if (ctaBanner) ctaBanner.style.display = isAdmin ? 'none' : '';
       if (isAdmin) {
         var isCO = !!(d.coOwner && user.email.toLowerCase() === d.coOwner.toLowerCase());
+        var isPrimaryOwner = !!(d.primaryAdmin && user.email.toLowerCase() === d.primaryAdmin.toLowerCase());
         window._isCoOwner = isCO;
         if (isCO) adminBtn.innerHTML = '<i class="ph-bold ph-shield-star" style="font-size:.85rem"></i> Co-Owner';
+        // Hide marketing elements for all devs except the owner
+        if (!isPrimaryOwner) {
+          var _navCta = document.getElementById('nav-cta-btn');
+          if (_navCta) _navCta.style.display = 'none';
+          var _contactSect = document.getElementById('contact');
+          if (_contactSect) _contactSect.style.display = 'none';
+          document.querySelectorAll('.glow-divider').forEach(function(el, i) { if (i === document.querySelectorAll('.glow-divider').length - 1) el.style.display = 'none'; });
+        }
         // Auto-open panel when arriving via email deep link
         if (new URLSearchParams(window.location.search).get('req')) openAdmin();
       } else {
