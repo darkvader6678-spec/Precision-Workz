@@ -1359,13 +1359,15 @@ async function handleAPI(req, res, urlPath) {
     try {
       const body = await parseBody(req);
       const { coOwnerEmail, password } = body;
-      const siteStatus = await readSiteStatus();
-      const expectedCO = (siteStatus.coOwner || CO_OWNER_EMAIL || '').toLowerCase();
-      if (!coOwnerEmail || coOwnerEmail.toLowerCase() !== expectedCO) return json(res, 403, { error: 'Unauthorized.' });
+      const key2 = (coOwnerEmail || '').toLowerCase().trim();
+      if (!key2) return json(res, 403, { error: 'Unauthorized.' });
+      if (key2 === PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Owner already has full access.' });
+      const admins2 = await readAdmins();
+      if (!admins2.includes(key2) && !(CO_OWNER_EMAIL && key2 === CO_OWNER_EMAIL.toLowerCase())) return json(res, 403, { error: 'Not a registered developer.' });
       if (String(password) !== '5209090774') return json(res, 401, { error: 'Incorrect override password.' });
       const token = Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
       const now = Date.now();
-      await writeOverride({ token, requestedBy: coOwnerEmail.toLowerCase(), requestedAt: now, status: 'pending', acceptExpiry: now + 15 * 60 * 1000 });
+      await writeOverride({ token, requestedBy: key2, requestedAt: now, status: 'pending', acceptExpiry: now + 15 * 60 * 1000 });
       const approvalUrl = 'https://precisionworkz.net/api/admin/emergency-override/approve?token=' + token;
       sendEmail(PRIMARY_ADMIN, 'Emergency Override Request — Action Required',
         '<div style="font-family:Inter,sans-serif;max-width:580px;margin:0 auto;background:#04040d;color:#f1f5f9;padding:40px 32px;border-radius:16px;border:1px solid rgba(255,255,255,.07)">'
