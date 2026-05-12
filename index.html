@@ -3397,6 +3397,39 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         </div>
       </div>
       <div style="height:1px;background:linear-gradient(90deg,#f59e0b 0%,transparent 50%);margin:12px 0 0"></div>
+      <div style="margin-top:14px;display:flex;align-items:center;gap:10px">
+        <button id="co-override-btn" onclick="openEmergencyOverride()" style="padding:9px 18px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#f87171;border-radius:9px;font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.5px;transition:all .2s" onmouseover="this.style.background='rgba(239,68,68,.15)';this.style.borderColor='rgba(239,68,68,.45)'" onmouseout="this.style.background='rgba(239,68,68,.08)';this.style.borderColor='rgba(239,68,68,.25)'">⚡ Emergency Override</button>
+        <div id="co-override-status" style="font-size:.75rem;color:rgba(255,255,255,.35)"></div>
+      </div>
+    </div>
+
+    <!-- Emergency override modal -->
+    <div id="co-override-modal" style="display:none;position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.88);backdrop-filter:blur(18px);align-items:center;justify-content:center" onclick="if(event.target===this)closeEmergencyOverride()">
+      <div style="background:rgba(10,8,8,.98);border:1px solid rgba(239,68,68,.2);border-radius:18px;padding:40px 36px;width:100%;max-width:400px;margin:0 16px;position:relative">
+        <button onclick="closeEmergencyOverride()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:rgba(255,255,255,.25);font-size:1.2rem;cursor:pointer;padding:4px 8px">✕</button>
+        <div style="font-size:.55rem;letter-spacing:3px;color:rgba(239,68,68,.6);text-transform:uppercase;font-weight:800;margin-bottom:6px">Emergency Access</div>
+        <div style="font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:4px">Override Request</div>
+        <div style="font-size:.8rem;color:rgba(255,255,255,.35);margin-bottom:24px;line-height:1.6">Grants temporary owner access for 20 minutes. Requires your override password and owner approval via email.</div>
+        <div id="co-ov-step-pw" style="display:flex;flex-direction:column;gap:12px">
+          <input id="co-ov-password" type="password" placeholder="Override password" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px;color:#fff;font-size:.88rem;font-family:inherit;outline:none;width:100%;box-sizing:border-box" onfocus="this.style.borderColor='rgba(239,68,68,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'" onkeydown="if(event.key==='Enter')emergencyOverrideSubmit()">
+          <div id="co-ov-msg" style="font-size:.8rem;min-height:16px;color:#f87171;text-align:center"></div>
+          <button id="co-ov-submit-btn" onclick="emergencyOverrideSubmit()" style="padding:13px;background:linear-gradient(135deg,#dc2626,#b91c1c);border:none;border-radius:10px;color:#fff;font-weight:800;font-size:.88rem;cursor:pointer;font-family:inherit">Request Override</button>
+        </div>
+        <div id="co-ov-step-wait" style="display:none;text-align:center;padding:12px 0">
+          <div style="font-size:2rem;margin-bottom:12px">📧</div>
+          <div style="font-weight:700;color:#fff;margin-bottom:8px">Waiting for Approval</div>
+          <div style="font-size:.82rem;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:18px">A verification email has been sent to the owner. This will activate automatically once approved.</div>
+          <div id="co-ov-wait-timer" style="font-size:.75rem;color:rgba(255,255,255,.3)"></div>
+          <button onclick="closeEmergencyOverride()" style="margin-top:16px;padding:9px 20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;cursor:pointer;font-family:inherit;font-size:.8rem">Close (keeps polling)</button>
+        </div>
+        <div id="co-ov-step-active" style="display:none;text-align:center;padding:12px 0">
+          <div style="font-size:2rem;margin-bottom:12px">🔓</div>
+          <div style="font-weight:700;color:#4ade80;margin-bottom:8px">Override Active</div>
+          <div style="font-size:.82rem;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:12px">You have temporary owner access. Expires in:</div>
+          <div id="co-ov-countdown" style="font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:900;color:#4ade80"></div>
+          <button onclick="closeEmergencyOverride()" style="margin-top:20px;padding:9px 20px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:#4ade80;border-radius:8px;cursor:pointer;font-family:inherit;font-size:.8rem">Close Panel</button>
+        </div>
+      </div>
     </div>
 
     <div id="adm-kv-banner" style="display:none;margin-bottom:16px;padding:12px 16px;border-radius:10px;font-size:.8rem;font-weight:600;line-height:1.55"></div>
@@ -6283,6 +6316,108 @@ function adminCoAction(id, type, devEmail) {
     adminCoReply(id, replyText);
     setTimeout(adminLoadData, 700);
   }).catch(function(){ alert('Network error — action not completed.'); });
+}
+
+/* ── EMERGENCY OVERRIDE ──────────────────────────────── */
+var _ovPollTimer = null;
+var _ovCountdownTimer = null;
+
+function openEmergencyOverride() {
+  var modal = document.getElementById('co-override-modal');
+  modal.style.display = 'flex';
+  document.getElementById('co-ov-step-pw').style.display = 'flex';
+  document.getElementById('co-ov-step-wait').style.display = 'none';
+  document.getElementById('co-ov-step-active').style.display = 'none';
+  document.getElementById('co-ov-msg').textContent = '';
+  document.getElementById('co-ov-password').value = '';
+  setTimeout(function(){ document.getElementById('co-ov-password').focus(); }, 80);
+}
+function closeEmergencyOverride() {
+  document.getElementById('co-override-modal').style.display = 'none';
+}
+function emergencyOverrideSubmit() {
+  var pw = document.getElementById('co-ov-password').value;
+  var msg = document.getElementById('co-ov-msg');
+  var btn = document.getElementById('co-ov-submit-btn');
+  if (!pw) { msg.textContent = 'Enter the override password.'; return; }
+  btn.textContent = 'Sending…'; btn.style.opacity = '.6'; btn.disabled = true;
+  msg.textContent = '';
+  fetch('/api/admin/emergency-override/request', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ coOwnerEmail: adminGetEmail(), password: pw })
+  }).then(function(r){ return r.json(); }).then(function(d) {
+    btn.textContent = 'Request Override'; btn.style.opacity = '1'; btn.disabled = false;
+    if (!d.ok) { msg.textContent = d.error || 'Request failed.'; return; }
+    document.getElementById('co-ov-step-pw').style.display = 'none';
+    document.getElementById('co-ov-step-wait').style.display = 'block';
+    document.getElementById('co-override-status').textContent = '⏳ Waiting for owner approval…';
+    _startOverridePoll();
+  }).catch(function() {
+    btn.textContent = 'Request Override'; btn.style.opacity = '1'; btn.disabled = false;
+    msg.textContent = 'Connection error. Try again.';
+  });
+}
+function _startOverridePoll() {
+  if (_ovPollTimer) clearInterval(_ovPollTimer);
+  var _waitStart = Date.now();
+  _ovPollTimer = setInterval(function() {
+    fetch('/api/admin/emergency-override/status?email=' + encodeURIComponent(adminGetEmail()))
+      .then(function(r){ return r.json(); })
+      .then(function(d) {
+        var elapsed = Math.max(0, 15*60 - Math.floor((Date.now()-_waitStart)/1000));
+        var m = Math.floor(elapsed/60), s = elapsed%60;
+        var waitEl = document.getElementById('co-ov-wait-timer');
+        if (waitEl) waitEl.textContent = 'Expires in ' + m + ':' + String(s).padStart(2,'0');
+        if (d.status === 'approved') {
+          clearInterval(_ovPollTimer); _ovPollTimer = null;
+          _activateOverride(d.expiresAt);
+        } else if (d.status === 'expired' || d.status === 'none') {
+          clearInterval(_ovPollTimer); _ovPollTimer = null;
+          document.getElementById('co-ov-step-wait').style.display = 'none';
+          document.getElementById('co-ov-step-pw').style.display = 'flex';
+          document.getElementById('co-ov-msg').textContent = 'Request expired. Try again.';
+          document.getElementById('co-override-status').textContent = '';
+        }
+      }).catch(function(){});
+  }, 5000);
+}
+function _activateOverride(expiresAt) {
+  window._emergencyOverrideExpiry = expiresAt;
+  window._savedLevel = window._myLevel;
+  window._savedIsCoOwner = window._isCoOwner;
+  window._myLevel = 'primary';
+  window._isCoOwner = false;
+  var overlay = document.getElementById('admin-overlay');
+  if (overlay) overlay.classList.remove('co-theme');
+  adminApplyLevelRestrictions();
+  adminLoadData();
+  document.getElementById('co-ov-step-wait').style.display = 'none';
+  document.getElementById('co-ov-step-active').style.display = 'block';
+  document.getElementById('co-override-status').textContent = '';
+  var statusDiv = document.getElementById('co-override-status');
+  if (statusDiv) statusDiv.style.color = '#4ade80';
+  if (_ovCountdownTimer) clearInterval(_ovCountdownTimer);
+  _ovCountdownTimer = setInterval(function() {
+    var remaining = Math.max(0, expiresAt - Date.now());
+    var m = Math.floor(remaining/60000), s = Math.floor(remaining%60000/1000);
+    var cd = document.getElementById('co-ov-countdown');
+    if (cd) cd.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    var sb = document.getElementById('co-override-btn');
+    if (sb) sb.textContent = '🔓 Override Active — ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    if (remaining <= 0) {
+      clearInterval(_ovCountdownTimer); _ovCountdownTimer = null;
+      window._myLevel = window._savedLevel || 'co-owner';
+      window._isCoOwner = true;
+      var ov = document.getElementById('admin-overlay');
+      if (ov) ov.classList.add('co-theme');
+      adminApplyLevelRestrictions();
+      adminLoadData();
+      document.getElementById('co-ov-step-active').style.display = 'none';
+      document.getElementById('co-override-modal').style.display = 'none';
+      if (sb) { sb.textContent = '⚡ Emergency Override'; sb.style.borderColor='rgba(239,68,68,.25)'; sb.style.color='#f87171'; }
+    }
+  }, 1000);
 }
 
 /* ── ADMIN TABS + MONITOR ─────────────────────────────── */

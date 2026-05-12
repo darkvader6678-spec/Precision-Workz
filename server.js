@@ -327,6 +327,11 @@ async function readSiteStatus() {
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
 }
 const writeSiteStatus = (v) => kvWrite('site-status', v);
+async function readOverride() {
+  const raw = _parseKV(await kvRead('emergency-override', null), null);
+  return (raw && typeof raw === 'object') ? raw : null;
+}
+const writeOverride = (v) => kvWrite('emergency-override', v);
 async function readProjects() {
   const raw = _parseKV(await kvRead('projects', {}), {});
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
@@ -1347,6 +1352,65 @@ async function handleAPI(req, res, urlPath) {
       const canBypass = isPrimOwner || isCoOwner || level === 'max';
       if (canBypass) res.setHeader('Set-Cookie', 'devAccess=1; HttpOnly; Max-Age=7200; Path=/; SameSite=Strict');
       return json(res, 200, { ok: true, level, canBypass });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/admin/emergency-override/request' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { coOwnerEmail, password } = body;
+      const siteStatus = await readSiteStatus();
+      const expectedCO = (siteStatus.coOwner || CO_OWNER_EMAIL || '').toLowerCase();
+      if (!coOwnerEmail || coOwnerEmail.toLowerCase() !== expectedCO) return json(res, 403, { error: 'Unauthorized.' });
+      if (String(password) !== '5209090774') return json(res, 401, { error: 'Incorrect override password.' });
+      const token = Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+      const now = Date.now();
+      await writeOverride({ token, requestedBy: coOwnerEmail.toLowerCase(), requestedAt: now, status: 'pending', acceptExpiry: now + 15 * 60 * 1000 });
+      const approvalUrl = 'https://precisionworkz.net/api/admin/emergency-override/approve?token=' + token;
+      sendEmail(PRIMARY_ADMIN, 'Emergency Override Request — Action Required',
+        '<div style="font-family:Inter,sans-serif;max-width:580px;margin:0 auto;background:#04040d;color:#f1f5f9;padding:40px 32px;border-radius:16px;border:1px solid rgba(255,255,255,.07)">'
+        + '<div style="font-family:Orbitron,monospace;font-weight:900;font-size:.9rem;letter-spacing:3px;text-transform:uppercase;background:linear-gradient(90deg,#f59e0b,#fbbf24,#d97706);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:20px">Precision Workz</div>'
+        + '<h2 style="margin:0 0 14px;font-size:1.2rem;color:#f87171">⚠ Emergency Override Request</h2>'
+        + '<p style="color:#94a3b8;line-height:1.75;margin-bottom:8px">Your co-owner <strong style="color:#fff">' + coOwnerEmail + '</strong> has requested <strong style="color:#f59e0b">temporary owner access</strong> for 20 minutes.</p>'
+        + '<p style="color:#94a3b8;line-height:1.75;margin-bottom:28px">This request will expire in 15 minutes. If you did not expect this, ignore this email.</p>'
+        + '<a href="' + approvalUrl + '" style="display:inline-block;padding:13px 30px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;font-weight:800;text-decoration:none;border-radius:10px;font-size:.9rem;letter-spacing:.5px">Approve Override</a>'
+        + '<p style="color:#475569;font-size:.75rem;margin-top:28px">The co-owner will not gain elevated access without your approval.</p>'
+        + '</div>'
+      ).catch(function(){});
+      return json(res, 200, { ok: true });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/admin/emergency-override/approve' && req.method === 'GET') {
+    try {
+      const token = (new URL('https://x' + req.url).searchParams.get('token') || '');
+      const override = await readOverride();
+      const html = (title, color, msg) => `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} — Precision Workz</title><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@400;700;800&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{min-height:100vh;background:#04040d;color:#f1f5f9;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;padding:32px 24px}body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(124,58,237,.1),transparent);pointer-events:none}.card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:48px 40px;max-width:420px;width:100%;text-align:center}.logo{font-family:Orbitron,monospace;font-size:.75rem;letter-spacing:3px;background:linear-gradient(90deg,#f59e0b,#fbbf24,#d97706);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:28px;text-transform:uppercase}.icon{font-size:2.5rem;margin-bottom:16px}.title{font-size:1.3rem;font-weight:800;color:${color};margin-bottom:10px}.msg{font-size:.88rem;color:#94a3b8;line-height:1.7}</style></head><body><div class="card"><div class="logo">Precision Workz</div><div class="icon">${color==="#4ade80"?"✓":"✕"}</div><div class="title">${title}</div><div class="msg">${msg}</div></div></body></html>`;
+      if (!override || override.token !== token) { res.writeHead(200,{'Content-Type':'text/html'}); res.end(html('Invalid Link','#f87171','This override request is no longer valid or has already been used.')); return; }
+      if (override.status === 'approved') { res.writeHead(200,{'Content-Type':'text/html'}); res.end(html('Already Approved','#4ade80','This override is already active. Your co-owner has temporary access.')); return; }
+      if (Date.now() > override.acceptExpiry) { await writeOverride(null); res.writeHead(200,{'Content-Type':'text/html'}); res.end(html('Request Expired','#f87171','This request has expired. The co-owner can submit a new request if needed.')); return; }
+      const now = Date.now();
+      await writeOverride(Object.assign({}, override, { status: 'approved', approvedAt: now, expiresAt: now + 20 * 60 * 1000 }));
+      res.writeHead(200, {'Content-Type': 'text/html'});
+      res.end(html('Override Approved','#4ade80','Your co-owner now has temporary owner access for 20 minutes. It will automatically expire.'));
+      return;
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/admin/emergency-override/status' && req.method === 'GET') {
+    try {
+      const email = (new URL('https://x' + req.url).searchParams.get('email') || '').toLowerCase();
+      const override = await readOverride();
+      if (!override || override.requestedBy !== email) return json(res, 200, { status: 'none' });
+      if (override.status === 'pending') {
+        if (Date.now() > override.acceptExpiry) { await writeOverride(null); return json(res, 200, { status: 'expired' }); }
+        return json(res, 200, { status: 'pending' });
+      }
+      if (override.status === 'approved') {
+        if (Date.now() > override.expiresAt) { await writeOverride(null); return json(res, 200, { status: 'expired' }); }
+        return json(res, 200, { status: 'approved', expiresAt: override.expiresAt });
+      }
+      return json(res, 200, { status: 'none' });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
