@@ -7192,6 +7192,17 @@ function checkAdminBtn(user) {
 
 /* ── INIT ON LOAD ─────────────────────────────────────────── */
 (function(){
+  /* dev portal session from maintenance page bypass */
+  try {
+    var devSess = JSON.parse(sessionStorage.getItem('_devSession') || 'null');
+    if (devSess && devSess.email) {
+      sessionStorage.removeItem('_devSession');
+      window._devLoginEmail = devSess.email;
+      window._myLevel = devSess.level || 'low';
+      window._isCoOwner = (devSess.level === 'co-owner');
+      setTimeout(openAdmin, 400);
+    }
+  } catch(e) {}
   /* restore saved auth state */
   var user=getUserData();
   if(user){
