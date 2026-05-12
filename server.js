@@ -1372,9 +1372,10 @@ async function handleAPI(req, res, urlPath) {
         + '<div style="font-family:Orbitron,monospace;font-weight:900;font-size:.9rem;letter-spacing:3px;text-transform:uppercase;background:linear-gradient(90deg,#f59e0b,#fbbf24,#d97706);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:20px">Precision Workz</div>'
         + '<h2 style="margin:0 0 14px;font-size:1.2rem;color:#f87171">⚠ Emergency Override Request</h2>'
         + '<p style="color:#94a3b8;line-height:1.75;margin-bottom:8px">Your co-owner <strong style="color:#fff">' + coOwnerEmail + '</strong> has requested <strong style="color:#f59e0b">temporary owner access</strong> for 20 minutes.</p>'
-        + '<p style="color:#94a3b8;line-height:1.75;margin-bottom:28px">This request will expire in 15 minutes. If you did not expect this, ignore this email.</p>'
-        + '<a href="' + approvalUrl + '" style="display:inline-block;padding:13px 30px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;font-weight:800;text-decoration:none;border-radius:10px;font-size:.9rem;letter-spacing:.5px">Approve Override</a>'
-        + '<p style="color:#475569;font-size:.75rem;margin-top:28px">The co-owner will not gain elevated access without your approval.</p>'
+        + '<p style="color:#94a3b8;line-height:1.75;margin-bottom:4px">Just click the button below — that\'s all you need to do. No login required.</p>'
+        + '<p style="color:#94a3b8;line-height:1.75;margin-bottom:28px;font-size:.82rem">This request expires in 15 minutes. If you didn\'t expect this, ignore the email.</p>'
+        + '<a href="' + approvalUrl + '" style="display:inline-block;padding:15px 36px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;font-weight:800;text-decoration:none;border-radius:10px;font-size:1rem;letter-spacing:.5px">✓ Yes, Approve Access</a>'
+        + '<p style="color:#475569;font-size:.75rem;margin-top:28px">One click is all it takes. The co-owner gains access automatically and it expires after 20 minutes.</p>'
         + '</div>'
       ).catch(function(){});
       return json(res, 200, { ok: true });
@@ -1392,7 +1393,7 @@ async function handleAPI(req, res, urlPath) {
       const now = Date.now();
       await writeOverride(Object.assign({}, override, { status: 'approved', approvedAt: now, expiresAt: now + 20 * 60 * 1000 }));
       res.writeHead(200, {'Content-Type': 'text/html'});
-      res.end(html('Override Approved','#4ade80','Your co-owner now has temporary owner access for 20 minutes. It will automatically expire.'));
+      res.end(html('Access Approved','#4ade80','Done. Your co-owner now has temporary owner access for 20 minutes — it expires automatically. You can close this tab.'));
       return;
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
