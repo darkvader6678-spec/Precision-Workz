@@ -321,7 +321,12 @@ async function readAdminNames() {
   const raw = _parseKV(await kvRead('admin-names', {}), {});
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
 }
-const writeAdminNames = (v) => kvWrite('admin-names', v);
+const writeAdminNames  = (v) => kvWrite('admin-names', v);
+async function readSiteStatus() {
+  const raw = _parseKV(await kvRead('site-status', {}), {});
+  return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+}
+const writeSiteStatus = (v) => kvWrite('site-status', v);
 async function readProjects() {
   const raw = _parseKV(await kvRead('projects', {}), {});
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
@@ -464,6 +469,40 @@ function sendWelcomeEmail(toEmail, name) {
       '</div>'
     ].join('')
   }).catch(function(e){ console.error('[Email] Welcome email failed for', toEmail, '—', e.message); });
+}
+
+function sendPasswordResetEmail(toEmail, token) {
+  if (!nodemailer || !GMAIL_USER || !GMAIL_PASS) return Promise.resolve();
+  const link = SITE_URL + '/reset-password?token=' + token;
+  const transporter = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: GMAIL_USER, pass: GMAIL_PASS } });
+  return transporter.sendMail({
+    from: '"Precision Workz" <' + GMAIL_USER + '>',
+    to: toEmail,
+    subject: 'Reset your Precision Workz password',
+    text: 'Click the link below to reset your password. This link expires in 1 hour.\n\n' + link + '\n\nIf you did not request this, ignore this email.',
+    html: [
+      '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#ffffff;border-radius:12px;border:1px solid #e2e8f0">',
+      '<h2 style="font-size:1.3rem;font-weight:800;color:#0f172a;margin:0 0 10px">Reset your password</h2>',
+      '<p style="color:#475569;line-height:1.7;margin:0 0 24px;font-size:.92rem">Click the button below to set a new password. This link expires in <strong>1 hour</strong>.</p>',
+      '<table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:24px"><tr><td style="background:#7c3aed;border-radius:10px">',
+      '<a href="' + link + '" style="display:inline-block;padding:13px 28px;color:#fff;font-weight:700;font-size:.92rem;text-decoration:none;border-radius:10px">Reset Password &#8594;</a>',
+      '</td></tr></table>',
+      '<p style="color:#64748b;font-size:.8rem;margin:0 0 8px">Button not working? Copy this link:</p>',
+      '<p style="margin:0"><a href="' + link + '" style="color:#7c3aed;font-size:.78rem;word-break:break-all">' + link + '</a></p>',
+      '<hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">',
+      '<p style="color:#94a3b8;font-size:.75rem;margin:0">If you did not request a password reset, ignore this email — your password will not change.</p>',
+      '</div>'
+    ].join('')
+  }).catch(function(e){ console.error('[Email] Reset email failed for', toEmail, e.message); });
+}
+
+function serveResetPage(res, token, user) {
+  res.writeHead(200, { 'Content-Type': 'text/html' });
+  res.end('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reset Password — Precision Workz</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,system-ui,sans-serif;background:#04040d;color:#f1f5f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}.box{background:linear-gradient(145deg,#0d0d26,#121232);border:1px solid rgba(124,58,237,.35);border-radius:24px;padding:40px 36px;max-width:420px;width:100%}h2{font-size:1.5rem;font-weight:800;margin-bottom:8px}p{color:#94a3b8;font-size:.88rem;line-height:1.7;margin-bottom:22px}label{display:block;font-size:.78rem;font-weight:600;color:#94a3b8;margin-bottom:6px}input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#f1f5f9;padding:12px 14px;font-size:.9rem;outline:none;margin-bottom:14px;font-family:inherit}input:focus{border-color:rgba(124,58,237,.5)}button{width:100%;padding:13px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#06b6d4);color:#fff;font-weight:700;font-size:.92rem;border:none;cursor:pointer;font-family:inherit}.msg{margin-top:12px;font-size:.84rem;text-align:center}.ok{color:#4ade80}.err{color:#f87171}.back{display:block;margin-top:18px;text-align:center;color:#22d3ee;font-size:.82rem;text-decoration:none}</style></head><body><div class="box"><h2>Set New Password</h2><p>For <strong style="color:#22d3ee">' + user.email + '</strong></p><label>New Password</label><input type="password" id="pw1" placeholder="At least 8 characters"><label>Confirm Password</label><input type="password" id="pw2" placeholder="Repeat password"><button onclick="go()">Save New Password →</button><div class="msg" id="m"></div><a class="back" href="/">← Back to site</a></div><script>async function go(){var p1=document.getElementById("pw1").value,p2=document.getElementById("pw2").value,m=document.getElementById("m");if(p1.length<8){m.className="msg err";m.textContent="Password must be at least 8 characters.";return}if(p1!==p2){m.className="msg err";m.textContent="Passwords do not match.";return}m.className="msg";m.textContent="Saving...";var r=await fetch("/api/reset-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:"' + token + '",password:p1})});var d=await r.json();if(d.ok){m.className="msg ok";m.textContent="Password updated! Redirecting...";setTimeout(function(){window.location="/"},1800);}else{m.className="msg err";m.textContent=d.error||"Something went wrong.";}}</script></body></html>');
+}
+
+function buildMaintenancePage(msg) {
+  return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Down for Maintenance — Precision Workz</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,system-ui,sans-serif;background:#04040d;color:#f1f5f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}.box{max-width:480px;width:100%}.icon{font-size:3rem;margin-bottom:24px}.title{font-size:2rem;font-weight:900;letter-spacing:-1px;margin-bottom:12px}.sub{color:#94a3b8;font-size:.95rem;line-height:1.75;margin-bottom:8px}.brand{font-size:.8rem;color:rgba(255,255,255,.25);margin-top:40px;letter-spacing:2px;text-transform:uppercase}</style></head><body><div class="box"><div class="icon">🔧</div><div class="title">Back Soon</div><div class="sub">' + (msg || 'We\'re making some improvements. Check back in a few minutes.') + '</div><div class="brand">Precision Workz</div></div></body></html>';
 }
 
 async function sendEmail(to, subject, html) {
@@ -1151,6 +1190,7 @@ async function handleAPI(req, res, urlPath) {
         platform:         process.platform,
         ips:              ipList.slice(0, 100),
         analytics:        { events: analytics.events || {}, totalPageviews: analytics.totalPageviews || 0, lastUpdated: analytics.lastUpdated || null },
+        siteStatus:       await readSiteStatus(),
       });
     }
 
@@ -1158,6 +1198,14 @@ async function handleAPI(req, res, urlPath) {
       if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Co-owner or primary admin access required' });
       await writeAnalytics({});
       return json(res, 200, { ok: true });
+    }
+
+    if (urlPath === '/api/admin/site-control' && req.method === 'POST') {
+      if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Owner or Co-Owner access required' });
+      const { maintenance, message } = body;
+      await writeSiteStatus({ maintenance: !!maintenance, message: (message || '').slice(0, 200), updatedAt: new Date().toISOString(), updatedBy: body.adminEmail });
+      console.log('[Site Control] Maintenance mode', maintenance ? 'ENABLED' : 'DISABLED', 'by', body.adminEmail);
+      return json(res, 200, { ok: true, maintenance: !!maintenance });
     }
 
     return json(res, 404, { error: 'admin route not found' });
@@ -1279,6 +1327,50 @@ async function handleAPI(req, res, urlPath) {
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
+  if (urlPath === '/api/client-project') {
+    const qs = new URLSearchParams(req.url.split('?')[1] || '');
+    const email = (qs.get('email') || '').toLowerCase().trim();
+    if (!email) return json(res, 400, { error: 'email required' });
+    const projects = await readProjects();
+    const project = Object.values(projects).find(p => p.clientEmail && p.clientEmail.toLowerCase() === email) || null;
+    return json(res, 200, { project });
+  }
+
+  if (urlPath === '/api/forgot-password' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const key = ((body.email) || '').toLowerCase().trim();
+      if (key) {
+        const users = await readUsers();
+        if (users[key] && users[key].verified) {
+          const token = crypto.randomBytes(32).toString('hex');
+          users[key].resetToken = token;
+          users[key].resetExpiry = Date.now() + 3600000;
+          await writeUsers(users);
+          sendPasswordResetEmail(key, token).catch(function(){});
+        }
+      }
+      return json(res, 200, { ok: true });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/reset-password' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { token, password } = body;
+      if (!token || !password || password.length < 8) return json(res, 400, { error: 'Invalid request' });
+      const users = await readUsers();
+      const key = Object.keys(users).find(k => users[k].resetToken === token);
+      if (!key) return json(res, 400, { error: 'Invalid or expired link' });
+      if (Date.now() > (users[key].resetExpiry || 0)) return json(res, 400, { error: 'Link expired — request a new one' });
+      users[key].password = await hashPassword(password);
+      users[key].resetToken = null;
+      users[key].resetExpiry = null;
+      await writeUsers(users);
+      return json(res, 200, { ok: true });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
   return json(res, 404, { error: 'not found' });
 }
 
@@ -1304,6 +1396,20 @@ async function handler(req, res) {
       console.error('[API error]', urlPath, e.message);
       if (!res.headersSent) json(res, 500, { error: 'Internal server error' });
     });
+    return;
+  }
+
+  if (urlPath === '/reset-password') {
+    const qs = new URLSearchParams(req.url.split('?')[1] || '');
+    const token = qs.get('token') || '';
+    const users = await readUsers();
+    const key = Object.keys(users).find(k => users[k].resetToken === token);
+    if (!key || !token || Date.now() > (users[key].resetExpiry || 0)) {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Precision Workz</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,sans-serif;background:#04040d;color:#f1f5f9;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}.box{background:#0d0d26;border:1px solid rgba(124,58,237,.3);border-radius:16px;padding:36px;max-width:400px;width:100%;text-align:center}h2{margin-bottom:10px}p{color:#94a3b8;font-size:.88rem;line-height:1.6;margin-bottom:20px}a{color:#22d3ee;font-size:.85rem;text-decoration:none}</style></head><body><div class="box"><h2>Link Expired</h2><p>This password reset link has expired or already been used. Return to the site and request a new one.</p><a href="/">← Back to site</a></div></body></html>');
+      return;
+    }
+    serveResetPage(res, token, users[key]);
     return;
   }
 
@@ -1339,6 +1445,18 @@ async function handler(req, res) {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end(`User-agent: *\nAllow: /\n\nUser-agent: GPTBot\nAllow: /\n\nUser-agent: OAI-SearchBot\nAllow: /\n\nUser-agent: PerplexityBot\nAllow: /\n\nUser-agent: ClaudeBot\nAllow: /\n\nUser-agent: CCBot\nDisallow: /\n\nSitemap: https://precisionworkz.net/sitemap.xml`);
     return;
+  }
+
+  // Maintenance mode — blocks HTML pages, allows assets/API
+  if (!path.extname(urlPath) || urlPath === '/' || urlPath === '') {
+    try {
+      const status = await readSiteStatus();
+      if (status && status.maintenance) {
+        res.writeHead(503, { 'Content-Type': 'text/html' });
+        res.end(buildMaintenancePage(status.message));
+        return;
+      }
+    } catch(e) {}
   }
 
   if (urlPath === '/' || urlPath === '') urlPath = '/index.html';

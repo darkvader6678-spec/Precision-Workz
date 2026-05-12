@@ -3240,7 +3240,15 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <div class="form-group"><label for="ef-email-login">Email</label><input type="email" id="ef-email-login" placeholder="you@company.com" autocomplete="email"></div>
       <div class="form-group"><label for="ef-password-login">Password</label><input type="password" id="ef-password-login" placeholder="Your password" autocomplete="current-password"></div>
       <button class="email-signin-btn" onclick="emailLogin()">Log In →</button>
+      <div style="text-align:center;margin-top:10px"><button onclick="efSwitch('forgot')" style="background:none;border:none;color:var(--dim);font-size:.78rem;cursor:pointer;font-family:inherit;padding:0">Forgot password?</button></div>
       <div class="ef-msg" id="ef-login-msg"></div>
+    </div>
+    <div class="email-fallback-form" id="ef-forgot-form" style="display:none">
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px;line-height:1.6">Enter your email and we'll send a reset link that expires in 1 hour.</p>
+      <div class="form-group"><label for="ef-email-forgot">Email</label><input type="email" id="ef-email-forgot" placeholder="you@company.com" autocomplete="email"></div>
+      <button class="email-signin-btn" onclick="sendForgotPassword()">Send Reset Link →</button>
+      <div style="text-align:center;margin-top:10px"><button onclick="efSwitch('login')" style="background:none;border:none;color:var(--dim);font-size:.78rem;cursor:pointer;font-family:inherit;padding:0">← Back to Log In</button></div>
+      <div class="ef-msg" id="ef-forgot-msg"></div>
     </div>
     <div class="email-fallback-form" id="ef-register-form" style="display:none">
       <div class="form-group"><label for="ef-email-register">Email</label><input type="email" id="ef-email-register" placeholder="you@company.com" autocomplete="email"></div>
@@ -3809,6 +3817,20 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
           <span style="font-size:.75rem;color:var(--dim)">Total pageviews: <b style="color:var(--text)" id="mon-analytics-pv">—</b></span>
           <button class="admin-btn ghost" style="font-size:.7rem;padding:4px 12px;margin-left:auto;color:#f87171;border-color:rgba(239,68,68,.3)" onclick="monResetAnalytics()">Reset Analytics</button>
         </div>
+      </div>
+
+      <!-- Site Controls -->
+      <div class="mon-card" style="margin-top:12px;border-color:rgba(239,68,68,.2)">
+        <div class="mon-card-title" style="color:#f87171">Site Controls</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">
+          <div style="font-size:.8rem;color:var(--muted)">Status: <span id="mon-site-status-badge" style="font-weight:700;color:#4ade80">Online</span></div>
+          <button id="mon-shutdown-btn" class="admin-btn danger" style="padding:8px 18px;font-size:.8rem" onclick="monToggleMaintenance()">Take Site Offline</button>
+        </div>
+        <div style="margin-top:12px">
+          <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Maintenance Message (optional)</div>
+          <input id="mon-maint-msg" class="admin-input" placeholder="e.g. Back in 30 minutes — making some improvements." style="font-size:.8rem;max-width:420px">
+        </div>
+        <div id="mon-site-ctrl-msg" style="margin-top:8px;font-size:.8rem"></div>
       </div>
 
       </div><!-- end mon-content -->
@@ -4846,8 +4868,20 @@ function handleGoogleCredential(response){
 function efSwitch(tab){
   document.getElementById('ef-login-form').style.display=tab==='login'?'':'none';
   document.getElementById('ef-register-form').style.display=tab==='register'?'':'none';
+  var ff=document.getElementById('ef-forgot-form');if(ff)ff.style.display=tab==='forgot'?'':'none';
   document.getElementById('ef-tab-login').classList.toggle('active',tab==='login');
   document.getElementById('ef-tab-register').classList.toggle('active',tab==='register');
+}
+async function sendForgotPassword(){
+  var email=(document.getElementById('ef-email-forgot').value||'').trim();
+  var msg=document.getElementById('ef-forgot-msg');
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){msg.className='ef-msg err';msg.textContent='Enter a valid email address.';return;}
+  msg.className='ef-msg';msg.textContent='Sending…';
+  try{
+    await fetch('/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    msg.className='ef-msg ok';msg.textContent='✓ If that email has an account, a reset link is on its way.';
+    document.getElementById('ef-email-forgot').value='';
+  }catch(e){msg.className='ef-msg err';msg.textContent='Connection error — try again.';}
 }
 async function emailLogin(){
   var email=(document.getElementById('ef-email-login').value||'').trim();
@@ -4998,21 +5032,22 @@ function renderDashboard(user){
     var pkgLabel={'titanium':'Titanium','diamond':'Diamond','premium':'Premium','starter':'Starter'}[pkg]||(pkg.charAt(0).toUpperCase()+pkg.slice(1));
     var pkgClass='pkg-'+pkg;
     var pkgNameStyle='';
-    var pkgDetail='';
+    var pkgFeatures=[];
     if(pkg==='titanium'){
       pkgNameStyle='background:linear-gradient(135deg,#e2e8f0,#94a3b8,#cbd5e1,#f1f5f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:1.1rem';
-      pkgDetail='Custom design + full-stack build + security hardening';
+      pkgFeatures=['Fully custom design — no templates','Full-stack development & API integrations','Security hardening & threat protection','Sentinel lockdown & audit trail','SEO architecture from day one','6 months of post-launch support'];
     } else if(pkg==='diamond'){
       pkgNameStyle='background:linear-gradient(135deg,#06b6d4,#818cf8,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:1.05rem';
-      pkgDetail='Advanced site + security layer + CMS + priority support';
+      pkgFeatures=['Advanced multi-page website','Full security infrastructure layer','Content management system (CMS)','Priority support & faster response times','IP intelligence & rate limiting','SEO + performance optimization'];
     } else if(pkg==='premium'){
       pkgNameStyle='background:linear-gradient(135deg,#7c3aed,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent';
-      pkgDetail='Professional site with custom features + SEO';
+      pkgFeatures=['Professional custom-designed website','Custom features & interactive elements','On-page SEO setup','3 months of post-launch support','Mobile-first responsive layouts'];
     } else {
       pkgNameStyle='color:#818cf8';
-      pkgDetail='Starter project package';
+      pkgFeatures=['Clean, professional starter site','Mobile-responsive layout','Basic contact form & setup','30-day launch support'];
     }
-    pkgHtml='<div><div class="acct-section-label">Project Package</div><div class="acct-pkg-card '+pkgClass+'"><div class="acct-sub-name" style="'+pkgNameStyle+'">'+pkgLabel+' Package</div><div class="acct-sub-detail" style="margin-bottom:0">'+pkgDetail+'</div></div></div>';
+    var featHtml=pkgFeatures.map(function(f){return '<div style="display:flex;align-items:flex-start;gap:8px;font-size:.8rem;color:var(--muted);margin-bottom:5px"><span style="color:#4ade80;margin-top:1px;flex-shrink:0">✓</span>'+escHtml(f)+'</div>';}).join('');
+    pkgHtml='<div><div class="acct-section-label">Project Package</div><div class="acct-pkg-card '+pkgClass+'" id="acct-pkg-card"><div class="acct-sub-name" style="'+pkgNameStyle+'">'+pkgLabel+' Package</div><div style="margin-top:12px">'+featHtml+'</div><div id="acct-project-name" style="margin-top:12px;display:none"><div style="font-size:.68rem;font-weight:700;letter-spacing:.5px;color:var(--dim);text-transform:uppercase;margin-bottom:4px">Your Project</div><div style="font-size:.88rem;color:var(--cyan2);font-weight:600" id="acct-project-name-val"></div></div></div></div>';
   }
 
   /* request panel — hidden for owners/co-owners */
@@ -5065,8 +5100,9 @@ function renderDashboard(user){
       + '</div></div>';
   }
 
+  var memberSince = user.addedAt ? 'Member since ' + new Date(user.addedAt).toLocaleDateString('en-US',{month:'long',year:'numeric'}) : '';
   body.innerHTML=
-    '<div class="acct-user-card">'+avHtml+'<div><div class="acct-user-name-lg">'+user.name+'</div><div class="acct-user-email-lg">'+user.email+'</div></div></div>'+
+    '<div class="acct-user-card">'+avHtml+'<div><div class="acct-user-name-lg">'+escHtml(user.name)+'</div><div class="acct-user-email-lg">'+escHtml(user.email)+'</div>'+(memberSince?'<div style="font-size:.72rem;color:var(--dim);margin-top:3px">'+escHtml(memberSince)+'</div>':'')+'</div></div>'+
     '<div><div class="acct-section-label">Subscription</div>'+subHtml+'</div>'+
     pkgHtml+
     progressHtml+
@@ -5074,7 +5110,24 @@ function renderDashboard(user){
     (_isAdminUser?'':'<div><div class="acct-section-label" style="margin-bottom:8px">My Requests</div><div id="client-req-list"><p style="color:var(--dim);font-size:.82rem;text-align:center;padding:16px">Loading…</p></div></div>')+
     '<button class="acct-signout-btn" onclick="signOut()">Sign Out</button>';
 
-  if(!_isAdminUser) loadClientRequests(user.email);
+  if(!_isAdminUser) {
+    loadClientRequests(user.email);
+    if(pkg) loadClientProject(user.email);
+  }
+}
+
+function loadClientProject(email) {
+  fetch('/api/client-project?email='+encodeURIComponent(email))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d.project) return;
+      var nameEl = document.getElementById('acct-project-name');
+      var valEl  = document.getElementById('acct-project-name-val');
+      if(nameEl && valEl && d.project.name){
+        valEl.textContent = d.project.name;
+        nameEl.style.display = '';
+      }
+    }).catch(function(){});
 }
 
 function signOut(){clearUserData();updateAuthUI(null);closeDashboard()}
@@ -6723,9 +6776,39 @@ function monRender(d) {
     if (clkEl) clkEl.innerHTML = renderAnalyticRows(clickEntries, 'click:');
   }
 
+  // Site status
+  if (d.siteStatus) {
+    var isMaint = !!d.siteStatus.maintenance;
+    var badge = document.getElementById('mon-site-status-badge');
+    var btn = document.getElementById('mon-shutdown-btn');
+    var msgInp = document.getElementById('mon-maint-msg');
+    if (badge) { badge.textContent = isMaint ? 'Maintenance' : 'Online'; badge.style.color = isMaint ? '#f87171' : '#4ade80'; }
+    if (btn) { btn.textContent = isMaint ? 'Bring Site Back Online' : 'Take Site Offline'; btn.style.background = isMaint ? 'rgba(74,222,128,.12)' : ''; btn.style.borderColor = isMaint ? 'rgba(74,222,128,.3)' : ''; btn.style.color = isMaint ? '#4ade80' : ''; }
+    if (msgInp && !msgInp.value && d.siteStatus.message) msgInp.value = d.siteStatus.message;
+  }
+
   // Last refresh time
   el = document.getElementById('mon-last-refresh');
   if (el) el.textContent = 'Last refresh: ' + new Date().toLocaleTimeString();
+}
+
+function monToggleMaintenance() {
+  var badge = document.getElementById('mon-site-status-badge');
+  var isMaint = badge && badge.textContent === 'Maintenance';
+  var newState = !isMaint;
+  var msg = (document.getElementById('mon-maint-msg') || {}).value || '';
+  if (newState && !confirm('Take the site offline? Visitors will see a maintenance page.')) return;
+  var ctrlMsg = document.getElementById('mon-site-ctrl-msg');
+  if (ctrlMsg) { ctrlMsg.style.color = 'var(--dim)'; ctrlMsg.textContent = newState ? 'Taking offline…' : 'Bringing back online…'; }
+  fetch('/api/admin/site-control', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminEmail: adminGetEmail(), maintenance: newState, message: msg })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.error) { if(ctrlMsg){ctrlMsg.style.color='#f87171';ctrlMsg.textContent='Error: '+d.error;} return; }
+    if (ctrlMsg) { ctrlMsg.style.color = newState ? '#f87171' : '#4ade80'; ctrlMsg.textContent = newState ? '⚠ Site is now in maintenance mode' : '✓ Site is back online'; }
+    monRefresh();
+  }).catch(function(){ if(ctrlMsg){ctrlMsg.style.color='#f87171';ctrlMsg.textContent='Network error.';} });
 }
 
 function monResetAnalytics() {
@@ -6971,6 +7054,7 @@ function checkAdminBtn(user) {
           user.sub=d.client.sub||null;
           user.billing=d.client.billing||'monthly';
           user.packageType=d.client.packageType||null;
+          if(d.client.addedAt) user.addedAt=d.client.addedAt;
           setUserData(user);
           updateAuthUI(user);
         }
