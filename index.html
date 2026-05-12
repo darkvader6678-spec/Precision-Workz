@@ -3820,17 +3820,52 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
 
       <!-- Site Controls -->
-      <div class="mon-card" style="margin-top:12px;border-color:rgba(239,68,68,.2)">
+      <div class="mon-card" style="margin-top:12px;border-color:rgba(239,68,68,.18)">
         <div class="mon-card-title" style="color:#f87171">Site Controls</div>
-        <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">
-          <div style="font-size:.8rem;color:var(--muted)">Status: <span id="mon-site-status-badge" style="font-weight:700;color:#4ade80">Online</span></div>
-          <button id="mon-shutdown-btn" class="admin-btn danger" style="padding:8px 18px;font-size:.8rem" onclick="monToggleMaintenance()">Take Site Offline</button>
+
+        <!-- Current status row -->
+        <div style="display:flex;align-items:center;gap:14px;margin-top:12px;flex-wrap:wrap">
+          <div style="font-size:.82rem;color:var(--muted)">Status: <span id="mon-site-status-badge" style="font-weight:700;color:#4ade80">Online</span></div>
+          <div id="mon-sched-info" style="font-size:.75rem;color:#fbbf24;display:none"></div>
         </div>
-        <div style="margin-top:12px">
-          <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Maintenance Message (optional)</div>
-          <input id="mon-maint-msg" class="admin-input" placeholder="e.g. Back in 30 minutes — making some improvements." style="font-size:.8rem;max-width:420px">
+
+        <!-- Message -->
+        <div style="margin-top:14px">
+          <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Maintenance Message</div>
+          <input id="mon-maint-msg" class="admin-input" placeholder="e.g. Back in 30 minutes — making some improvements." style="font-size:.8rem;max-width:440px">
         </div>
-        <div id="mon-site-ctrl-msg" style="margin-top:8px;font-size:.8rem"></div>
+
+        <!-- Manual toggle -->
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button id="mon-shutdown-btn" class="admin-btn danger" style="padding:9px 20px;font-size:.8rem" onclick="monToggleMaintenance()">Take Site Offline</button>
+          <span style="font-size:.72rem;color:var(--dim)">Takes effect immediately</span>
+        </div>
+
+        <!-- Scheduled shutdown -->
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.06)">
+          <div style="font-size:.72rem;color:var(--dim);font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:12px">Schedule a Shutdown</div>
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+            <div>
+              <div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Date &amp; Time</div>
+              <input id="mon-sched-dt" class="admin-input" type="datetime-local" style="font-size:.8rem;max-width:210px">
+            </div>
+            <div>
+              <div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Duration</div>
+              <select id="mon-sched-dur" class="admin-input" style="font-size:.8rem;max-width:150px;cursor:pointer">
+                <option value="15">15 minutes</option>
+                <option value="30" selected>30 minutes</option>
+                <option value="60">1 hour</option>
+                <option value="120">2 hours</option>
+                <option value="240">4 hours</option>
+                <option value="480">8 hours</option>
+              </select>
+            </div>
+            <button class="admin-btn primary" style="padding:9px 18px;font-size:.8rem;align-self:flex-end" onclick="monScheduleShutdown()">Schedule</button>
+            <button class="admin-btn ghost" style="padding:9px 14px;font-size:.8rem;align-self:flex-end" onclick="monClearSchedule()">Clear</button>
+          </div>
+        </div>
+
+        <div id="mon-site-ctrl-msg" style="margin-top:10px;font-size:.8rem"></div>
       </div>
 
       </div><!-- end mon-content -->
@@ -6778,13 +6813,49 @@ function monRender(d) {
 
   // Site status
   if (d.siteStatus) {
-    var isMaint = !!d.siteStatus.maintenance;
-    var badge = document.getElementById('mon-site-status-badge');
-    var btn = document.getElementById('mon-shutdown-btn');
-    var msgInp = document.getElementById('mon-maint-msg');
-    if (badge) { badge.textContent = isMaint ? 'Maintenance' : 'Online'; badge.style.color = isMaint ? '#f87171' : '#4ade80'; }
-    if (btn) { btn.textContent = isMaint ? 'Bring Site Back Online' : 'Take Site Offline'; btn.style.background = isMaint ? 'rgba(74,222,128,.12)' : ''; btn.style.borderColor = isMaint ? 'rgba(74,222,128,.3)' : ''; btn.style.color = isMaint ? '#4ade80' : ''; }
-    if (msgInp && !msgInp.value && d.siteStatus.message) msgInp.value = d.siteStatus.message;
+    var ss = d.siteStatus;
+    var now2 = Date.now();
+    var schedStart2 = ss.scheduledStart ? new Date(ss.scheduledStart).getTime() : 0;
+    var schedEnd2   = schedStart2 + (ss.scheduledDuration || 0) * 60000;
+    var isScheduledNow = schedStart2 && now2 >= schedStart2 && now2 <= schedEnd2;
+    var isScheduledFuture = schedStart2 && now2 < schedStart2;
+    var isMaint2 = !!ss.maintenance || isScheduledNow;
+    var badge2 = document.getElementById('mon-site-status-badge');
+    var btn2   = document.getElementById('mon-shutdown-btn');
+    var msgInp2 = document.getElementById('mon-maint-msg');
+    var schedInfo = document.getElementById('mon-sched-info');
+    if (badge2) {
+      badge2.textContent = isMaint2 ? 'Maintenance' : (isScheduledFuture ? 'Online (shutdown scheduled)' : 'Online');
+      badge2.style.color = isMaint2 ? '#f87171' : (isScheduledFuture ? '#fbbf24' : '#4ade80');
+    }
+    if (btn2) {
+      var inMaint = !!ss.maintenance;
+      btn2.textContent = inMaint ? 'Bring Site Back Online' : 'Take Site Offline';
+      btn2.style.cssText = inMaint ? 'padding:9px 20px;font-size:.8rem;background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#4ade80' : 'padding:9px 20px;font-size:.8rem';
+    }
+    if (msgInp2 && !msgInp2.value && ss.message) msgInp2.value = ss.message;
+    if (schedInfo) {
+      if (isScheduledFuture) {
+        schedInfo.textContent = 'Scheduled: ' + new Date(ss.scheduledStart).toLocaleString() + ' · ' + ss.scheduledDuration + ' min';
+        schedInfo.style.display = '';
+      } else if (isScheduledNow) {
+        schedInfo.textContent = 'Active scheduled window — ends ' + new Date(schedEnd2).toLocaleTimeString();
+        schedInfo.style.display = '';
+      } else {
+        schedInfo.style.display = 'none';
+      }
+    }
+    // Pre-fill schedule datetime if set
+    var dtInp = document.getElementById('mon-sched-dt');
+    var durInp = document.getElementById('mon-sched-dur');
+    if (dtInp && !dtInp.value && ss.scheduledStart) {
+      var d2 = new Date(ss.scheduledStart);
+      dtInp.value = d2.getFullYear()+'-'+String(d2.getMonth()+1).padStart(2,'0')+'-'+String(d2.getDate()).padStart(2,'0')+'T'+String(d2.getHours()).padStart(2,'0')+':'+String(d2.getMinutes()).padStart(2,'0');
+    }
+    if (durInp && ss.scheduledDuration) {
+      var opt = durInp.querySelector('option[value="'+ss.scheduledDuration+'"]');
+      if (opt) opt.selected = true;
+    }
   }
 
   // Last refresh time
@@ -6792,23 +6863,43 @@ function monRender(d) {
   if (el) el.textContent = 'Last refresh: ' + new Date().toLocaleTimeString();
 }
 
-function monToggleMaintenance() {
-  var badge = document.getElementById('mon-site-status-badge');
-  var isMaint = badge && badge.textContent === 'Maintenance';
-  var newState = !isMaint;
-  var msg = (document.getElementById('mon-maint-msg') || {}).value || '';
-  if (newState && !confirm('Take the site offline? Visitors will see a maintenance page.')) return;
+function _monSitePost(body, successMsg, errorFn) {
   var ctrlMsg = document.getElementById('mon-site-ctrl-msg');
-  if (ctrlMsg) { ctrlMsg.style.color = 'var(--dim)'; ctrlMsg.textContent = newState ? 'Taking offline…' : 'Bringing back online…'; }
+  if (ctrlMsg) { ctrlMsg.style.color = 'var(--dim)'; ctrlMsg.textContent = 'Saving…'; }
   fetch('/api/admin/site-control', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ adminEmail: adminGetEmail(), maintenance: newState, message: msg })
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({ adminEmail: adminGetEmail() }, body))
   }).then(function(r){ return r.json(); }).then(function(d){
     if (d.error) { if(ctrlMsg){ctrlMsg.style.color='#f87171';ctrlMsg.textContent='Error: '+d.error;} return; }
-    if (ctrlMsg) { ctrlMsg.style.color = newState ? '#f87171' : '#4ade80'; ctrlMsg.textContent = newState ? '⚠ Site is now in maintenance mode' : '✓ Site is back online'; }
+    if (ctrlMsg && successMsg) { ctrlMsg.style.color='#4ade80'; ctrlMsg.textContent=successMsg; }
     monRefresh();
   }).catch(function(){ if(ctrlMsg){ctrlMsg.style.color='#f87171';ctrlMsg.textContent='Network error.';} });
+}
+
+function monToggleMaintenance() {
+  var badge = document.getElementById('mon-site-status-badge');
+  var isMaint = badge && badge.textContent.indexOf('Maintenance') !== -1;
+  var newState = !isMaint;
+  var msg = (document.getElementById('mon-maint-msg') || {}).value || '';
+  if (newState && !confirm('Take the site offline? Visitors will see the maintenance page.')) return;
+  var ctrlMsg = document.getElementById('mon-site-ctrl-msg');
+  if (ctrlMsg) { ctrlMsg.style.color='var(--dim)'; ctrlMsg.textContent = newState ? 'Taking offline…' : 'Bringing back online…'; }
+  _monSitePost({ maintenance: newState, message: msg }, newState ? '⚠ Site is offline — maintenance page is live' : '✓ Site is back online');
+}
+
+function monScheduleShutdown() {
+  var dt   = document.getElementById('mon-sched-dt').value;
+  var dur  = parseInt(document.getElementById('mon-sched-dur').value, 10);
+  var msg  = (document.getElementById('mon-maint-msg') || {}).value || '';
+  if (!dt) { var c=document.getElementById('mon-site-ctrl-msg'); if(c){c.style.color='#f87171';c.textContent='Pick a date and time first.';} return; }
+  var ts = new Date(dt).toISOString();
+  var end = new Date(new Date(dt).getTime() + dur*60000).toLocaleString();
+  if (!confirm('Schedule maintenance from ' + new Date(dt).toLocaleString() + ' for ' + dur + ' minutes (ends ' + end + ')?')) return;
+  _monSitePost({ scheduledStart: ts, scheduledDuration: dur, message: msg }, '✓ Shutdown scheduled — visitors will see maintenance page during that window');
+}
+
+function monClearSchedule() {
+  _monSitePost({ clearSchedule: true }, '✓ Scheduled shutdown cleared');
 }
 
 function monResetAnalytics() {
