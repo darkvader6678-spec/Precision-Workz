@@ -1482,6 +1482,7 @@ async function handler(req, res) {
   }
 
   // Maintenance mode — blocks HTML pages, allows assets/API
+  let _clearDevCookie = false;
   if (!path.extname(urlPath) || urlPath === '/' || urlPath === '') {
     try {
       const status = await readSiteStatus();
@@ -1498,6 +1499,8 @@ async function handler(req, res) {
         res.end(buildMaintenancePage({ message: status.message, endTime: isScheduled ? schedEnd : 0, isScheduled }));
         return;
       }
+      // Cookie is valid — clear it immediately so reload returns to maintenance
+      if (hasDevAccess) _clearDevCookie = true;
     } catch(e) {}
   }
 
@@ -1508,11 +1511,15 @@ async function handler(req, res) {
     if (err) {
       fs.readFile(path.join(DIR, 'index.html'), function(e2, d2) {
         if (e2) { res.writeHead(404); res.end('Not found'); return; }
-        res.writeHead(200, { 'Content-Type': 'text/html' }); res.end(d2);
+        const hdrs = { 'Content-Type': 'text/html' };
+        if (_clearDevCookie) hdrs['Set-Cookie'] = 'devAccess=; Max-Age=0; Path=/; SameSite=Strict';
+        res.writeHead(200, hdrs); res.end(d2);
       });
       return;
     }
-    res.writeHead(200, { 'Content-Type': mime }); res.end(data);
+    const hdrs = { 'Content-Type': mime };
+    if (_clearDevCookie) hdrs['Set-Cookie'] = 'devAccess=; Max-Age=0; Path=/; SameSite=Strict';
+    res.writeHead(200, hdrs); res.end(data);
   });
 }
 
