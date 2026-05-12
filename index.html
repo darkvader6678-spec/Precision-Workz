@@ -3445,16 +3445,45 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <div class="admin-section">
       <div class="admin-section-title">Developer Access</div>
       <div id="adm-devs-list" style="margin-bottom:14px"></div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap" id="adm-add-dev-row">
-        <input class="admin-input" id="adm-dev-email" type="email" placeholder="developer@email.com" style="max-width:240px">
-        <select class="admin-input" id="adm-dev-level" style="max-width:150px;cursor:pointer">
-          <option value="low">Low Access</option>
-          <option value="medium">Medium Access</option>
-          <option value="max">Max Access</option>
-        </select>
-        <button class="admin-btn primary" onclick="adminAddDev()">Add Developer</button>
+      <div style="display:none;flex-direction:column;gap:10px" id="adm-add-dev-row">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+          <div>
+            <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Email *</div>
+            <input class="admin-input" id="adm-dev-email" type="email" placeholder="developer@email.com" style="max-width:220px">
+          </div>
+          <div>
+            <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Name (optional)</div>
+            <input class="admin-input" id="adm-dev-name" type="text" placeholder="e.g. Oscar" style="max-width:160px">
+          </div>
+          <div>
+            <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Access Level</div>
+            <select class="admin-input" id="adm-dev-level" style="max-width:150px;cursor:pointer">
+              <option value="low">Low Access</option>
+              <option value="medium">Medium Access</option>
+              <option value="max">Max Access</option>
+            </select>
+          </div>
+          <button class="admin-btn primary" style="align-self:flex-end" onclick="adminAddDev()">Add Developer</button>
+        </div>
+        <div class="admin-msg" id="adm-dev-msg"></div>
+        <details style="margin-top:4px">
+          <summary style="font-size:.72rem;color:var(--dim);cursor:pointer;user-select:none;font-weight:600;letter-spacing:.3px">Access Level Guide ›</summary>
+          <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:.78rem">
+            <div style="padding:10px 14px;background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.15);border-radius:8px">
+              <div style="color:#4ade80;font-weight:700;margin-bottom:4px">Low Access</div>
+              <div style="color:var(--muted);line-height:1.6">✓ View client list (emails masked) &nbsp;·&nbsp; ✓ Reports &nbsp;·&nbsp; ✓ Monitor &nbsp;·&nbsp; ✓ Projects<br>✗ Edit clients &nbsp;·&nbsp; ✗ Delete clients &nbsp;·&nbsp; ✗ Add clients &nbsp;·&nbsp; ✗ Progress</div>
+            </div>
+            <div style="padding:10px 14px;background:rgba(251,146,60,.05);border:1px solid rgba(251,146,60,.15);border-radius:8px">
+              <div style="color:#fb923c;font-weight:700;margin-bottom:4px">Medium Access</div>
+              <div style="color:var(--muted);line-height:1.6">✓ Everything in Low &nbsp;·&nbsp; ✓ Edit clients &nbsp;·&nbsp; ✓ Add projects<br>✗ Delete clients &nbsp;·&nbsp; ✗ Add clients &nbsp;·&nbsp; ✗ Progress</div>
+            </div>
+            <div style="padding:10px 14px;background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.15);border-radius:8px">
+              <div style="color:#f87171;font-weight:700;margin-bottom:4px">Max Access</div>
+              <div style="color:var(--muted);line-height:1.6">✓ Everything in Medium &nbsp;·&nbsp; ✓ Delete clients &nbsp;·&nbsp; ✓ Add clients &nbsp;·&nbsp; ✓ Progress<br>✗ Add/remove developers &nbsp;·&nbsp; ✗ Owner-only controls</div>
+            </div>
+          </div>
+        </details>
       </div>
-      <div class="admin-msg" id="adm-dev-msg"></div>
     </div>
 
     <div class="admin-section">
@@ -5442,8 +5471,6 @@ function adminLoadData() {
       var _myEml = adminGetEmail().toLowerCase();
       var _isCO = !!(d.coOwner && _myEml === d.coOwner.toLowerCase());
       window._isCoOwner = _isCO;
-      var _subtitle = document.getElementById('admin-panel-subtitle');
-      if (_subtitle) _subtitle.textContent = _isCO ? '— Co-Owner Panel' : '— Control Panel';
       var _cleanBtn = document.querySelector('[onclick="adminCleanDB()"]');
       if (_cleanBtn) _cleanBtn.style.display = _isCO ? 'none' : '';
       var _isPrimary = _myEml === (d.primaryAdmin||'').toLowerCase();
@@ -5459,7 +5486,15 @@ function adminLoadData() {
       if (inboxEl) inboxEl.style.display = _isPrimary ? '' : 'none';
       if (composeEl) composeEl.style.display = !_isPrimary ? '' : 'none';
       adminRenderStats(d.clients);
-      adminRenderDevs(d.admins, d.primaryAdmin, d.coOwner, d.adminLevels || {});
+      adminRenderDevs(d.admins, d.primaryAdmin, d.coOwner, d.adminLevels || {}, d.adminNames || {});
+      // Show greeting with dev's name if one is set
+      var _myName = (d.adminNames || {})[_myEml] || (d.adminNames || {})[adminGetEmail()] || '';
+      var _subtitle = document.getElementById('admin-panel-subtitle');
+      if (_subtitle) {
+        if (_isCO) _subtitle.textContent = '— Co-Owner Panel';
+        else if (_myName && !_isPrimary) _subtitle.textContent = '— Welcome, ' + _myName.split(' ')[0];
+        else _subtitle.textContent = '— Control Panel';
+      }
       // Populate remove-dev dropdown for co-owner
       if (_isCO) {
         var remSel = document.getElementById('co-dev-remove-select');
@@ -5488,7 +5523,7 @@ function adminRenderStats(clients) {
   document.getElementById('adm-stat-pkgs').textContent  = pkgs;
 }
 
-function adminRenderDevs(admins, primary, coOwner, levels) {
+function adminRenderDevs(admins, primary, coOwner, levels, names) {
   var list = document.getElementById('adm-devs-list');
   var myEmail = adminGetEmail().toLowerCase();
   var isPrimary = myEmail === (primary || '').toLowerCase();
@@ -5496,9 +5531,11 @@ function adminRenderDevs(admins, primary, coOwner, levels) {
   if (addRow) addRow.style.display = isPrimary ? 'flex' : 'none';
 
   list.innerHTML = admins.map(function(email) {
-    var isP = email.toLowerCase() === (primary || '').toLowerCase();
-    var isCO = coOwner && email.toLowerCase() === coOwner.toLowerCase();
-    var isMe = email.toLowerCase() === myEmail;
+    var eKey = email.toLowerCase();
+    var isP = eKey === (primary || '').toLowerCase();
+    var isCO = coOwner && eKey === coOwner.toLowerCase();
+    var isMe = eKey === myEmail;
+    var devName = (names && (names[eKey] || names[email])) || '';
     var removeBtn = (!isP && !isCO && isPrimary)
       ? '<button class="admin-btn danger" style="padding:5px 12px;font-size:.75rem" onclick="adminRemoveDev(\''+email+'\')">Remove</button>'
       : '';
@@ -5509,15 +5546,19 @@ function adminRenderDevs(admins, primary, coOwner, levels) {
         : '<span style="font-size:.72rem;color:var(--dim)">Developer</span>';
     var lvlBadge = '';
     if (!isP && !isCO && levels) {
-      var lvl = (levels[email.toLowerCase()] || levels[email] || 'low');
+      var lvl = (levels[eKey] || levels[email] || 'low');
       var lvlClr = lvl === 'max' ? '#f87171' : lvl === 'medium' ? '#fb923c' : '#4ade80';
       var lvlBg  = lvl === 'max' ? 'rgba(239,68,68,.12)' : lvl === 'medium' ? 'rgba(251,146,60,.12)' : 'rgba(74,222,128,.1)';
       var lvlTxt = lvl === 'max' ? 'Max Access' : lvl === 'medium' ? 'Medium' : 'Low';
       lvlBadge = '<span style="font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:6px;background:'+lvlBg+';color:'+lvlClr+';text-transform:uppercase;letter-spacing:.5px;margin-left:4px">'+lvlTxt+'</span>';
     }
     var displayEmail = isPrimary ? email : (isMe ? email + ' <span style="font-size:.65rem;color:var(--cyan2)">(you)</span>' : maskEmail(email));
+    var nameTag = devName ? '<span style="font-size:.75rem;color:var(--cyan2);font-weight:600;margin-left:2px">' + escHtml(devName) + '</span>' : '';
     return '<div class="admin-dev-row">'
+      + '<div style="display:flex;flex-direction:column;gap:2px;flex:1">'
       + '<span class="admin-dev-email">' + displayEmail + '</span>'
+      + (nameTag ? nameTag : '')
+      + '</div>'
       + badge
       + lvlBadge
       + removeBtn
@@ -5563,7 +5604,7 @@ function adminFilterTable() {
       + '<td style="color:var(--dim);font-size:.8rem">' + added + '</td>'
       + '<td style="display:flex;gap:6px">'
         + (['medium','max','primary'].includes(window._myLevel) && !window._isCoOwner ? '<button class="admin-btn ghost" style="padding:5px 10px;font-size:.75rem" onclick="adminEditRow(\'' + k + '\')">Edit</button>' : '')
-        + (['medium','max','primary'].includes(window._myLevel) && !window._isCoOwner ? '<button class="admin-btn danger" style="padding:5px 10px;font-size:.75rem" onclick="adminRemoveClient(\'' + k + '\')">Remove</button>' : '')
+        + (['max','primary'].includes(window._myLevel) && !window._isCoOwner ? '<button class="admin-btn danger" style="padding:5px 10px;font-size:.75rem" onclick="adminRemoveClient(\'' + k + '\')">Remove</button>' : '')
       + '</td>'
       + '</tr>';
   }).join('');
@@ -5690,6 +5731,8 @@ function adminRemoveClient(email) {
 
 function adminAddDev() {
   var email  = (document.getElementById('adm-dev-email').value || '').trim();
+  var nameEl = document.getElementById('adm-dev-name');
+  var name   = nameEl ? (nameEl.value || '').trim() : '';
   var levelEl = document.getElementById('adm-dev-level');
   var level  = levelEl ? levelEl.value : 'low';
   var msgEl  = document.getElementById('adm-dev-msg');
@@ -5703,11 +5746,12 @@ function adminAddDev() {
   fetch('/api/admin/add-admin', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ adminEmail: adminGetEmail(), newEmail: email, level: level })
+    body: JSON.stringify({ adminEmail: adminGetEmail(), newEmail: email, level: level, name: name || null })
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.error) { msgEl.style.color = '#f87171'; msgEl.textContent = d.error; return; }
-    msgEl.style.color = '#4ade80'; msgEl.textContent = '✓ Developer added (' + level + ' access)';
+    msgEl.style.color = '#4ade80'; msgEl.textContent = '✓ Developer added (' + level + ' access)' + (name ? ' — ' + name : '');
     document.getElementById('adm-dev-email').value = '';
+    if (nameEl) nameEl.value = '';
     if (levelEl) levelEl.value = 'low';
     adminLoadData();
   }).catch(function() { msgEl.style.color = '#f87171'; msgEl.textContent = 'Network error.'; });
@@ -5834,7 +5878,7 @@ function maskPhone(p) {
   return d.length >= 10 ? '(' + d.slice(0,3) + ') •••-••••' : '•'.repeat(Math.min(p.length,10));
 }
 function _canSeeSensitive() {
-  return ['max','primary'].includes(window._myLevel) && !window._isCoOwner;
+  return ['max','primary','co-owner'].includes(window._myLevel);
 }
 function maskDetails(details) {
   if (!details) return details;
@@ -6136,6 +6180,9 @@ function adminApplyLevelRestrictions() {
   // Dev management row: primary only
   var devRow = document.getElementById('adm-add-dev-row');
   if (devRow) devRow.style.display = isPrimary ? 'flex' : 'none';
+  // Also clear the password error msg so it never bleeds into other views
+  var devMsg = document.getElementById('adm-dev-msg');
+  if (devMsg && !isPrimary) devMsg.textContent = '';
 
   // Hide public-facing CTAs for non-primary devs
   if (!isPrimary) {

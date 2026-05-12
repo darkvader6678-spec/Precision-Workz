@@ -317,6 +317,11 @@ async function readAdminLevels() {
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
 }
 const writeAdminLevels = (v) => kvWrite('admin-levels', v);
+async function readAdminNames() {
+  const raw = _parseKV(await kvRead('admin-names', {}), {});
+  return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+}
+const writeAdminNames = (v) => kvWrite('admin-names', v);
 async function readProjects() {
   const raw = _parseKV(await kvRead('projects', {}), {});
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
@@ -710,11 +715,11 @@ async function handleAPI(req, res, urlPath) {
     if (!await isAdmin(body.adminEmail)) return json(res, 403, { error: 'Forbidden' });
 
     if (urlPath === '/api/admin/data') {
-      const [clients, admins, adminLevels, projects] = await Promise.all([readClients(), readAdmins(), readAdminLevels(), readProjects()]);
+      const [clients, admins, adminLevels, adminNames, projects] = await Promise.all([readClients(), readAdmins(), readAdminLevels(), readAdminNames(), readProjects()]);
       const coLow = (CO_OWNER_EMAIL || '').toLowerCase();
       const allAdmins = [...new Set([PRIMARY_ADMIN, ...(CO_OWNER_EMAIL ? [CO_OWNER_EMAIL] : []), ...admins.filter(a => a.toLowerCase() !== PRIMARY_ADMIN.toLowerCase() && a.toLowerCase() !== coLow)])];
       const myLevel = await getAdminLevel(body.adminEmail);
-      return json(res, 200, { clients, admins: allAdmins, primaryAdmin: PRIMARY_ADMIN, coOwner: CO_OWNER_EMAIL || null, adminLevels, myLevel, projects });
+      return json(res, 200, { clients, admins: allAdmins, primaryAdmin: PRIMARY_ADMIN, coOwner: CO_OWNER_EMAIL || null, adminLevels, adminNames, myLevel, projects });
     }
 
     if (urlPath === '/api/admin/requests') {
@@ -939,7 +944,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/remove-client' && req.method === 'POST') {
-      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'medium')) return json(res, 403, { error: 'Medium access or higher required', permissionDenied: true });
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'max')) return json(res, 403, { error: 'Max access or higher required', permissionDenied: true });
       try {
         const { targetEmail } = body;
         if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
@@ -972,6 +977,11 @@ async function handleAPI(req, res, urlPath) {
           levels[key] = level;
           await writeAdminLevels(levels);
         }
+        if (body.name && typeof body.name === 'string') {
+          const names = await readAdminNames();
+          names[key] = body.name.trim().slice(0, 60);
+          await writeAdminNames(names);
+        }
         return json(res, 200, { ok: true, admins });
       } catch(e) { return json(res, 500, { error: e.message }); }
     }
@@ -982,11 +992,15 @@ async function handleAPI(req, res, urlPath) {
           return json(res, 403, { error: 'Only the primary admin can remove developers' });
         }
         const { targetEmail } = body;
+        const key = (targetEmail||'').toLowerCase();
         const admins = (await readAdmins()).filter(e =>
-          e.toLowerCase() !== (targetEmail||'').toLowerCase() && e.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()
+          e.toLowerCase() !== key && e.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()
         );
         admins.unshift(PRIMARY_ADMIN);
         await writeAdmins(admins);
+        const names = await readAdminNames();
+        delete names[key];
+        await writeAdminNames(names);
         return json(res, 200, { ok: true, admins });
       } catch(e) { return json(res, 500, { error: e.message }); }
     }
