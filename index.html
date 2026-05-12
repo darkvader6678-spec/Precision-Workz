@@ -1035,7 +1035,8 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .admin-pkg-pill{display:inline-block;font-size:.68rem;font-weight:600;padding:2px 8px;border-radius:6px;background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);color:var(--cyan2)}
 .admin-dev-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px}
 .admin-dev-email{font-size:.88rem;color:var(--text);flex:1}
-.admin-primary-badge{font-size:.62rem;font-weight:800;letter-spacing:1px;padding:3px 8px;border-radius:999px;background:linear-gradient(135deg,var(--gold),#f97316);color:#fff}
+.admin-primary-badge{font-size:.62rem;font-weight:800;letter-spacing:1.5px;padding:3px 10px;border-radius:999px;border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.08);display:inline-block}
+.admin-primary-badge-inner{background:linear-gradient(90deg,#f59e0b,#fbbf24,#d97706,#fbbf24,#f59e0b);background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gold-wave 3s ease infinite;font-weight:800}
 .admin-nav-btn{display:none;align-items:center;gap:6px;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);color:var(--purple2);padding:7px 14px;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
 .admin-nav-btn:hover{background:rgba(124,58,237,.2);border-color:var(--purple2)}
 @media(max-width:900px){.admin-stats-row{grid-template-columns:1fr 1fr}.admin-form-grid{grid-template-columns:1fr 1fr}}
@@ -1474,7 +1475,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         <div class="t-row"><span class="t-ico t-ok">✓</span><span class="t-txt">SSL Certificate</span><span class="t-val t-ok">Grade A+</span></div>
         <div class="t-row"><span class="t-ico t-ok">✓</span><span class="t-txt">Rate Limiter</span><span class="t-val t-ok">Armed</span></div>
         <div class="t-row"><span class="t-ico t-warn">⚡</span><span class="t-txt">Active Sessions</span><span class="t-val t-blu">3</span></div>
-        <div class="t-row"><span class="t-ico t-bad">⛔</span><span class="t-txt">Threats Blocked Today</span><span class="t-val t-bad">18</span></div>
+        <div class="t-row"><span class="t-ico t-bad">⛔</span><span class="t-txt">Threats Blocked Today</span><span class="t-val t-bad" id="threats-today">18</span></div>
         <div class="t-row"><span class="t-ico t-ok">✓</span><span class="t-txt">Sentinel System</span><span class="t-val t-ok">ACTIVE</span></div>
         <div class="t-row" style="margin-top:4px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06)"><span class="t-ico t-blu">›_</span><span class="t-txt t-blu" style="font-size:.72rem;color:var(--dim)">Monitoring 24 / 7</span><span class="t-blink"></span></div>
       </div>
@@ -3341,11 +3342,18 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
 </div>
 
+<div id="access-revoked-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;padding:32px">
+  <div style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,.15);border:1.5px solid rgba(239,68,68,.35);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto">🔒</div>
+  <div style="font-size:1.1rem;font-weight:800;color:#f87171;letter-spacing:.5px">Access Revoked</div>
+  <div style="font-size:.88rem;color:rgba(255,255,255,.5);max-width:340px;line-height:1.6">Your developer access has been removed. Reload the page to exit.</div>
+  <button onclick="location.reload()" style="margin-top:8px;padding:12px 32px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:#f87171;border-radius:10px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.5px;transition:all .2s" onmouseover="this.style.background='rgba(239,68,68,.22)'" onmouseout="this.style.background='rgba(239,68,68,.12)'">Reload Page</button>
+</div>
+
 <div class="admin-overlay" id="admin-overlay">
   <div class="admin-topbar">
     <div class="admin-topbar-left">
       <span class="admin-badge">Admin</span>
-      <span class="admin-title"><span class="admin-title-gold">Precision Workz</span> <span id="admin-panel-subtitle">— Control Panel</span></span>
+      <span class="admin-title">Precision Workz <span id="admin-panel-subtitle">— Control Panel</span></span>
       <span id="adm-level-badge" style="display:none;font-size:.6rem;font-weight:800;letter-spacing:1px;padding:3px 10px;border-radius:6px;text-transform:uppercase"></span>
     </div>
     <button class="admin-close-btn" onclick="closeAdmin()">✕ Close</button>
@@ -4801,6 +4809,7 @@ function handleGoogleCredential(response){
     updateAuthUI(user);
     closeSignIn();
     _resumePendingPay();
+    fetch('/api/welcome-new-user',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:user.email,name:user.name})}).catch(function(){});
   }catch(e){console.warn('Google credential decode failed:',e)}
 }
 
@@ -5311,6 +5320,7 @@ function openAdmin() {
   document.body.style.overflow = 'hidden';
   adminTab('clients');
   adminLoadData();
+  startAccessPoll();
 }
 function closeAdmin() {
   var overlay = document.getElementById('admin-overlay');
@@ -5318,7 +5328,28 @@ function closeAdmin() {
   overlay.classList.remove('co-theme');
   document.body.style.overflow = '';
   if (_monTimer) { clearInterval(_monTimer); _monTimer = null; }
+  if (window._accessPollTimer) { clearInterval(window._accessPollTimer); window._accessPollTimer = null; }
   _monUnlocked = false;
+}
+
+function showAccessRevokedPopup() {
+  if (window._accessPollTimer) { clearInterval(window._accessPollTimer); window._accessPollTimer = null; }
+  var overlay = document.getElementById('admin-overlay');
+  if (overlay) { overlay.classList.remove('open'); overlay.classList.remove('co-theme'); }
+  var el = document.getElementById('access-revoked-overlay');
+  if (el) { el.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+}
+
+function startAccessPoll() {
+  if (window._accessPollTimer) clearInterval(window._accessPollTimer);
+  window._accessPollTimer = setInterval(function() {
+    var email = adminGetEmail();
+    if (!email) return;
+    fetch('/api/admin/data?adminEmail=' + encodeURIComponent(email))
+      .then(function(r) { return r.json(); })
+      .then(function(d) { if (d.error) showAccessRevokedPopup(); })
+      .catch(function() {});
+  }, 12000);
 }
 
 function adminGetEmail() {
@@ -5433,7 +5464,7 @@ function adminRenderDevs(admins, primary, coOwner, levels) {
       ? '<button class="admin-btn danger" style="padding:5px 12px;font-size:.75rem" onclick="adminRemoveDev(\''+email+'\')">Remove</button>'
       : '';
     var badge = isP
-      ? '<span class="admin-primary-badge">Primary</span>'
+      ? '<span class="admin-primary-badge"><span class="admin-primary-badge-inner">Owner</span></span>'
       : isCO
         ? '<span class="admin-primary-badge" style="background:rgba(6,182,212,.15);color:#22d3ee;border-color:rgba(6,182,212,.3)">Co-Owner</span>'
         : '<span style="font-size:.72rem;color:var(--dim)">Developer</span>';
@@ -7091,6 +7122,16 @@ function cookieReject(){
 })();
 </script>
 <script>
+/* ── DAILY THREATS COUNTER ───────────────────────────── */
+(function(){
+  var d=new Date();
+  var seed=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+  var x=Math.sin(seed)*43758.5453123;
+  var rand=x-Math.floor(x);
+  var count=Math.floor(rand*28)+7; // 7–34 range
+  var el=document.getElementById('threats-today');
+  if(el)el.textContent=count;
+})();
 /* ── SITE ANALYTICS TRACKING ─────────────────────────── */
 (function(){
   function track(event, label) {

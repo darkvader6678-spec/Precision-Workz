@@ -423,6 +423,44 @@ function sendVerificationEmail(toEmail, token) {
   });
 }
 
+function sendWelcomeEmail(toEmail, name) {
+  if (!nodemailer || !GMAIL_USER || !GMAIL_PASS) return Promise.resolve();
+  const firstName = (name || toEmail.split('@')[0]).split(' ')[0];
+  const transporter = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: GMAIL_USER, pass: GMAIL_PASS } });
+  return transporter.sendMail({
+    from: '"Precision Workz" <' + GMAIL_USER + '>',
+    to: toEmail,
+    subject: 'Welcome to Precision Workz',
+    text: 'Hey ' + firstName + ',\n\nThanks for joining Precision Workz. We build custom websites, security infrastructure, and full-stack systems for businesses in Tucson, AZ and beyond — no templates, no shortcuts.\n\nIf you have any questions or want to kick off a project, just reply to this email or visit us at ' + SITE_URL + '\n\n— The Precision Workz Team',
+    html: [
+      '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0">',
+      '<div style="background:#04040d;padding:28px 32px;text-align:center">',
+      '<span style="font-size:1.25rem;font-weight:900;letter-spacing:1px;color:#ffffff">PRECISION <span style="color:#f59e0b">WORKZ</span></span>',
+      '</div>',
+      '<div style="padding:36px 32px">',
+      '<h2 style="margin:0 0 10px;font-size:1.4rem;font-weight:800;color:#0f172a">Hey ' + firstName + ', welcome aboard.</h2>',
+      '<p style="color:#475569;line-height:1.75;margin:0 0 20px;font-size:.93rem">Thanks for joining Precision Workz. We build custom websites, security infrastructure, and full-stack systems — no templates, no shortcuts, no fluff. Just clean, fast, and secure work built to last.</p>',
+      '<p style="color:#475569;line-height:1.75;margin:0 0 28px;font-size:.93rem">Here\'s a quick look at what we do:</p>',
+      '<table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:28px;width:100%">',
+      '<tr><td style="padding:10px 0;border-bottom:1px solid #f1f5f9;font-size:.88rem;color:#334155"><strong style="color:#7c3aed">&#9656;</strong>&nbsp; Custom web design &amp; development</td></tr>',
+      '<tr><td style="padding:10px 0;border-bottom:1px solid #f1f5f9;font-size:.88rem;color:#334155"><strong style="color:#06b6d4">&#9656;</strong>&nbsp; Security infrastructure &amp; threat protection</td></tr>',
+      '<tr><td style="padding:10px 0;border-bottom:1px solid #f1f5f9;font-size:.88rem;color:#334155"><strong style="color:#f59e0b">&#9656;</strong>&nbsp; Full-stack systems, APIs &amp; automation</td></tr>',
+      '<tr><td style="padding:10px 0;font-size:.88rem;color:#334155"><strong style="color:#a3e635">&#9656;</strong>&nbsp; Ongoing support &amp; managed plans</td></tr>',
+      '</table>',
+      '<table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:28px">',
+      '<tr><td style="background:#7c3aed;border-radius:10px;padding:0">',
+      '<a href="' + SITE_URL + '" style="display:inline-block;padding:13px 28px;color:#ffffff;font-weight:700;font-size:.92rem;text-decoration:none;border-radius:10px;font-family:Arial,sans-serif">Visit Our Site &#8594;</a>',
+      '</td></tr></table>',
+      '<p style="color:#475569;font-size:.88rem;line-height:1.7;margin:0">Have a project in mind or a question? Just reply to this email — we\'re real people and we respond fast.</p>',
+      '</div>',
+      '<div style="background:#f8fafc;padding:18px 32px;border-top:1px solid #e2e8f0;text-align:center">',
+      '<p style="color:#94a3b8;font-size:.75rem;margin:0">Precision Workz &bull; Tucson, AZ &bull; <a href="' + SITE_URL + '" style="color:#7c3aed;text-decoration:none">' + SITE_URL.replace('https://','') + '</a></p>',
+      '</div>',
+      '</div>'
+    ].join('')
+  }).catch(function(e){ console.error('[Email] Welcome email failed for', toEmail, '—', e.message); });
+}
+
 async function sendEmail(to, subject, html) {
   if (!nodemailer || !GMAIL_USER || !GMAIL_PASS) {
     console.warn('[Email] Skipped — GMAIL_USER or GMAIL_PASS not configured');
@@ -1189,7 +1227,10 @@ async function handleAPI(req, res, urlPath) {
       users[key].verified = true;
       users[key].verifyToken = null;
       users[key].tokenExpiry = null;
+      const alreadyWelcomed = !!users[key].welcomeSent;
+      users[key].welcomeSent = true;
       await writeUsers(users);
+      if (!alreadyWelcomed) sendWelcomeEmail(key, users[key].name || '').catch(function(){});
       return json(res, 200, { ok: true });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
@@ -1206,6 +1247,21 @@ async function handleAPI(req, res, urlPath) {
       const ok = await verifyPassword(password, user.password);
       if (!ok) return json(res, 401, { error: 'Invalid email or password' });
       return json(res, 200, { ok: true, user: { email: key, name: key.split('@')[0] } });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/welcome-new-user' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { email, name } = body;
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json(res, 400, { error: 'Valid email required' });
+      const key = email.toLowerCase().trim();
+      const users = await readUsers();
+      if (users[key] && users[key].welcomeSent) return json(res, 200, { ok: true, skipped: true });
+      users[key] = Object.assign(users[key] || { email: key }, { welcomeSent: true });
+      await writeUsers(users);
+      sendWelcomeEmail(key, name || '').catch(function(){});
+      return json(res, 200, { ok: true });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
