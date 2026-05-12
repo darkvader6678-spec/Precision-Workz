@@ -5781,7 +5781,9 @@ function adminSaveClient() {
   var billing  = document.getElementById('adm-billing').value;
   var pkg      = document.getElementById('adm-package').value;
   var notes    = (document.getElementById('adm-notes').value || '').trim();
-  var projName = (document.getElementById('adm-proj-name') ? (document.getElementById('adm-proj-name').value||'').trim() : '');
+  var projNameRaw = (document.getElementById('adm-proj-name') ? (document.getElementById('adm-proj-name').value||'').trim() : '');
+  var _isNewClient = !(_adminData.clients && _adminData.clients[(document.getElementById('adm-email')?document.getElementById('adm-email').value||'':'').trim().toLowerCase()]);
+  var projName = projNameRaw || (_isNewClient ? (name || email.split('@')[0]) + ' Project' : '');
   var msgEl    = document.getElementById('adm-form-msg');
   var btn      = document.getElementById('adm-save-btn');
 
@@ -6414,7 +6416,7 @@ function adminRenderProjects(projects) {
   var isPrimary = (window._myLevel || '') === 'primary';
   var isMed = ['medium','max','primary'].includes(window._myLevel || '');
   var arr = Object.values(projects || {}).sort(function(a,b){ return (b.created||0)-(a.created||0); });
-  if (!arr.length) { list.innerHTML = '<p style="color:var(--dim);font-size:.85rem">No projects yet.</p>'; return; }
+  if (!arr.length) { list.innerHTML = '<p style="color:var(--dim);font-size:.85rem">No projects yet. Save a client above to auto-create one, or use the form below.</p>'; return; }
   list.innerHTML = arr.map(function(p) {
     var locked = p.locked;
     var canEdit = isMed && (!locked || isPrimary);
