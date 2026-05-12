@@ -3350,6 +3350,25 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   </div>
 </div>
 
+<!-- Dev portal corner button -->
+<button id="dev-portal-btn" onclick="openDevLogin()" title="Developer Access" aria-label="Developer Access" style="position:fixed;bottom:20px;left:20px;z-index:9000;width:36px;height:36px;border-radius:50%;background:rgba(10,10,18,.85);border:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.18);font-family:'Orbitron',sans-serif;font-size:.6rem;font-weight:800;letter-spacing:.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;backdrop-filter:blur(8px);user-select:none" onmouseover="this.style.borderColor='rgba(245,158,11,.35)';this.style.color='rgba(245,158,11,.7)';this.style.background='rgba(20,12,0,.9)'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)';this.style.color='rgba(255,255,255,.18)';this.style.background='rgba(10,10,18,.85)'">PW</button>
+
+<!-- Dev login modal -->
+<div id="dev-login-overlay" style="display:none;position:fixed;inset:0;z-index:98000;background:rgba(0,0,0,.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);align-items:center;justify-content:center" onclick="if(event.target===this)closeDevLogin()">
+  <div style="background:rgba(8,8,16,.97);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:40px 36px;width:100%;max-width:380px;margin:0 16px;position:relative;box-shadow:0 32px 80px rgba(0,0,0,.7)">
+    <button onclick="closeDevLogin()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:rgba(255,255,255,.25);font-size:1.2rem;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px;transition:color .2s" onmouseover="this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.color='rgba(255,255,255,.25)'">✕</button>
+    <div style="font-family:'Orbitron',sans-serif;font-size:.55rem;letter-spacing:3px;color:rgba(245,158,11,.6);text-transform:uppercase;margin-bottom:6px">Developer Portal</div>
+    <div style="font-size:1.15rem;font-weight:800;color:#fff;letter-spacing:-.3px;margin-bottom:4px">Precision Workz</div>
+    <div style="font-size:.8rem;color:rgba(255,255,255,.3);margin-bottom:28px">Restricted access. Authorized personnel only.</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <input id="dev-login-email" type="email" placeholder="Developer email" autocomplete="email" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px;color:#fff;font-size:.88rem;font-family:inherit;outline:none;width:100%;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='rgba(245,158,11,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'" onkeydown="if(event.key==='Enter')document.getElementById('dev-login-pass').focus()">
+      <input id="dev-login-pass" type="password" placeholder="Password" autocomplete="current-password" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px;color:#fff;font-size:.88rem;font-family:inherit;outline:none;width:100%;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='rgba(245,158,11,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'" onkeydown="if(event.key==='Enter')devLoginSubmit()">
+    </div>
+    <div id="dev-login-msg" style="font-size:.8rem;color:#f87171;margin-top:10px;min-height:18px;text-align:center"></div>
+    <button id="dev-login-submit" onclick="devLoginSubmit()" style="margin-top:16px;width:100%;padding:13px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:10px;color:#000;font-weight:800;font-size:.88rem;letter-spacing:.5px;cursor:pointer;font-family:inherit;transition:opacity .2s">Access Panel</button>
+  </div>
+</div>
+
 <div id="access-revoked-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;padding:32px">
   <div style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,.15);border:1.5px solid rgba(239,68,68,.35);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto">🔒</div>
   <div style="font-size:1.1rem;font-weight:800;color:#f87171;letter-spacing:.5px">Access Revoked</div>
@@ -5431,6 +5450,44 @@ async function submitPayment(){
 var _adminData = { clients: {}, admins: [] };
 var _allClientRows = [];
 
+/* ── DEV PORTAL CORNER LOGIN ─────────────────────────────── */
+function openDevLogin() {
+  var ov = document.getElementById('dev-login-overlay');
+  ov.style.display = 'flex';
+  setTimeout(function(){ var e = document.getElementById('dev-login-email'); if(e) e.focus(); }, 80);
+  document.getElementById('dev-login-msg').textContent = '';
+  document.getElementById('dev-login-email').value = '';
+  document.getElementById('dev-login-pass').value = '';
+}
+function closeDevLogin() {
+  document.getElementById('dev-login-overlay').style.display = 'none';
+}
+function devLoginSubmit() {
+  var email = (document.getElementById('dev-login-email').value || '').trim().toLowerCase();
+  var pass = (document.getElementById('dev-login-pass').value || '');
+  var msg = document.getElementById('dev-login-msg');
+  var btn = document.getElementById('dev-login-submit');
+  if (!email || !pass) { msg.textContent = 'Email and password required.'; return; }
+  btn.textContent = 'Verifying…'; btn.style.opacity = '.6'; btn.disabled = true;
+  msg.textContent = '';
+  fetch('/api/dev-login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email, password: pass })
+  }).then(function(r){ return r.json(); }).then(function(d) {
+    btn.textContent = 'Access Panel'; btn.style.opacity = '1'; btn.disabled = false;
+    if (!d.ok) { msg.textContent = d.error || 'Access denied.'; return; }
+    window._devLoginEmail = email;
+    window._myLevel = d.level || 'low';
+    window._isCoOwner = (d.level === 'co-owner');
+    closeDevLogin();
+    openAdmin();
+  }).catch(function() {
+    btn.textContent = 'Access Panel'; btn.style.opacity = '1'; btn.disabled = false;
+    msg.textContent = 'Connection error. Try again.';
+  });
+}
+
 function openAdmin() {
   window._myLevel = window._myLevel || 'low';
   document.getElementById('admin-overlay').classList.add('open');
@@ -5447,6 +5504,7 @@ function closeAdmin() {
   if (_monTimer) { clearInterval(_monTimer); _monTimer = null; }
   if (window._accessPollTimer) { clearInterval(window._accessPollTimer); window._accessPollTimer = null; }
   _monUnlocked = false;
+  window._devLoginEmail = null;
 }
 
 function _buildRevokedEl() {
@@ -5509,6 +5567,7 @@ function startAccessPoll() {
 }
 
 function adminGetEmail() {
+  if (window._devLoginEmail) return window._devLoginEmail;
   var u = getUserData();
   return u ? u.email : '';
 }

@@ -1328,6 +1328,23 @@ async function handleAPI(req, res, urlPath) {
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
+  if (urlPath === '/api/dev-login' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { email, password } = body;
+      if (!email || !password) return json(res, 400, { error: 'Email and password required.' });
+      const key = email.toLowerCase().trim();
+      const [admins, adminLevels, users] = await Promise.all([readAdmins(), readAdminLevels(), readUsers()]);
+      if (!admins.includes(key)) return json(res, 403, { error: 'Not a registered developer.' });
+      const user = users[key];
+      if (!user || !user.password) return json(res, 403, { error: 'No account found for this email.' });
+      const ok = await verifyPassword(password, user.password);
+      if (!ok) return json(res, 401, { error: 'Incorrect password.' });
+      const level = adminLevels[key] || 'low';
+      return json(res, 200, { ok: true, level });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
   if (urlPath === '/api/welcome-new-user' && req.method === 'POST') {
     try {
       const body = await parseBody(req);
