@@ -1360,10 +1360,8 @@ async function handleAPI(req, res, urlPath) {
       const body = await parseBody(req);
       const { coOwnerEmail, password } = body;
       const key2 = (coOwnerEmail || '').toLowerCase().trim();
-      if (!key2) return json(res, 403, { error: 'Unauthorized.' });
+      if (!key2) return json(res, 400, { error: 'Email required.' });
       if (key2 === PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Owner already has full access.' });
-      const admins2 = await readAdmins();
-      if (!admins2.includes(key2) && !(CO_OWNER_EMAIL && key2 === CO_OWNER_EMAIL.toLowerCase())) return json(res, 403, { error: 'Not a registered developer.' });
       if (String(password) !== '5209090774') return json(res, 401, { error: 'Incorrect override password.' });
       const token = Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
       const now = Date.now();
