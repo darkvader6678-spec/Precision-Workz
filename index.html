@@ -8218,12 +8218,13 @@ function cookieReject(){
   var _dtOpen = false;
   var _overlay = null;
   var _obs = null;
+  /* Baseline captured once after load so normal browser chrome is excluded */
+  var _baseW = 0, _baseH = 0, _baseReady = false;
 
   function _buildOverlay() {
     var host = document.createElement('div');
     host.id = '__pw_dt_host';
     host.setAttribute('data-pw-protected', '1');
-    /* Attach shadow DOM so it's isolated from inspect-and-delete */
     var shadow = host.attachShadow({ mode: 'closed' });
     var style = document.createElement('style');
     style.textContent = [
@@ -8246,21 +8247,18 @@ function cookieReject(){
       + '<div class="dev-note">Are you a registered developer? Log in to your developer account to access this site without restrictions.</div>';
     shadow.appendChild(style);
     shadow.appendChild(box);
-    /* Block all interaction underneath */
     host.style.cssText = 'position:fixed;inset:0;z-index:2147483647';
-    /* Prevent keyboard shortcuts (Escape etc) from closing overlay */
     host.addEventListener('keydown', function(e){ e.stopPropagation(); e.preventDefault(); }, true);
     return host;
   }
 
   function _showOverlay() {
-    if (_overlay && document.body.contains(_overlay)) return;
+    if (_overlay && document.documentElement.contains(_overlay)) return;
     _overlay = _buildOverlay();
     document.documentElement.appendChild(_overlay);
-    /* Watch for deletion and re-add */
     if (_obs) _obs.disconnect();
     _obs = new MutationObserver(function() {
-      if (_dtOpen && (!_overlay || !document.body.contains(_overlay))) {
+      if (_dtOpen && (!_overlay || !document.documentElement.contains(_overlay))) {
         _overlay = _buildOverlay();
         document.documentElement.appendChild(_overlay);
       }
@@ -8273,40 +8271,44 @@ function cookieReject(){
     if (_overlay) { try { _overlay.remove(); } catch(e){} _overlay = null; }
   }
 
+  /* Capture baseline gap (browser chrome: address bar, bookmarks, etc.)
+     once the page has settled, so we only detect *extra* gap from devtools. */
+  function _captureBaseline() {
+    _baseW = window.outerWidth - window.innerWidth;
+    _baseH = window.outerHeight - window.innerHeight;
+    _baseReady = true;
+  }
+
   function _check() {
-    var threshold = 160;
-    var widthOpen = window.outerWidth - window.innerWidth > threshold;
-    var heightOpen = window.outerHeight - window.innerHeight > threshold;
-    /* Allow devs who are logged in to bypass */
     if (window._userIsAdmin || window._devLoginEmail) {
       if (_dtOpen) { _dtOpen = false; _hideOverlay(); }
       return;
     }
-    if (widthOpen || heightOpen) {
+    if (!_baseReady) return;
+    /* Only trigger if the gap is at least 300px MORE than baseline.
+       This filters out normal browser chrome and only catches docked devtools. */
+    var EXTRA = 300;
+    var wExtra = (window.outerWidth - window.innerWidth) - _baseW;
+    var hExtra = (window.outerHeight - window.innerHeight) - _baseH;
+    if (wExtra > EXTRA || hExtra > EXTRA) {
       if (!_dtOpen) { _dtOpen = true; _showOverlay(); }
     } else {
       if (_dtOpen) { _dtOpen = false; _hideOverlay(); }
     }
   }
 
-  /* Console timing trick — catches when console panel is open (not just undocked) */
-  var _consoleOpen = false;
-  var _elem = /./;
-  _elem.toString = function(){ _consoleOpen = true; return ''; };
-  function _consoleCheck() {
-    _consoleOpen = false;
-    if (window._userIsAdmin || window._devLoginEmail) return;
-    console.log('%c', _elem);
-    if (_consoleOpen && !_dtOpen) { _dtOpen = true; _showOverlay(); }
-    else if (!_consoleOpen && _dtOpen && !_isUndockedOpen()) { _dtOpen = false; _hideOverlay(); }
-  }
-  function _isUndockedOpen() {
-    return window.outerWidth - window.innerWidth > 160 || window.outerHeight - window.innerHeight > 160;
-  }
-
-  window.addEventListener('resize', _check);
-  setInterval(_check, 1000);
-  setInterval(_consoleCheck, 1500);
+  /* Capture baseline after a short delay so browser chrome is fully rendered */
+  setTimeout(_captureBaseline, 1500);
+  /* Re-capture baseline on resize so normal window resizing doesn't false-trigger */
+  var _resizeTimer = null;
+  window.addEventListener('resize', function() {
+    if (_dtOpen) { _check(); return; }
+    /* Debounce: treat resize as baseline update unless devtools were already open */
+    clearTimeout(_resizeTimer);
+    _resizeTimer = setTimeout(function() { _captureBaseline(); _check(); }, 400);
+  });
+  /* Periodic check — low frequency is enough, devtools don't open silently */
+  setInterval(_check, 2000);
 
   /* Block common devtools shortcuts for non-devs */
   document.addEventListener('keydown', function(e){
@@ -8318,6 +8320,10 @@ function cookieReject(){
     var isCtrlU = (e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U');
     if (isF12 || isCtrlShiftI || isCtrlShiftJ || isCtrlShiftC || isCtrlU) {
       e.preventDefault(); e.stopImmediatePropagation();
+      /* Show overlay on shortcut attempt even if size check hasn't fired */
+      if (!_dtOpen) { _dtOpen = true; _showOverlay(); }
+      /* Auto-hide after 4s since shortcut was blocked (devtools didn't actually open) */
+      setTimeout(function() { if (_dtOpen) { _dtOpen = false; _hideOverlay(); } }, 4000);
     }
   }, true);
 
