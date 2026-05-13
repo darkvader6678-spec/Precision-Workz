@@ -1629,7 +1629,7 @@ async function handleAPI(req, res, urlPath) {
     try {
       const qs = new URL('https://x' + req.url).searchParams;
       const email = (qs.get('adminEmail') || '').toLowerCase().trim();
-      if (email !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Owner only.' });
+      if (!isCoOwnerOrPrimary(email)) return json(res, 403, { error: 'Owner or co-owner only.' });
       const promos = await readPromoCodes();
       return json(res, 200, { promos });
     } catch(e) { return json(res, 500, { error: e.message }); }
@@ -1638,7 +1638,8 @@ async function handleAPI(req, res, urlPath) {
   if (urlPath === '/api/admin/promo-add' && req.method === 'POST') {
     try {
       const body = await parseBody(req);
-      if ((body.adminEmail || '').toLowerCase().trim() !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Owner only.' });
+      const reqEmail = (body.adminEmail || '').toLowerCase().trim();
+      if (!isCoOwnerOrPrimary(reqEmail)) return json(res, 403, { error: 'Owner or co-owner only.' });
       const code = (body.code || '').toUpperCase().trim().replace(/\s+/g, '');
       if (!code || code.length < 2 || code.length > 20) return json(res, 400, { error: 'Code must be 2–20 characters.' });
       const discount = parseFloat(body.discount);
@@ -1649,6 +1650,7 @@ async function handleAPI(req, res, urlPath) {
         uses: 0, maxUses: parseInt(body.maxUses) || null,
         expiry: body.expiry ? new Date(body.expiry).getTime() : null,
         active: true, createdAt: Date.now(), label: (body.label || '').trim().slice(0, 60) || null,
+        createdBy: reqEmail,
       };
       await writePromoCodes(promos);
       return json(res, 200, { ok: true, promos });
@@ -1658,7 +1660,8 @@ async function handleAPI(req, res, urlPath) {
   if (urlPath === '/api/admin/promo-remove' && req.method === 'POST') {
     try {
       const body = await parseBody(req);
-      if ((body.adminEmail || '').toLowerCase().trim() !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Owner only.' });
+      const reqEmail = (body.adminEmail || '').toLowerCase().trim();
+      if (!isCoOwnerOrPrimary(reqEmail)) return json(res, 403, { error: 'Owner or co-owner only.' });
       const code = (body.code || '').toUpperCase().trim();
       if (!code) return json(res, 400, { error: 'Code required.' });
       const promos = await readPromoCodes();
