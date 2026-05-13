@@ -3700,7 +3700,38 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       <div id="adm-promo-list"><div style="color:var(--dim);font-size:.8rem">Loading…</div></div>
     </div>
 
-    <div class="admin-section">
+    
+    <div class="admin-section" id="adm-receipts-section" style="display:none">
+      <div class="admin-section-title" style="display:flex;align-items:center;justify-content:space-between"><span>Receipts</span><button class="admin-btn ghost" style="font-size:.72rem" onclick="adminLoadReceipts()">&#8635; Refresh</button></div>
+      <details style="margin-bottom:14px">
+        <summary style="font-size:.78rem;color:var(--dim);cursor:pointer;font-weight:600;padding:8px 0">+ Create New Receipt</summary>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div><div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Client Email *</div><input class="admin-input" id="rcpt-email" type="email" placeholder="client@email.com" style="width:100%"></div>
+            <div><div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Full Name</div><input class="admin-input" id="rcpt-name" placeholder="John Smith" style="width:100%"></div>
+          </div>
+          <div><div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Phone Number</div><input class="admin-input" id="rcpt-phone" placeholder="(555) 555-5555" style="width:100%"></div>
+          <div><div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Address</div><input class="admin-input" id="rcpt-address" placeholder="123 Main St, Phoenix, AZ 85001" style="width:100%"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div><div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Service Type *</div><input class="admin-input" id="rcpt-service" placeholder="e.g. Titanium Build" style="width:100%"></div>
+            <div><div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Subscription</div><input class="admin-input" id="rcpt-sub" placeholder="e.g. Gold Monthly" style="width:100%"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <div><div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Payment Method</div><input class="admin-input" id="rcpt-payment" placeholder="Visa ending 4242" style="width:100%"></div>
+            <div><div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Amount</div><input class="admin-input" id="rcpt-amount" placeholder="1,500.00" style="width:100%"></div>
+            <div><div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Date</div><input class="admin-input" id="rcpt-date" type="date" style="width:100%"></div>
+          </div>
+          <div><div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Notes (optional)</div><textarea class="admin-input" id="rcpt-notes" placeholder="e.g. Paid via invoice #1042" style="width:100%;min-height:60px;resize:vertical"></textarea></div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button class="admin-btn primary" onclick="adminAddReceipt()">Save Receipt</button>
+            <div id="rcpt-msg" style="font-size:.8rem;min-height:14px"></div>
+          </div>
+        </div>
+      </details>
+      <div id="adm-receipts-list"><div style="color:var(--dim);font-size:.82rem">Loading...</div></div>
+    </div>
+
+<div class="admin-section">
       <div class="admin-section-title">All Clients</div>
       <div class="admin-search-row">
         <input class="admin-input" id="adm-search" placeholder="Search by email or name…" oninput="adminFilterTable()" style="max-width:340px">
@@ -5352,8 +5383,10 @@ function renderDashboard(user){
       +'<div style="background:rgba(255,255,255,.03);border-radius:8px;padding:8px 10px"><div style="font-size:.62rem;color:var(--dim);font-weight:600;margin-bottom:2px">Cycle</div><div style="font-size:.82rem;font-weight:700;color:var(--text)">'+escHtml(billing==='annual'?'Annual':'Monthly')+'</div></div>'
       +'</div>'
       +'<div class="acct-sub-detail" style="margin-bottom:10px">✓ Monthly updates &nbsp;·&nbsp; ✓ Uptime monitoring &nbsp;·&nbsp; ✓ Priority support</div>'
-      +'<button class="acct-upgrade-btn" onclick="closeDashboard();document.getElementById(\'subscription\').scrollIntoView({behavior:\'smooth\'})">Upgrade to Gold — $149/mo →</button>'
-      +'</div>';
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      +'<button class="acct-upgrade-btn" onclick="closeDashboard();document.getElementById(\'subscription\').scrollIntoView({behavior:\'smooth\'})">Upgrade to Gold →</button>'
+      +'<button class="acct-upgrade-btn" style="background:rgba(255,255,255,.04);color:var(--dim);border-color:rgba(255,255,255,.1)" onclick="closeDashboard();openReqModal(\'plan-change\')">Request Change</button>'
+      +'</div></div>';
   } else {
     subHtml='<div class="acct-sub-card active-gold">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
@@ -5364,7 +5397,8 @@ function renderDashboard(user){
       +'<div style="background:rgba(255,255,255,.03);border-radius:8px;padding:8px 10px"><div style="font-size:.62rem;color:var(--dim);font-weight:600;margin-bottom:2px">Billing</div><div style="font-size:.82rem;font-weight:700;color:var(--text)">$149 / mo</div></div>'
       +'<div style="background:rgba(255,255,255,.03);border-radius:8px;padding:8px 10px"><div style="font-size:.62rem;color:var(--dim);font-weight:600;margin-bottom:2px">Cycle</div><div style="font-size:.82rem;font-weight:700;color:var(--text)">'+escHtml(billing==='annual'?'Annual':'Monthly')+'</div></div>'
       +'</div>'
-      +'<div class="acct-sub-detail">✓ Weekly updates &nbsp;·&nbsp; ✓ Security monitoring &nbsp;·&nbsp; ✓ Feature requests &nbsp;·&nbsp; ✓ Emergency support</div>'
+      +'<div class="acct-sub-detail" style="margin-bottom:10px">✓ Weekly updates &nbsp;·&nbsp; ✓ Security monitoring &nbsp;·&nbsp; ✓ Feature requests &nbsp;·&nbsp; ✓ Emergency support</div>'
+      +'<button class="acct-upgrade-btn" style="background:rgba(255,255,255,.04);color:var(--dim);border-color:rgba(255,255,255,.1)" onclick="closeDashboard();openReqModal(\'plan-change\')">Request Plan Change / Cancel</button>'
       +'</div>';
   }
 
@@ -5599,6 +5633,7 @@ var REQ_CFG={
   'maintenance':    {title:'Maintenance Check',     eyebrow:'Basic & Gold', desc:'Tell us what to look at — we\'ll review your site and flag anything that needs fixing or improving.', emergency:false},
   'emergency':      {title:'Emergency Repair',      eyebrow:'Gold Plan',    desc:'Your site is down or critically broken. Describe the issue — we respond on priority SLA.',  emergency:true},
   'security-audit': {title:'Full Security Audit',   eyebrow:'Gold Plan',    desc:'Describe your current security concerns and the scope of the audit you need.',              emergency:false},
+  'plan-change':    {title:'Plan Change Request',   eyebrow:'Subscription', desc:'Tell us what change you need — upgrade, downgrade, cancel, or switch billing cycle. We\'ll get back to you within 24 hours.',   emergency:false},
 };
 
 function openReqModal(type){
@@ -6151,7 +6186,8 @@ function adminLoadDevApps() {
         var statusLabel = app.status === 'approved' ? 'Approved' : app.status === 'rejected' ? 'Rejected' : 'Pending';
         var age = Math.round((Date.now() - app.createdAt) / 60000);
         var ageStr = age < 60 ? age + 'm ago' : age < 1440 ? Math.round(age/60) + 'h ago' : Math.round(age/1440) + 'd ago';
-        var actions = app.status === 'pending'
+        var _canActOnApp = window._myLevel === 'primary' || window._isCoOwner;
+        var actions = (app.status === 'pending' && _canActOnApp)
           ? '<div style="display:flex;gap:8px;margin-top:12px">'
             + '<button class="admin-btn primary" style="font-size:.75rem;padding:5px 14px" onclick="adminDevAppAction(\''+app.id+'\',\'approve\')">Approve</button>'
             + '<button class="admin-btn danger" style="font-size:.75rem;padding:5px 14px" onclick="adminDevAppAction(\''+app.id+'\',\'reject\')">Reject</button>'
@@ -6181,6 +6217,93 @@ function adminDevAppAction(id, action) {
   }).then(function(r){ return r.json(); }).then(function(d) {
     if (d.ok) { adminLoadDevApps(); if (action === 'approve') setTimeout(adminLoadData, 800); }
     else { alert(d.error || 'Action failed.'); }
+  }).catch(function(){ alert('Network error.'); });
+}
+
+function adminLoadReceipts() {
+  var email = adminGetEmail();
+  if (!email) return;
+  var listEl = document.getElementById('adm-receipts-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="color:var(--dim);font-size:.82rem">Loading...</div>';
+  fetch('/api/admin/receipts?adminEmail=' + encodeURIComponent(email))
+    .then(function(r){ return r.json(); })
+    .then(function(d) {
+      var receipts = d.receipts || [];
+      if (!receipts.length) { listEl.innerHTML = '<div style="color:var(--dim);font-size:.82rem">No receipts yet.</div>'; return; }
+      listEl.innerHTML = receipts.map(function(rcpt) {
+        var dateStr = rcpt.date || (rcpt.createdAt ? new Date(rcpt.createdAt).toLocaleDateString() : '—');
+        var amtStr = rcpt.amount ? ('$' + rcpt.amount + (rcpt.currency && rcpt.currency !== 'usd' ? ' ' + rcpt.currency.toUpperCase() : '')) : '—';
+        return '<details style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:10px;margin-bottom:8px;overflow:hidden">'
+          + '<summary style="padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:.82rem;list-style:none;outline:none">'
+          + '<span style="flex:1;font-weight:700;color:var(--text)">' + escHtml(rcpt.clientName || rcpt.clientEmail) + '</span>'
+          + '<span style="font-size:.7rem;color:var(--dim)">' + escHtml(rcpt.clientEmail) + '</span>'
+          + '<span style="font-size:.74rem;color:#4ade80;font-weight:700">' + amtStr + '</span>'
+          + '<span style="font-size:.68rem;color:var(--dim)">' + escHtml(dateStr) + '</span>'
+          + '</summary>'
+          + '<div style="padding:14px;border-top:1px solid rgba(255,255,255,.06)">'
+          + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font-size:.8rem;color:var(--muted);margin-bottom:10px">'
+          + (rcpt.clientEmail ? '<div><span style="color:var(--dim);font-size:.68rem;font-weight:700">EMAIL</span><div>' + escHtml(rcpt.clientEmail) + '</div></div>' : '')
+          + (rcpt.phone ? '<div><span style="color:var(--dim);font-size:.68rem;font-weight:700">PHONE</span><div>' + escHtml(rcpt.phone) + '</div></div>' : '')
+          + (rcpt.address ? '<div style="grid-column:1/-1"><span style="color:var(--dim);font-size:.68rem;font-weight:700">ADDRESS</span><div>' + escHtml(rcpt.address) + '</div></div>' : '')
+          + (rcpt.serviceType ? '<div><span style="color:var(--dim);font-size:.68rem;font-weight:700">SERVICE</span><div>' + escHtml(rcpt.serviceType) + '</div></div>' : '')
+          + (rcpt.subType ? '<div><span style="color:var(--dim);font-size:.68rem;font-weight:700">SUBSCRIPTION</span><div>' + escHtml(rcpt.subType) + '</div></div>' : '')
+          + (rcpt.paymentMethod ? '<div><span style="color:var(--dim);font-size:.68rem;font-weight:700">PAYMENT</span><div>' + escHtml(rcpt.paymentMethod) + '</div></div>' : '')
+          + (rcpt.amount ? '<div><span style="color:var(--dim);font-size:.68rem;font-weight:700">AMOUNT</span><div style="color:#4ade80;font-weight:700">' + amtStr + '</div></div>' : '')
+          + '</div>'
+          + (rcpt.notes ? '<div style="margin-bottom:10px"><span style="color:var(--dim);font-size:.68rem;font-weight:700">NOTES</span><div style="font-size:.8rem;color:var(--muted);margin-top:2px">' + escHtml(rcpt.notes) + '</div></div>' : '')
+          + (rcpt.createdBy ? '<div style="font-size:.68rem;color:var(--dim)">Created by ' + escHtml(rcpt.createdBy) + '</div>' : '')
+          + '<div style="margin-top:10px"><button class="admin-btn danger" style="font-size:.72rem;padding:4px 12px" onclick="adminDeleteReceipt(\''+escHtml(rcpt.id)+'\')">Delete</button></div>'
+          + '</div></details>';
+      }).join('');
+    }).catch(function(){ if (listEl) listEl.innerHTML = '<div style="color:#f87171;font-size:.82rem">Failed to load receipts.</div>'; });
+}
+function adminAddReceipt() {
+  var email = adminGetEmail();
+  var clientEmail = (document.getElementById('rcpt-email')||{}).value || '';
+  var msgEl = document.getElementById('rcpt-msg');
+  if (!clientEmail.trim()) { if (msgEl) { msgEl.textContent = 'Client email is required.'; msgEl.style.color = '#f87171'; } return; }
+  var serviceType = (document.getElementById('rcpt-service')||{}).value || '';
+  if (!serviceType.trim()) { if (msgEl) { msgEl.textContent = 'Service type is required.'; msgEl.style.color = '#f87171'; } return; }
+  var payload = {
+    adminEmail: email,
+    clientEmail: clientEmail.trim(),
+    clientName: (document.getElementById('rcpt-name')||{}).value || '',
+    phone: (document.getElementById('rcpt-phone')||{}).value || '',
+    address: (document.getElementById('rcpt-address')||{}).value || '',
+    serviceType: serviceType.trim(),
+    subType: (document.getElementById('rcpt-sub')||{}).value || '',
+    paymentMethod: (document.getElementById('rcpt-payment')||{}).value || '',
+    amount: (document.getElementById('rcpt-amount')||{}).value || '',
+    currency: 'usd',
+    date: (document.getElementById('rcpt-date')||{}).value || '',
+    notes: (document.getElementById('rcpt-notes')||{}).value || '',
+    createdAt: Date.now()
+  };
+  if (msgEl) { msgEl.textContent = 'Saving...'; msgEl.style.color = 'var(--dim)'; }
+  fetch('/api/admin/receipt-add', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(function(r){ return r.json(); }).then(function(d) {
+    if (d.ok) {
+      if (msgEl) { msgEl.textContent = 'Receipt saved!'; msgEl.style.color = '#4ade80'; }
+      ['rcpt-email','rcpt-name','rcpt-phone','rcpt-address','rcpt-service','rcpt-sub','rcpt-payment','rcpt-amount','rcpt-date','rcpt-notes'].forEach(function(id){ var el = document.getElementById(id); if (el) el.value = ''; });
+      setTimeout(function(){ if (msgEl) msgEl.textContent = ''; }, 3000);
+      adminLoadReceipts();
+    } else {
+      if (msgEl) { msgEl.textContent = d.error || 'Failed to save.'; msgEl.style.color = '#f87171'; }
+    }
+  }).catch(function(){ if (msgEl) { msgEl.textContent = 'Network error.'; msgEl.style.color = '#f87171'; } });
+}
+function adminDeleteReceipt(id) {
+  if (!confirm('Delete this receipt? This cannot be undone.')) return;
+  var email = adminGetEmail();
+  fetch('/api/admin/receipt-delete', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminEmail: email, id: id })
+  }).then(function(r){ return r.json(); }).then(function(d) {
+    if (d.ok) { adminLoadReceipts(); }
+    else { alert(d.error || 'Delete failed.'); }
   }).catch(function(){ alert('Network error.'); });
 }
 
@@ -7178,6 +7301,13 @@ function adminApplyLevelRestrictions() {
     if (isCoOwnerPlus) adminLoadDevApps();
   }
 
+  // Receipts: owner + co-owner
+  var rcptSec = document.getElementById('adm-receipts-section');
+  if (rcptSec) {
+    rcptSec.style.display = isCoOwnerPlus ? '' : 'none';
+    if (isCoOwnerPlus) adminLoadReceipts();
+  }
+
   // Dev management row: primary only
   var devRow = document.getElementById('adm-add-dev-row');
   if (devRow) devRow.style.display = isPrimary ? 'flex' : 'none';
@@ -7577,35 +7707,41 @@ function monRefreshActivity() {
 
 function adminLoadSecurityLogs() {
   var email = adminGetEmail();
-  if (!email || !_monUnlocked) return;
+  if (!email) return;
   var el = document.getElementById('adm-sec-logs-body');
   if (!el) return;
   el.innerHTML = '<div style="color:var(--dim);font-size:.8rem">Loading…</div>';
   fetch('/api/admin/security-logs?adminEmail=' + encodeURIComponent(email))
     .then(function(r){ return r.json(); })
     .then(function(d){
+      if (d.error) { el.innerHTML = '<div style="color:#f87171;font-size:.8rem">'+escHtml(d.error)+'</div>'; return; }
       var logs = d.logs || [];
       if (!logs.length) { el.innerHTML = '<div style="color:var(--dim);font-size:.8rem;padding:8px 0">No security events logged yet.</div>'; return; }
-      var typeColors = { recaptcha:'#a78bfa', admin_login:'#22d3ee', admin_login_fail:'#f87171', client_login:'#4ade80', client_login_fail:'#f87171', client_added:'#4ade80', client_updated:'#94a3b8', dev_blocked:'#fb923c', dev_added:'#22d3ee', dev_removed:'#f87171', override_approved:'#fbbf24', override_extended:'#fbbf24', override_revoked:'#f87171', dev_override_granted:'#fbbf24' };
-      var typeLabels = { recaptcha:'reCAPTCHA', admin_login:'Admin Login', admin_login_fail:'Admin Login Fail', client_login:'Client Login', client_login_fail:'Client Login Fail', client_added:'Client Added', client_updated:'Client Updated', dev_blocked:'Dev Block', dev_added:'Dev Added', dev_removed:'Dev Removed', override_approved:'Override Approved', override_extended:'Override Extended', override_revoked:'Override Revoked', dev_override_granted:'Dev Override' };
+      var typeColors = { recaptcha:'#a78bfa', admin_login:'#22d3ee', admin_login_fail:'#f87171', client_login:'#4ade80', client_login_fail:'#f87171', client_added:'#4ade80', client_updated:'#94a3b8', dev_blocked:'#fb923c', dev_added:'#22d3ee', dev_removed:'#f87171', override_approved:'#fbbf24', override_extended:'#fbbf24', override_revoked:'#f87171', dev_override_granted:'#fbbf24', devtools_detected:'#f97316', plan_change_req:'#818cf8' };
+      var typeLabels = { recaptcha:'reCAPTCHA', admin_login:'Admin Login', admin_login_fail:'Login Fail', client_login:'Client Login', client_login_fail:'Client Fail', client_added:'Client Added', client_updated:'Client Updated', dev_blocked:'Dev Block', dev_added:'Dev Added', dev_removed:'Dev Removed', override_approved:'Override OK', override_extended:'Override Ext.', override_revoked:'Override Revoked', dev_override_granted:'Dev Override', devtools_detected:'DevTools Open', plan_change_req:'Plan Change' };
+      var lvlColors = { owner:'#a78bfa', 'co-owner':'#22d3ee', max:'#f87171', medium:'#fb923c', low:'#4ade80', dev:'#94a3b8' };
       el.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.75rem">'
         + '<thead><tr style="color:var(--dim);text-align:left">'
-        + '<th style="padding:5px 8px;font-weight:700;letter-spacing:.3px">Time</th>'
-        + '<th style="padding:5px 8px;font-weight:700;letter-spacing:.3px">Event</th>'
-        + '<th style="padding:5px 8px;font-weight:700;letter-spacing:.3px">Actor</th>'
-        + '<th style="padding:5px 8px;font-weight:700;letter-spacing:.3px">Target</th>'
-        + '<th style="padding:5px 8px;font-weight:700;letter-spacing:.3px">Detail</th>'
-        + '<th style="padding:5px 8px;font-weight:700;letter-spacing:.3px">IP</th>'
+        + '<th style="padding:5px 8px;font-weight:700">Time</th>'
+        + '<th style="padding:5px 8px;font-weight:700">Event</th>'
+        + '<th style="padding:5px 8px;font-weight:700">Actor</th>'
+        + '<th style="padding:5px 8px;font-weight:700">Target</th>'
+        + '<th style="padding:5px 8px;font-weight:700">Detail</th>'
+        + '<th style="padding:5px 8px;font-weight:700">IP</th>'
         + '</tr></thead><tbody>'
-        + logs.slice(0, 100).map(function(log){
+        + logs.slice(0, 150).map(function(log){
           var ago = Math.floor((Date.now() - log.ts) / 1000);
           var agoStr = ago < 60 ? ago + 's ago' : ago < 3600 ? Math.floor(ago/60) + 'm ago' : ago < 86400 ? Math.floor(ago/3600) + 'h ago' : Math.floor(ago/86400) + 'd ago';
           var color = typeColors[log.type] || 'var(--text)';
           var label = typeLabels[log.type] || log.type;
+          var actorDisplay = escHtml(log.actor || '—');
+          if (log.actorName) actorDisplay = '<span style="font-weight:700">' + escHtml(log.actorName) + '</span> <span style="color:var(--dim);font-size:.7rem">(' + escHtml(log.actor) + ')</span>';
+          var lvlClr = log.actorLevel ? (lvlColors[log.actorLevel] || '#94a3b8') : '';
+          var lvlBadge = log.actorLevel ? ' <span style="font-size:.65rem;font-weight:700;color:'+lvlClr+'">'+log.actorLevel+'</span>' : '';
           return '<tr style="border-top:1px solid rgba(255,255,255,.05)">'
             + '<td style="padding:6px 8px;color:var(--dim);white-space:nowrap">' + agoStr + '</td>'
             + '<td style="padding:6px 8px;white-space:nowrap"><span style="background:rgba(255,255,255,.06);border-radius:999px;padding:1px 8px;color:'+color+';font-weight:700">' + label + '</span></td>'
-            + '<td style="padding:6px 8px;color:var(--text);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(log.actor||'—') + '</td>'
+            + '<td style="padding:6px 8px;color:var(--text);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + actorDisplay + lvlBadge + '</td>'
             + '<td style="padding:6px 8px;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(log.target||'—') + '</td>'
             + '<td style="padding:6px 8px;color:var(--dim);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(log.detail||'') + '</td>'
             + '<td style="padding:6px 8px;color:var(--dim);font-family:monospace;white-space:nowrap">' + escHtml(log.ip||'—') + '</td>'
@@ -7613,7 +7749,7 @@ function adminLoadSecurityLogs() {
         }).join('')
         + '</tbody></table></div>';
     }).catch(function(){
-      if (el) el.innerHTML = '<div style="color:#f87171;font-size:.8rem">Failed to load logs.</div>';
+      if (el) el.innerHTML = '<div style="color:#f87171;font-size:.8rem">Failed to load — check console.</div>';
     });
 }
 
@@ -8439,6 +8575,14 @@ function cookieReject(){
     return host;
   }
 
+  var _dtLogged = false;
+  function _logDT(method) {
+    if (_dtLogged) return; _dtLogged = true;
+    var u = (function(){ try { var d = JSON.parse(localStorage.getItem('_pw_user')||'null'); return d && d.email ? d.email : ''; } catch(e){ return ''; } })();
+    fetch('/api/log-dt', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email: u, method: method }) }).catch(function(){});
+    setTimeout(function(){ _dtLogged = false; }, 30000);
+  }
+
   function _showOverlay() {
     if (_overlay && document.documentElement.contains(_overlay)) return;
     _overlay = _buildOverlay();
@@ -8479,7 +8623,7 @@ function cookieReject(){
     var wExtra = (window.outerWidth - window.innerWidth) - _baseW;
     var hExtra = (window.outerHeight - window.innerHeight) - _baseH;
     if (wExtra > EXTRA || hExtra > EXTRA) {
-      if (!_dtOpen) { _dtOpen = true; _showOverlay(); }
+      if (!_dtOpen) { _dtOpen = true; _logDT('size'); _showOverlay(); }
     } else {
       if (_dtOpen) { _dtOpen = false; _hideOverlay(); }
     }
@@ -8512,7 +8656,7 @@ function cookieReject(){
     if (isF12 || isCtrlShiftI || isCtrlShiftJ || isCtrlShiftC || isCtrlU) {
       e.preventDefault(); e.stopImmediatePropagation();
       /* Show overlay on shortcut attempt even if size check hasn't fired */
-      if (!_dtOpen) { _dtOpen = true; _showOverlay(); }
+      if (!_dtOpen) { _dtOpen = true; _logDT('shortcut'); _showOverlay(); }
       /* Auto-hide after 4s since shortcut was blocked (devtools didn't actually open) */
       setTimeout(function() { if (_dtOpen) { _dtOpen = false; _hideOverlay(); } }, 4000);
     }

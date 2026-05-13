@@ -360,6 +360,11 @@ async function readDevApps() {
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
 }
 const writeDevApps = (v) => kvWrite('dev-applications', v);
+async function readReceipts() {
+  const raw = _parseKV(await kvRead('receipts', {}), {});
+  return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+}
+const writeReceipts = (v) => kvWrite('receipts', v);
 async function readProjects() {
   const raw = _parseKV(await kvRead('projects', {}), {});
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
@@ -1732,9 +1737,22 @@ async function handleAPI(req, res, urlPath) {
       const email = (qs.get('adminEmail') || '').toLowerCase().trim();
       if (!email) return json(res, 400, { error: 'adminEmail required.' });
       const level = await getAdminLevel(email);
-      if (email !== PRIMARY_ADMIN.toLowerCase() && !levelAtLeast(level, 'max')) return json(res, 403, { error: 'Owner or max-level access required.' });
+      const coLow2 = (CO_OWNER_EMAIL || '').toLowerCase();
+      const canView = email === PRIMARY_ADMIN.toLowerCase() || email === coLow2 || levelAtLeast(level, 'max');
+      if (!canView) return json(res, 403, { error: 'Owner, co-owner, or max-level access required.' });
       const raw = _parseKV(await kvRead('security-logs', []), []);
-      return json(res, 200, { logs: Array.isArray(raw) ? raw : [] });
+      const logs = Array.isArray(raw) ? raw : [];
+      const names = await readAdminNames();
+      const levels = await readAdminLevels();
+      const enriched = logs.map(function(l) {
+        const actorLow = (l.actor || '').toLowerCase();
+        const actorName = names[actorLow] || names[l.actor] || '';
+        const actorLevel = actorLow === PRIMARY_ADMIN.toLowerCase() ? 'owner'
+          : actorLow === (CO_OWNER_EMAIL || '').toLowerCase() ? 'co-owner'
+          : levels[actorLow] || 'dev';
+        return Object.assign({}, l, { actorName, actorLevel });
+      });
+      return json(res, 200, { logs: enriched });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
@@ -1766,6 +1784,68 @@ async function handleAPI(req, res, urlPath) {
         appendSecurityLog('dev_added', body.adminEmail, key, 'Approved via application', getReqIP(req)).catch(function(){});
       }
       await writeDevApps(apps);
+      return json(res, 200, { ok: true });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  // Log devtools detection event (public — IP-rate-limited by intent, no sensitive data)
+  if (urlPath === '/api/log-dt' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const ip = getReqIP(req);
+      appendSecurityLog('devtools_detected', body.email || 'visitor', '', body.method || 'size', ip).catch(function(){});
+      return json(res, 200, { ok: true });
+    } catch(e) { return json(res, 200, { ok: true }); }
+  }
+
+  // Receipts — co-owner and owner only
+  if (urlPath === '/api/admin/receipts' && req.method === 'GET') {
+    try {
+      const qs = new URL('https://x' + req.url).searchParams;
+      const email = (qs.get('adminEmail') || '').toLowerCase().trim();
+      if (!isCoOwnerOrPrimary(email)) return json(res, 403, { error: 'Co-owner or owner only.' });
+      return json(res, 200, { receipts: await readReceipts() });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/admin/receipt-add' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Co-owner or owner only.' });
+      const { clientEmail, clientName, address, phone, serviceType, subType, paymentMethod, amount, currency, date, notes } = body;
+      if (!clientEmail || !serviceType) return json(res, 400, { error: 'Client email and service type are required.' });
+      const id = 'rcpt_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+      const receipts = await readReceipts();
+      receipts[id] = {
+        id,
+        clientEmail: clientEmail.toLowerCase().trim(),
+        clientName: (clientName || '').trim().slice(0, 80),
+        address: (address || '').trim().slice(0, 200),
+        phone: (phone || '').trim().slice(0, 30),
+        serviceType: (serviceType || '').trim().slice(0, 60),
+        subType: (subType || '').trim().slice(0, 40),
+        paymentMethod: (paymentMethod || '').trim().slice(0, 80),
+        amount: (amount || '').toString().trim().slice(0, 20),
+        currency: (currency || 'USD').trim().slice(0, 10),
+        date: (date || new Date().toISOString().slice(0, 10)),
+        notes: (notes || '').trim().slice(0, 300),
+        createdBy: (body.adminEmail || '').toLowerCase(),
+        createdAt: Date.now(),
+      };
+      await writeReceipts(receipts);
+      return json(res, 200, { ok: true, id, receipt: receipts[id] });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/admin/receipt-delete' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Co-owner or owner only.' });
+      const { id } = body;
+      if (!id) return json(res, 400, { error: 'id required.' });
+      const receipts = await readReceipts();
+      delete receipts[id];
+      await writeReceipts(receipts);
       return json(res, 200, { ok: true });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
