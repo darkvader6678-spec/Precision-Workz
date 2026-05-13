@@ -355,6 +355,11 @@ async function readPromoCodes() {
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
 }
 const writePromoCodes = (v) => kvWrite('promo-codes', v);
+async function readDevApps() {
+  const raw = _parseKV(await kvRead('dev-applications', {}), {});
+  return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+}
+const writeDevApps = (v) => kvWrite('dev-applications', v);
 async function readProjects() {
   const raw = _parseKV(await kvRead('projects', {}), {});
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
@@ -790,6 +795,39 @@ async function handleAPI(req, res, urlPath) {
     const all = await readCoMessages();
     const mine = all.filter(m => (m.from||'').toLowerCase() === senderEmail);
     return json(res, 200, { messages: mine });
+  }
+
+  // Lightweight admin-check — always 200, no 403 console noise for non-admins
+  if (urlPath === '/api/is-admin' && req.method === 'GET') {
+    const qs = new URLSearchParams(req.url.split('?')[1] || '');
+    const email = (qs.get('email') || '').toLowerCase().trim();
+    if (!email) return json(res, 200, { isAdmin: false, coOwner: CO_OWNER_EMAIL || null, primaryAdmin: PRIMARY_ADMIN });
+    const admins = await readAdmins();
+    const coLow = (CO_OWNER_EMAIL || '').toLowerCase();
+    const allSet = new Set([PRIMARY_ADMIN.toLowerCase(), ...(coLow ? [coLow] : []), ...admins.map(a => a.toLowerCase())]);
+    if (!allSet.has(email)) return json(res, 200, { isAdmin: false, coOwner: CO_OWNER_EMAIL || null, primaryAdmin: PRIMARY_ADMIN });
+    const level = await getAdminLevel(email);
+    return json(res, 200, { isAdmin: true, level, coOwner: CO_OWNER_EMAIL || null, primaryAdmin: PRIMARY_ADMIN });
+  }
+
+  // Developer access application — public POST
+  if (urlPath === '/api/dev-apply' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { email, name, reason, experience, portfolio } = body;
+      if (!email || !reason) return json(res, 400, { error: 'Email and reason are required.' });
+      const key = email.toLowerCase().trim();
+      const apps = await readDevApps();
+      const existing = Object.values(apps).find(a => a.email === key && a.status === 'pending');
+      if (existing) return json(res, 400, { error: 'You already have a pending application.' });
+      const id = 'dapp_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+      apps[id] = { id, email: key, name: (name||'').trim().slice(0,80), reason: reason.trim().slice(0,500), experience: (experience||'').trim().slice(0,500), portfolio: (portfolio||'').trim().slice(0,200), status: 'pending', createdAt: Date.now() };
+      await writeDevApps(apps);
+      sendEmail(GMAIL_USER, 'New Dev Application — ' + key,
+        `<p>A user applied for developer access.</p><p><strong>Email:</strong> ${key}<br><strong>Name:</strong> ${apps[id].name||'N/A'}<br><strong>Reason:</strong> ${apps[id].reason}</p>`
+      ).catch(function(){});
+      return json(res, 200, { ok: true });
+    } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
   // Admin routes
@@ -1678,7 +1716,7 @@ async function handleAPI(req, res, urlPath) {
       if (!email) return json(res, 400, { error: 'Email required.' });
       const [users, reqs] = await Promise.all([readUsers(), readRequests()]);
       const user = users[email];
-      if (!user || !user.verified) return json(res, 404, { error: 'Not found.' });
+      if (!user || !user.verified) return json(res, 200, { name: '', phone: '', business: '' });
       const lastReq = reqs.find(r => r.email && r.email.toLowerCase() === email);
       return json(res, 200, {
         name: user.name || (lastReq && lastReq.name) || '',
@@ -1697,6 +1735,38 @@ async function handleAPI(req, res, urlPath) {
       if (email !== PRIMARY_ADMIN.toLowerCase() && !levelAtLeast(level, 'max')) return json(res, 403, { error: 'Owner or max-level access required.' });
       const raw = _parseKV(await kvRead('security-logs', []), []);
       return json(res, 200, { logs: Array.isArray(raw) ? raw : [] });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/admin/dev-applications' && req.method === 'GET') {
+    try {
+      const qs = new URL('https://x' + req.url).searchParams;
+      const email = (qs.get('adminEmail') || '').toLowerCase().trim();
+      if (!isCoOwnerOrPrimary(email)) return json(res, 403, { error: 'Co-owner or owner only.' });
+      return json(res, 200, { applications: await readDevApps() });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/admin/dev-application-action' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Co-owner or owner only.' });
+      const { id, action } = body;
+      const apps = await readDevApps();
+      if (!apps[id]) return json(res, 404, { error: 'Application not found.' });
+      apps[id].status = action === 'approve' ? 'approved' : 'rejected';
+      apps[id].reviewedBy = (body.adminEmail || '').toLowerCase();
+      apps[id].reviewedAt = Date.now();
+      if (action === 'approve') {
+        const [admins, levels, names] = await Promise.all([readAdmins(), readAdminLevels(), readAdminNames()]);
+        const key = apps[id].email;
+        if (!admins.map(a => a.toLowerCase()).includes(key)) { admins.push(key); await writeAdmins(admins); }
+        if (!levels[key]) { levels[key] = 'low'; await writeAdminLevels(levels); }
+        if (apps[id].name && !names[key]) { names[key] = apps[id].name; await writeAdminNames(names); }
+        appendSecurityLog('dev_added', body.adminEmail, key, 'Approved via application', getReqIP(req)).catch(function(){});
+      }
+      await writeDevApps(apps);
+      return json(res, 200, { ok: true });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
