@@ -2889,7 +2889,10 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
   <div class="section-header centered fade-up" style="margin-bottom:48px">
     <div class="section-tag">Get In Touch</div>
     <h2 class="section-title">Let's Build <span class="grad-text">Something Great</span></h2>
-    <p class="section-sub">Tell us about your project. We respond within 24 hours — usually much faster.</p>
+    <p class="section-sub">Tell us about your project — we respond within 24 hours, usually much faster. Already a client? Your info is pre-filled below.</p>
+  </div>
+  <div id="cf-client-banner" style="display:none;max-width:700px;margin:0 auto 24px;padding:10px 18px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);border-radius:10px;font-size:.82rem;color:#4ade80;font-weight:600;text-align:center">
+    ✓ Logged in as <span id="cf-client-banner-email"></span> — your details have been pre-filled.
   </div>
   <div class="contact-wrap">
     <div class="contact-info fade-up">
@@ -3598,6 +3601,46 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
     </div>
 
+    <!-- Promo Codes — primary admin only -->
+    <div class="admin-section" id="adm-promo-section" style="display:none">
+      <div class="admin-section-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Promo Codes</span>
+        <button class="admin-btn ghost" style="font-size:.72rem" onclick="adminLoadPromos()">↻ Refresh</button>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px">
+        <div>
+          <div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Code</div>
+          <input id="adm-promo-code" class="admin-input" placeholder="SAVE20" maxlength="20" style="width:120px;text-transform:uppercase">
+        </div>
+        <div>
+          <div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Discount</div>
+          <input id="adm-promo-discount" class="admin-input" placeholder="20" type="number" min="1" max="100" style="width:80px">
+        </div>
+        <div>
+          <div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Type</div>
+          <select id="adm-promo-type" class="admin-input" style="width:100px">
+            <option value="percent">% Off</option>
+            <option value="fixed">$ Fixed</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Max Uses</div>
+          <input id="adm-promo-maxuses" class="admin-input" placeholder="∞" type="number" min="1" style="width:80px">
+        </div>
+        <div>
+          <div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Expiry</div>
+          <input id="adm-promo-expiry" class="admin-input" type="date" style="width:140px">
+        </div>
+        <div>
+          <div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Label (optional)</div>
+          <input id="adm-promo-label" class="admin-input" placeholder="Return client discount" style="width:180px">
+        </div>
+        <button class="admin-btn primary" style="padding:9px 18px" onclick="adminAddPromo()">+ Add Code</button>
+      </div>
+      <div id="adm-promo-msg" style="font-size:.8rem;margin-bottom:10px;min-height:14px"></div>
+      <div id="adm-promo-list"><div style="color:var(--dim);font-size:.8rem">Loading…</div></div>
+    </div>
+
     <div class="admin-section">
       <div class="admin-section-title">All Clients</div>
       <div class="admin-search-row">
@@ -4053,9 +4096,11 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <p>We build to the highest standards but cannot guarantee specific business outcomes. Precision Workz is not liable for losses beyond the cost of the project itself.</p>
     <h2>7. Termination</h2>
     <p>Either party may terminate the agreement with written notice. Work completed to the termination date will be invoiced. Deposits are non-refundable once work has commenced.</p>
-    <h2>8. Governing Law</h2>
+    <h2>8. Developer Tools & Site Inspection</h2>
+    <p>The use of browser developer tools (including but not limited to Inspect Element, the JavaScript console, network tab, and source viewer) to examine, copy, modify, or interfere with the code, design, or functionality of this website is strictly prohibited for general visitors. This restriction exists to protect our proprietary design work and intellectual property. Registered developers with an authorized developer account are exempt from this restriction. Attempts to inspect or reverse-engineer this site without authorization may be logged and are a violation of these Terms of Service.</p>
+    <h2>9. Governing Law</h2>
     <p>These terms are governed by the laws of the State of Arizona.</p>
-    <h2>9. Contact</h2>
+    <h2>10. Contact</h2>
     <p><a href="mailto:precizionworkz@gmail.com">precizionworkz@gmail.com</a></p>
     <div class="legal-footer">
       <span class="legal-footer-copy">© 2026 Precision Workz · Arizona</span>
@@ -4810,21 +4855,31 @@ function openLegal(id){document.getElementById('legal-'+id).classList.add('open'
 function closeLegal(id){document.getElementById('legal-'+id).classList.remove('open');document.body.style.overflow=''}
 document.querySelectorAll('.legal-overlay').forEach(function(el){el.addEventListener('click',function(e){if(e.target===el){el.classList.remove('open');document.body.style.overflow=''}})});
 
-var _VALID_PROMOS={'RETURN25':25,'RETURN5':5,'LOYAL10':10,'LAUNCH20':20};
+var _appliedPromo = null;
 function applyContactPromo(){
   var code=(document.getElementById('cfPromo').value||'').trim().toUpperCase();
   var statusEl=document.getElementById('cfPromoStatus');
+  var inp=document.getElementById('cfPromo');
   if(!code){statusEl.style.color='#f87171';statusEl.textContent='Enter a promo code first.';return}
-  var pct=_VALID_PROMOS[code];
-  if(pct){
-    statusEl.style.color='#4ade80';
-    statusEl.textContent='✓ Code '+code+' applied — '+pct+'% off your project!';
-    document.getElementById('cfPromo').style.borderColor='rgba(74,222,128,.5)';
-  } else {
-    statusEl.style.color='#f87171';
-    statusEl.textContent='Invalid promo code.';
-    document.getElementById('cfPromo').style.borderColor='rgba(248,113,113,.5)';
-  }
+  statusEl.style.color='var(--dim)';statusEl.textContent='Checking…';
+  fetch('/api/promo/validate?code='+encodeURIComponent(code))
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d.valid){
+        _appliedPromo={code:code,discount:d.discount,type:d.type};
+        var label=d.type==='fixed'?'$'+d.discount+' off':''+d.discount+'% off';
+        statusEl.style.color='#4ade80';
+        statusEl.textContent='✓ Code '+code+' applied — '+label+' your project!';
+        inp.style.borderColor='rgba(74,222,128,.5)';
+      } else {
+        _appliedPromo=null;
+        statusEl.style.color='#f87171';
+        statusEl.textContent=d.expired?'That code has expired.':d.exhausted?'That code has reached its usage limit.':'Invalid promo code.';
+        inp.style.borderColor='rgba(248,113,113,.5)';
+      }
+    }).catch(function(){
+      statusEl.style.color='#f87171';statusEl.textContent='Could not validate code — try again.';
+    });
 }
 
 /* ── PROFANITY FILTER ─────────────────────────────────── */
@@ -5099,6 +5154,32 @@ function updateAuthUI(user){
   }
   _updateCtaBanner(user);
   checkAdminBtn(user);
+  _autofillContactForm(user);
+}
+
+function _autofillContactForm(user) {
+  var banner = document.getElementById('cf-client-banner');
+  var bannerEmail = document.getElementById('cf-client-banner-email');
+  if (!user || !user.email) {
+    if (banner) banner.style.display = 'none';
+    return;
+  }
+  var nameEl = document.getElementById('cfName');
+  var emailEl = document.getElementById('cfEmail');
+  if (nameEl && !nameEl.value && user.name) nameEl.value = user.name;
+  if (emailEl && !emailEl.value) emailEl.value = user.email;
+  if (banner) { banner.style.display = ''; }
+  if (bannerEmail) bannerEmail.textContent = user.email;
+  fetch('/api/client-info?email=' + encodeURIComponent(user.email))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.error) return;
+      var phoneEl = document.getElementById('cfPhone');
+      var bizEl = document.getElementById('cfBusiness');
+      if (nameEl && !nameEl.value && d.name) nameEl.value = d.name;
+      if (phoneEl && !phoneEl.value && d.phone) phoneEl.value = d.phone;
+      if (bizEl && !bizEl.value && d.business) bizEl.value = d.business;
+    }).catch(function(){});
 }
 
 function _updateCtaBanner(user){
@@ -5820,6 +5901,81 @@ function adminLoadData() {
       adminLoadReports();
     })
     .catch(function(e) { console.warn('Admin fetch failed:', e); });
+}
+
+function adminLoadPromos() {
+  var email = adminGetEmail();
+  if (!email) return;
+  var listEl = document.getElementById('adm-promo-list');
+  if (!listEl) return;
+  fetch('/api/admin/promo-list?adminEmail=' + encodeURIComponent(email))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var promos = d.promos || {};
+      var keys = Object.keys(promos);
+      if (!keys.length) { listEl.innerHTML = '<div style="color:var(--dim);font-size:.8rem;padding:8px 0">No promo codes yet.</div>'; return; }
+      listEl.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.78rem">'
+        + '<thead><tr style="color:var(--dim);text-align:left"><th style="padding:5px 8px">Code</th><th style="padding:5px 8px">Discount</th><th style="padding:5px 8px">Uses</th><th style="padding:5px 8px">Max Uses</th><th style="padding:5px 8px">Expiry</th><th style="padding:5px 8px">Label</th><th style="padding:5px 8px"></th></tr></thead><tbody>'
+        + keys.sort().map(function(code){
+          var p = promos[code];
+          var disc = p.type === 'fixed' ? '$' + p.discount : p.discount + '%';
+          var exp = p.expiry ? new Date(p.expiry).toLocaleDateString() : '∞';
+          var isExp = p.expiry && Date.now() > p.expiry;
+          var isFull = p.maxUses && p.uses >= p.maxUses;
+          var status = isExp ? '<span style="color:#f87171">Expired</span>' : isFull ? '<span style="color:#f87171">Full</span>' : '<span style="color:#4ade80">Active</span>';
+          return '<tr style="border-top:1px solid rgba(255,255,255,.05)">'
+            + '<td style="padding:7px 8px;font-weight:800;color:var(--cyan2);letter-spacing:.5px">' + escHtml(code) + '</td>'
+            + '<td style="padding:7px 8px;color:#fbbf24;font-weight:700">' + disc + '</td>'
+            + '<td style="padding:7px 8px">' + (p.uses || 0) + '</td>'
+            + '<td style="padding:7px 8px">' + (p.maxUses || '∞') + '</td>'
+            + '<td style="padding:7px 8px;color:var(--dim)">' + exp + ' ' + status + '</td>'
+            + '<td style="padding:7px 8px;color:var(--dim);font-style:italic">' + escHtml(p.label || '') + '</td>'
+            + '<td style="padding:7px 8px"><button class="admin-btn ghost" style="padding:3px 10px;font-size:.7rem;color:#f87171;border-color:rgba(239,68,68,.3)" onclick="adminRemovePromo(\''+escHtml(code)+'\')">Remove</button></td>'
+            + '</tr>';
+        }).join('')
+        + '</tbody></table></div>';
+    }).catch(function(){
+      if (listEl) listEl.innerHTML = '<div style="color:#f87171;font-size:.8rem">Failed to load.</div>';
+    });
+}
+
+function adminAddPromo() {
+  var email = adminGetEmail();
+  var code = (document.getElementById('adm-promo-code').value || '').toUpperCase().trim();
+  var discount = parseFloat(document.getElementById('adm-promo-discount').value || '');
+  var type = document.getElementById('adm-promo-type').value;
+  var maxUses = document.getElementById('adm-promo-maxuses').value;
+  var expiry = document.getElementById('adm-promo-expiry').value;
+  var label = document.getElementById('adm-promo-label').value;
+  var msgEl = document.getElementById('adm-promo-msg');
+  if (!code) { msgEl.style.color = '#f87171'; msgEl.textContent = 'Enter a code.'; return; }
+  if (!discount || discount <= 0) { msgEl.style.color = '#f87171'; msgEl.textContent = 'Enter a valid discount.'; return; }
+  msgEl.style.color = 'var(--dim)'; msgEl.textContent = 'Saving…';
+  fetch('/api/admin/promo-add', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminEmail: email, code, discount, type, maxUses: maxUses || null, expiry: expiry || null, label: label || null })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.ok) {
+      msgEl.style.color = '#4ade80'; msgEl.textContent = '✓ Code "' + code + '" added.';
+      document.getElementById('adm-promo-code').value = '';
+      document.getElementById('adm-promo-discount').value = '';
+      document.getElementById('adm-promo-maxuses').value = '';
+      document.getElementById('adm-promo-expiry').value = '';
+      document.getElementById('adm-promo-label').value = '';
+      adminLoadPromos();
+    } else { msgEl.style.color = '#f87171'; msgEl.textContent = d.error || 'Failed.'; }
+  }).catch(function(){ msgEl.style.color = '#f87171'; msgEl.textContent = 'Network error.'; });
+}
+
+function adminRemovePromo(code) {
+  if (!confirm('Remove promo code "' + code + '"?')) return;
+  var email = adminGetEmail();
+  fetch('/api/admin/promo-remove', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminEmail: email, code })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.ok) adminLoadPromos();
+  }).catch(function(){});
 }
 
 function adminRenderStats(clients) {
@@ -6801,6 +6957,13 @@ function adminApplyLevelRestrictions() {
   // Override controls: primary only
   var ovCtrl = document.getElementById('adm-override-controls');
   if (ovCtrl) ovCtrl.style.display = isPrimary ? '' : 'none';
+
+  // Promo codes: primary only
+  var promoSec = document.getElementById('adm-promo-section');
+  if (promoSec) {
+    promoSec.style.display = isPrimary ? '' : 'none';
+    if (isPrimary) adminLoadPromos();
+  }
 
   // Dev management row: primary only
   var devRow = document.getElementById('adm-add-dev-row');
@@ -8024,6 +8187,121 @@ function cookieReject(){
   var el=document.getElementById('threats-today');
   if(el)el.textContent=count;
 })();
+/* ── DEVTOOLS DETECTION ───────────────────────────────── */
+(function(){
+  var _dtOpen = false;
+  var _overlay = null;
+  var _obs = null;
+
+  function _buildOverlay() {
+    var host = document.createElement('div');
+    host.id = '__pw_dt_host';
+    host.setAttribute('data-pw-protected', '1');
+    /* Attach shadow DOM so it's isolated from inspect-and-delete */
+    var shadow = host.attachShadow({ mode: 'closed' });
+    var style = document.createElement('style');
+    style.textContent = [
+      ':host{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:rgba(4,4,13,.97);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}',
+      '.box{max-width:460px;width:calc(100% - 48px);text-align:center;padding:52px 40px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:24px;box-shadow:0 0 80px rgba(124,58,237,.18)}',
+      '.icon{font-size:3rem;margin-bottom:20px;display:block}',
+      '.logo{font-family:Orbitron,monospace;font-weight:900;font-size:.72rem;letter-spacing:3px;text-transform:uppercase;margin-bottom:24px;background:linear-gradient(90deg,#f59e0b,#fbbf24,#d97706);-webkit-background-clip:text;-webkit-text-fill-color:transparent}',
+      '.title{font-size:1.35rem;font-weight:800;color:#f1f5f9;letter-spacing:.3px;margin-bottom:12px}',
+      '.sub{font-size:.88rem;color:rgba(255,255,255,.45);line-height:1.7;margin-bottom:28px}',
+      '.tag{display:inline-block;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;border-radius:999px;padding:4px 14px;font-size:.72rem;font-weight:700;letter-spacing:.5px}',
+      '.dev-note{margin-top:18px;font-size:.72rem;color:rgba(255,255,255,.2);line-height:1.6}'
+    ].join('');
+    var box = document.createElement('div');
+    box.className = 'box';
+    box.innerHTML = '<div class="logo">Precision Workz</div>'
+      + '<span class="icon">🛡️</span>'
+      + '<div class="title">Trying to inspect the site?</div>'
+      + '<div class="sub">Developer tools are not permitted on this site for regular visitors. This action has been noted and is covered under our Terms of Service.</div>'
+      + '<div class="tag">⚠ Unauthorized Access Attempt</div>'
+      + '<div class="dev-note">Are you a registered developer? Log in to your developer account to access this site without restrictions.</div>';
+    shadow.appendChild(style);
+    shadow.appendChild(box);
+    /* Block all interaction underneath */
+    host.style.cssText = 'position:fixed;inset:0;z-index:2147483647';
+    /* Prevent keyboard shortcuts (Escape etc) from closing overlay */
+    host.addEventListener('keydown', function(e){ e.stopPropagation(); e.preventDefault(); }, true);
+    return host;
+  }
+
+  function _showOverlay() {
+    if (_overlay && document.body.contains(_overlay)) return;
+    _overlay = _buildOverlay();
+    document.documentElement.appendChild(_overlay);
+    /* Watch for deletion and re-add */
+    if (_obs) _obs.disconnect();
+    _obs = new MutationObserver(function() {
+      if (_dtOpen && (!_overlay || !document.body.contains(_overlay))) {
+        _overlay = _buildOverlay();
+        document.documentElement.appendChild(_overlay);
+      }
+    });
+    _obs.observe(document.documentElement, { childList: true, subtree: true });
+  }
+
+  function _hideOverlay() {
+    if (_obs) { _obs.disconnect(); _obs = null; }
+    if (_overlay) { try { _overlay.remove(); } catch(e){} _overlay = null; }
+  }
+
+  function _check() {
+    var threshold = 160;
+    var widthOpen = window.outerWidth - window.innerWidth > threshold;
+    var heightOpen = window.outerHeight - window.innerHeight > threshold;
+    /* Allow devs who are logged in to bypass */
+    if (window._userIsAdmin || window._devLoginEmail) {
+      if (_dtOpen) { _dtOpen = false; _hideOverlay(); }
+      return;
+    }
+    if (widthOpen || heightOpen) {
+      if (!_dtOpen) { _dtOpen = true; _showOverlay(); }
+    } else {
+      if (_dtOpen) { _dtOpen = false; _hideOverlay(); }
+    }
+  }
+
+  /* Console timing trick — catches when console panel is open (not just undocked) */
+  var _consoleOpen = false;
+  var _elem = /./;
+  _elem.toString = function(){ _consoleOpen = true; return ''; };
+  function _consoleCheck() {
+    _consoleOpen = false;
+    if (window._userIsAdmin || window._devLoginEmail) return;
+    console.log('%c', _elem);
+    if (_consoleOpen && !_dtOpen) { _dtOpen = true; _showOverlay(); }
+    else if (!_consoleOpen && _dtOpen && !_isUndockedOpen()) { _dtOpen = false; _hideOverlay(); }
+  }
+  function _isUndockedOpen() {
+    return window.outerWidth - window.innerWidth > 160 || window.outerHeight - window.innerHeight > 160;
+  }
+
+  window.addEventListener('resize', _check);
+  setInterval(_check, 1000);
+  setInterval(_consoleCheck, 1500);
+
+  /* Block common devtools shortcuts for non-devs */
+  document.addEventListener('keydown', function(e){
+    if (window._userIsAdmin || window._devLoginEmail) return;
+    var isF12 = e.key === 'F12';
+    var isCtrlShiftI = (e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i');
+    var isCtrlShiftJ = (e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j');
+    var isCtrlShiftC = (e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'C' || e.key === 'c');
+    var isCtrlU = (e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U');
+    if (isF12 || isCtrlShiftI || isCtrlShiftJ || isCtrlShiftC || isCtrlU) {
+      e.preventDefault(); e.stopImmediatePropagation();
+    }
+  }, true);
+
+  /* Block right-click context menu for non-devs */
+  document.addEventListener('contextmenu', function(e){
+    if (window._userIsAdmin || window._devLoginEmail) return;
+    e.preventDefault();
+  });
+})();
+
 /* ── SITE ANALYTICS TRACKING ─────────────────────────── */
 (function(){
   function track(event, label) {

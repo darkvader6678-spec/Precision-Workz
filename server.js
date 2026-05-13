@@ -350,6 +350,11 @@ async function readDevOverride() {
   return (raw && typeof raw === 'object') ? raw : null;
 }
 const writeDevOverride = (v) => kvWrite('dev-override', v);
+async function readPromoCodes() {
+  const raw = _parseKV(await kvRead('promo-codes', {}), {});
+  return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+}
+const writePromoCodes = (v) => kvWrite('promo-codes', v);
 async function readProjects() {
   const raw = _parseKV(await kvRead('projects', {}), {});
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
@@ -643,6 +648,14 @@ async function handleAPI(req, res, urlPath) {
       const reqs = await readRequests();
       reqs.unshift(newReq);
       await writeRequests(reqs);
+      if (promoCode) {
+        const promos = await readPromoCodes();
+        const pKey = promoCode.toUpperCase().trim();
+        if (promos[pKey] && promos[pKey].active) {
+          promos[pKey].uses = (promos[pKey].uses || 0) + 1;
+          await writePromoCodes(promos);
+        }
+      }
       console.log('[Request submitted]', newReq.type, 'from', newReq.email);
       // Email notification to admins
       const typeLabel = newReq.type === 'quote' ? 'Quote Request' : newReq.type.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
@@ -1595,6 +1608,80 @@ async function handleAPI(req, res, urlPath) {
       users[key].resetExpiry = null;
       await writeUsers(users);
       return json(res, 200, { ok: true });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/promo/validate' && req.method === 'GET') {
+    try {
+      const qs = new URL('https://x' + req.url).searchParams;
+      const code = (qs.get('code') || '').toUpperCase().trim();
+      if (!code) return json(res, 400, { error: 'Code required.' });
+      const promos = await readPromoCodes();
+      const promo = promos[code];
+      if (!promo || !promo.active) return json(res, 200, { valid: false });
+      if (promo.expiry && Date.now() > promo.expiry) return json(res, 200, { valid: false, expired: true });
+      if (promo.maxUses && promo.uses >= promo.maxUses) return json(res, 200, { valid: false, exhausted: true });
+      return json(res, 200, { valid: true, discount: promo.discount, type: promo.type || 'percent', code });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/admin/promo-list' && req.method === 'GET') {
+    try {
+      const qs = new URL('https://x' + req.url).searchParams;
+      const email = (qs.get('adminEmail') || '').toLowerCase().trim();
+      if (email !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Owner only.' });
+      const promos = await readPromoCodes();
+      return json(res, 200, { promos });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/admin/promo-add' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      if ((body.adminEmail || '').toLowerCase().trim() !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Owner only.' });
+      const code = (body.code || '').toUpperCase().trim().replace(/\s+/g, '');
+      if (!code || code.length < 2 || code.length > 20) return json(res, 400, { error: 'Code must be 2–20 characters.' });
+      const discount = parseFloat(body.discount);
+      if (!discount || discount <= 0 || discount > 100) return json(res, 400, { error: 'Discount must be 1–100.' });
+      const promos = await readPromoCodes();
+      promos[code] = {
+        discount, type: body.type === 'fixed' ? 'fixed' : 'percent',
+        uses: 0, maxUses: parseInt(body.maxUses) || null,
+        expiry: body.expiry ? new Date(body.expiry).getTime() : null,
+        active: true, createdAt: Date.now(), label: (body.label || '').trim().slice(0, 60) || null,
+      };
+      await writePromoCodes(promos);
+      return json(res, 200, { ok: true, promos });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/admin/promo-remove' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      if ((body.adminEmail || '').toLowerCase().trim() !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Owner only.' });
+      const code = (body.code || '').toUpperCase().trim();
+      if (!code) return json(res, 400, { error: 'Code required.' });
+      const promos = await readPromoCodes();
+      delete promos[code];
+      await writePromoCodes(promos);
+      return json(res, 200, { ok: true, promos });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/client-info' && req.method === 'GET') {
+    try {
+      const qs = new URL('https://x' + req.url).searchParams;
+      const email = (qs.get('email') || '').toLowerCase().trim();
+      if (!email) return json(res, 400, { error: 'Email required.' });
+      const [users, reqs] = await Promise.all([readUsers(), readRequests()]);
+      const user = users[email];
+      if (!user || !user.verified) return json(res, 404, { error: 'Not found.' });
+      const lastReq = reqs.find(r => r.email && r.email.toLowerCase() === email);
+      return json(res, 200, {
+        name: user.name || (lastReq && lastReq.name) || '',
+        phone: (lastReq && lastReq.phone) || '',
+        business: user.businessName || '',
+      });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
