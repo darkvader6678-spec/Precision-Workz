@@ -365,6 +365,11 @@ async function readReceipts() {
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
 }
 const writeReceipts = (v) => kvWrite('receipts', v);
+async function readDTConfig() {
+  const raw = _parseKV(await kvRead('dt-config', { enabled: true }), { enabled: true });
+  return (raw && typeof raw === 'object') ? raw : { enabled: true };
+}
+const writeDTConfig = (v) => kvWrite('dt-config', v);
 async function readProjects() {
   const raw = _parseKV(await kvRead('projects', {}), {});
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
@@ -1796,6 +1801,29 @@ async function handleAPI(req, res, urlPath) {
       appendSecurityLog('devtools_detected', body.email || 'visitor', '', body.method || 'size', ip).catch(function(){});
       return json(res, 200, { ok: true });
     } catch(e) { return json(res, 200, { ok: true }); }
+  }
+
+  // DevTools detection config — public read
+  if (urlPath === '/api/dt-config' && req.method === 'GET') {
+    try {
+      const cfg = await readDTConfig();
+      return json(res, 200, { enabled: cfg.enabled !== false });
+    } catch(e) { return json(res, 200, { enabled: true }); }
+  }
+
+  // DevTools detection toggle — co-owner+ only
+  if (urlPath === '/api/admin/dt-toggle' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const email = (body.adminEmail || '').toLowerCase().trim();
+      if (!isCoOwnerOrPrimary(email)) return json(res, 403, { error: 'Co-owner or owner only.' });
+      const cfg = await readDTConfig();
+      const newEnabled = body.enabled !== undefined ? !!body.enabled : !cfg.enabled;
+      await writeDTConfig({ enabled: newEnabled });
+      const ip = getReqIP(req);
+      appendSecurityLog('dt_detection_toggled', email, '', newEnabled ? 'enabled' : 'disabled', ip).catch(function(){});
+      return json(res, 200, { ok: true, enabled: newEnabled });
+    } catch(e) { return json(res, 500, { error: 'Server error.' }); }
   }
 
   // Receipts — co-owner and owner only
