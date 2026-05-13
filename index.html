@@ -596,7 +596,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 @media(prefers-reduced-motion:reduce){.marquee-row,.marquee-row-2{animation:none;overflow:hidden}}
 @keyframes gold-wave{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 .admin-title-gold{background:linear-gradient(90deg,#f59e0b,#fbbf24,#d97706,#fbbf24,#f59e0b);background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gold-wave 3s ease infinite;font-weight:800}
-#adm-projects-view{display:none;padding-top:20px}
+#adm-projects-view{padding-top:20px;display:flex;flex-direction:column;gap:28px}
 .proj-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;position:relative}
 .proj-card.locked{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.03)}
 .proj-id{font-size:.6rem;letter-spacing:1.5px;color:var(--dim);font-family:'Orbitron',monospace;text-transform:uppercase}
@@ -3618,40 +3618,6 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
     </div>
 
-    <!-- Projects view -->
-    <div id="adm-projects-view">
-      <div class="admin-section" id="adm-add-project-section">
-        <div class="admin-section-title">New Project</div>
-        <div class="admin-form-grid">
-          <div>
-            <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Project Name *</div>
-            <input class="admin-input" id="proj-new-name" type="text" placeholder="e.g. Website Redesign 2026">
-          </div>
-          <div>
-            <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Client Email (optional)</div>
-            <input class="admin-input" id="proj-new-client" type="email" placeholder="client@email.com">
-          </div>
-        </div>
-        <div style="margin-top:10px;display:flex;gap:10px;align-items:flex-end">
-          <div style="flex:1">
-            <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Notes</div>
-            <input class="admin-input" id="proj-new-notes" type="text" placeholder="Any internal notes…">
-          </div>
-          <button class="admin-btn primary" onclick="adminAddProject()">Create Project</button>
-        </div>
-        <div class="admin-msg" id="proj-form-msg"></div>
-      </div>
-      <div class="admin-section">
-        <div class="admin-section-title" style="display:flex;align-items:center;justify-content:space-between">
-          <span>All Projects</span>
-          <button class="admin-btn ghost" onclick="adminLoadData()" style="font-size:.72rem">↻ Refresh</button>
-        </div>
-        <div id="adm-projects-list" style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
-          <p style="color:var(--dim);font-size:.85rem">Loading…</p>
-        </div>
-      </div>
-    </div>
-
     <!-- Team inbox — primary admin only -->
     <div class="admin-section" id="co-inbox-section" style="display:none">
       <div class="admin-section-title" style="display:flex;align-items:center;justify-content:space-between">
@@ -3713,6 +3679,40 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
     </div>
 
+    </div>
+
+    <!-- Projects view — sibling of other tab views -->
+    <div id="adm-projects-view" style="display:none">
+      <div class="admin-section" id="adm-add-project-section">
+        <div class="admin-section-title">New Project</div>
+        <div class="admin-form-grid">
+          <div>
+            <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Project Name *</div>
+            <input class="admin-input" id="proj-new-name" type="text" placeholder="e.g. Website Redesign 2026">
+          </div>
+          <div>
+            <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Client Email (optional)</div>
+            <input class="admin-input" id="proj-new-client" type="email" placeholder="client@email.com">
+          </div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:10px;align-items:flex-end">
+          <div style="flex:1">
+            <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Notes</div>
+            <input class="admin-input" id="proj-new-notes" type="text" placeholder="Any internal notes…">
+          </div>
+          <button class="admin-btn primary" onclick="adminAddProject()">Create Project</button>
+        </div>
+        <div class="admin-msg" id="proj-form-msg"></div>
+      </div>
+      <div class="admin-section">
+        <div class="admin-section-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>All Projects</span>
+          <button class="admin-btn ghost" onclick="adminLoadData()" style="font-size:.72rem">↻ Refresh</button>
+        </div>
+        <div id="adm-projects-list" style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+          <p style="color:var(--dim);font-size:.85rem">Loading…</p>
+        </div>
+      </div>
     </div>
 
     <div id="adm-reports-view" style="display:none;padding-top:20px">
@@ -6887,7 +6887,7 @@ function adminRenderProjects(projects) {
   var isPrimary = (window._myLevel || '') === 'primary';
   var isMed = ['medium','max','primary'].includes(window._myLevel || '');
   var arr = Object.values(projects || {}).sort(function(a,b){ return (b.created||0)-(a.created||0); });
-  if (!arr.length) { list.innerHTML = '<p style="color:var(--dim);font-size:.85rem">No projects yet. Save a client above to auto-create one, or use the form below.</p>'; return; }
+  if (!arr.length) { list.innerHTML = '<div style="text-align:center;padding:32px 20px;background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.1);border-radius:12px"><div style="font-size:1.8rem;margin-bottom:10px">📂</div><div style="font-weight:700;color:rgba(255,255,255,.5);margin-bottom:6px">No projects yet</div><div style="font-size:.82rem;color:var(--dim);line-height:1.6">Use the form above to create one, or save a client with a project name to auto-create it.</div></div>'; return; }
   list.innerHTML = arr.map(function(p) {
     var locked = p.locked;
     var canEdit = isMed && (!locked || isPrimary);
