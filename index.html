@@ -3378,6 +3378,21 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <button class="admin-close-btn" onclick="closeAdmin()">✕ Close</button>
   </div>
   <div class="admin-body">
+    <!-- Temporary owner countdown banner — shown during override -->
+    <div id="ov-panel-banner" style="display:none;margin-bottom:14px;padding:12px 18px;border-radius:12px;background:rgba(220,38,38,.1);border:1px solid rgba(239,68,68,.3);display:none;align-items:center;gap:14px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+        <span style="font-size:.75rem;font-weight:800;letter-spacing:1px;color:#f87171;text-transform:uppercase">🔓 Temporary Owner</span>
+        <span style="font-size:.75rem;color:rgba(255,255,255,.4)">— expires in</span>
+        <span id="ov-banner-timer" style="font-family:'Orbitron',monospace;font-size:.95rem;font-weight:900;color:#f87171;letter-spacing:2px">--:--</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span style="font-size:.7rem;color:rgba(255,255,255,.3);margin-right:2px">Request more time:</span>
+        <button onclick="requestMoreTime(10)" style="padding:5px 12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#f87171;border-radius:7px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s" onmouseover="this.style.background='rgba(239,68,68,.22)'" onmouseout="this.style.background='rgba(239,68,68,.12)'">+10 min</button>
+        <button onclick="requestMoreTime(20)" style="padding:5px 12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#f87171;border-radius:7px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s" onmouseover="this.style.background='rgba(239,68,68,.22)'" onmouseout="this.style.background='rgba(239,68,68,.12)'">+20 min</button>
+        <button onclick="requestMoreTime(30)" style="padding:5px 12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#f87171;border-radius:7px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s" onmouseover="this.style.background='rgba(239,68,68,.22)'" onmouseout="this.style.background='rgba(239,68,68,.12)'">+30 min</button>
+        <span id="ov-extend-msg" style="font-size:.72rem;color:#4ade80;margin-left:4px;display:none"></span>
+      </div>
+    </div>
     <div class="admin-tabs-row">
       <button class="admin-tab-btn active" id="atab-clients" onclick="adminTab('clients')">Clients</button>
       <button class="admin-tab-btn" id="atab-progress" onclick="adminTab('progress')">Progress</button>
@@ -6459,14 +6474,19 @@ function _activateOverride(expiresAt, fromPoll) {
   if (_ovActive) _ovActive.style.display = 'block';
   var statusDiv = document.getElementById('co-override-status');
   if (statusDiv) { statusDiv.textContent = ''; statusDiv.style.color = '#4ade80'; }
+  var _banner = document.getElementById('ov-panel-banner');
+  if (_banner) _banner.style.display = 'flex';
   if (_ovCountdownTimer) clearInterval(_ovCountdownTimer);
   _ovCountdownTimer = setInterval(function() {
-    var remaining = Math.max(0, expiresAt - Date.now());
+    var remaining = Math.max(0, window._emergencyOverrideExpiry - Date.now());
     var m = Math.floor(remaining/60000), s = Math.floor(remaining%60000/1000);
+    var ts = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
     var cd = document.getElementById('co-ov-countdown');
-    if (cd) cd.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    if (cd) cd.textContent = ts;
+    var bt = document.getElementById('ov-banner-timer');
+    if (bt) bt.textContent = ts;
     var sb = document.getElementById('co-override-btn');
-    if (sb) sb.textContent = '🔓 Override Active — ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    if (sb) sb.textContent = '🔓 Override Active — ' + ts;
     if (remaining <= 0) {
       clearInterval(_ovCountdownTimer); _ovCountdownTimer = null;
       window._emergencyOverrideExpiry = null;
@@ -6474,6 +6494,7 @@ function _activateOverride(expiresAt, fromPoll) {
       window._isCoOwner = true;
       var ov = document.getElementById('admin-overlay');
       if (ov) ov.classList.add('co-theme');
+      if (_banner) _banner.style.display = 'none';
       adminApplyLevelRestrictions();
       adminLoadData();
       var _ovActiveEl = document.getElementById('co-ov-step-active');
@@ -6485,6 +6506,28 @@ function _activateOverride(expiresAt, fromPoll) {
       if (_nb) _nb.innerHTML = '<i class="ph-bold ph-shield-star" style="font-size:.85rem"></i> Co-Owner';
     }
   }, 1000);
+}
+
+function requestMoreTime(mins) {
+  var btns = document.querySelectorAll('#ov-panel-banner button');
+  btns.forEach(function(b){ b.disabled = true; b.style.opacity = '.5'; });
+  var msg = document.getElementById('ov-extend-msg');
+  if (msg) { msg.style.display = 'none'; }
+  fetch('/api/override/extend', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ coOwnerEmail: adminGetEmail(), minutes: mins })
+  }).then(function(r){ return r.json(); }).then(function(d) {
+    btns.forEach(function(b){ b.disabled = false; b.style.opacity = '1'; });
+    if (d.ok) {
+      window._emergencyOverrideExpiry = d.expiresAt;
+      if (msg) { msg.textContent = '+' + mins + ' min added'; msg.style.display = 'inline'; setTimeout(function(){ msg.style.display = 'none'; }, 3000); }
+    } else {
+      if (msg) { msg.style.color = '#f87171'; msg.textContent = d.error || 'Failed'; msg.style.display = 'inline'; setTimeout(function(){ msg.style.display = 'none'; msg.style.color = '#4ade80'; }, 3000); }
+    }
+  }).catch(function() {
+    btns.forEach(function(b){ b.disabled = false; b.style.opacity = '1'; });
+  });
 }
 
 function _checkKVOverride(coOwnerEmail) {

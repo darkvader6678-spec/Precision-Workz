@@ -1422,6 +1422,30 @@ async function handleAPI(req, res, urlPath) {
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
+  if (urlPath === '/api/override/extend' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const email = ((body.coOwnerEmail) || '').toLowerCase().trim();
+      const mins = parseInt(body.minutes) || 0;
+      if (!email) return json(res, 400, { error: 'Email required.' });
+      if (![10, 20, 30].includes(mins)) return json(res, 400, { error: 'Invalid duration. Choose 10, 20, or 30.' });
+      const override = await readOverride();
+      if (!override || override.status !== 'approved' || override.requestedBy !== email) return json(res, 403, { error: 'No active override for this account.' });
+      if (Date.now() > override.expiresAt) return json(res, 400, { error: 'Override has already expired.' });
+      const newExpiry = override.expiresAt + mins * 60 * 1000;
+      await writeOverride(Object.assign({}, override, { expiresAt: newExpiry }));
+      sendEmail(PRIMARY_ADMIN, 'Override Extended +' + mins + ' min — Precision Workz',
+        '<div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;background:#04040d;color:#f1f5f9;padding:32px;border-radius:14px;border:1px solid rgba(255,255,255,.07)">'
+        + '<div style="font-weight:900;letter-spacing:2px;font-size:.75rem;color:#f59e0b;margin-bottom:16px">PRECISION WORKZ</div>'
+        + '<h2 style="color:#fbbf24;margin:0 0 12px">⏱ Override Extended</h2>'
+        + '<p style="color:#94a3b8;line-height:1.75">Your co-owner <strong style="color:#fff">' + email + '</strong> extended their temporary owner access by <strong style="color:#f59e0b">+' + mins + ' minutes</strong>.</p>'
+        + '<p style="color:#64748b;font-size:.8rem;margin-top:16px">New expiry: ' + new Date(newExpiry).toLocaleString('en-US',{timeZone:'America/Phoenix'}) + ' AZ time</p>'
+        + '</div>'
+      ).catch(function(){});
+      return json(res, 200, { ok: true, expiresAt: newExpiry });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
   if (urlPath === '/api/welcome-new-user' && req.method === 'POST') {
     try {
       const body = await parseBody(req);
