@@ -5264,21 +5264,75 @@ function closeDashboard(){
 function renderDashboard(user){
   var sub=user.sub||null;
   var pkg=user.packageType||null;
+  var billing=user.billing||'monthly';
   var body=document.getElementById('acct-body');
+  var _isAdminUser=window._userIsAdmin||false;
+  var _isDevOnly=_isAdminUser && !window._isCoOwner && !window._adminIsOwner;
 
   /* avatar */
   var avHtml=user.picture
-    ?'<div class="acct-av-wrap"><img src="'+user.picture+'" alt=""></div>'
-    :'<div class="acct-av-init-lg">'+user.name.charAt(0).toUpperCase()+'</div>';
+    ?'<img src="'+user.picture+'" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid rgba(124,58,237,.4)">'
+    :'<div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:#fff;flex-shrink:0">'+user.name.charAt(0).toUpperCase()+'</div>';
+
+  /* dev-only short-circuit */
+  if (_isDevOnly) {
+    body.innerHTML=
+      '<div style="padding:22px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border)">'+avHtml+'<div><div style="font-size:1rem;font-weight:800;color:var(--text)">'+escHtml(user.name)+'</div><div style="font-size:.78rem;color:var(--dim);margin-top:2px">'+escHtml(user.email)+'</div></div></div>'+
+      '<div style="margin:20px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:20px 18px;text-align:center">'
+        +'<div style="font-size:1.4rem;margin-bottom:10px">🛠️</div>'
+        +'<div style="font-size:.88rem;font-weight:700;color:var(--text);margin-bottom:6px">Developer Account</div>'
+        +'<div style="font-size:.82rem;color:var(--muted);line-height:1.65">No packages or plans appear here — you\'re logged in as a developer. Use the Admin Panel to manage the site.</div>'
+      +'</div>'+
+      '<div style="padding:0 20px 24px"><button class="acct-signout-btn" onclick="signOut()">Sign Out</button></div>';
+    return;
+  }
+
+  /* stats bar */
+  var memberSinceStr = user.addedAt ? new Date(user.addedAt).toLocaleDateString('en-US',{month:'short',year:'numeric'}) : 'New';
+  var planLabel = !sub ? 'No Plan' : sub==='basic' ? 'Basic Managed' : 'Gold Managed';
+  var planColor = !sub ? 'var(--dim)' : sub==='basic' ? '#22d3ee' : '#fbbf24';
+  var billingLabel = sub ? (billing==='annual' ? 'Annual' : 'Monthly') : '—';
+  var statsBar = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:20px">'
+    +'<div style="padding:12px 14px;background:#0d0d26;text-align:center"><div style="font-size:.6rem;font-weight:700;letter-spacing:.5px;color:var(--dim);text-transform:uppercase;margin-bottom:4px">Member Since</div><div style="font-size:.82rem;font-weight:700;color:var(--text)">'+escHtml(memberSinceStr)+'</div></div>'
+    +'<div style="padding:12px 14px;background:#0d0d26;text-align:center"><div style="font-size:.6rem;font-weight:700;letter-spacing:.5px;color:var(--dim);text-transform:uppercase;margin-bottom:4px">Plan</div><div style="font-size:.82rem;font-weight:700;color:'+planColor+'">'+escHtml(planLabel)+'</div></div>'
+    +'<div style="padding:12px 14px;background:#0d0d26;text-align:center"><div style="font-size:.6rem;font-weight:700;letter-spacing:.5px;color:var(--dim);text-transform:uppercase;margin-bottom:4px">Billing</div><div style="font-size:.82rem;font-weight:700;color:var(--text)">'+escHtml(billingLabel)+'</div></div>'
+    +'</div>';
 
   /* subscription card */
   var subHtml;
   if(!sub){
-    subHtml='<div class="acct-sub-card"><div class="acct-sub-name" style="color:var(--muted)">No Active Plan</div><div class="acct-sub-detail">Subscribe to a managed plan to unlock support requests.</div><button class="acct-upgrade-btn" onclick="closeDashboard();document.getElementById(\'subscription\').scrollIntoView({behavior:\'smooth\'})">View Managed Plans</button></div>';
+    subHtml='<div class="acct-sub-card" style="border:1px dashed rgba(255,255,255,.1)">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:1.2rem">📋</span><div style="font-size:.95rem;font-weight:700;color:var(--muted)">No Active Plan</div></div>'
+      +'<div class="acct-sub-detail" style="margin-bottom:14px">You don\'t have a managed plan yet. A plan gives you direct support, monthly updates, security monitoring, and priority response.</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      +'<button class="acct-upgrade-btn" onclick="closeDashboard();document.getElementById(\'subscription\').scrollIntoView({behavior:\'smooth\'})">View Managed Plans →</button>'
+      +'<button class="acct-upgrade-btn" style="background:rgba(255,255,255,.04);color:var(--dim);border-color:rgba(255,255,255,.1)" onclick="closeDashboard();document.getElementById(\'contact\').scrollIntoView({behavior:\'smooth\'})">Contact Us</button>'
+      +'</div></div>';
   } else if(sub==='basic'){
-    subHtml='<div class="acct-sub-card active-basic"><div class="acct-sub-name">Basic Managed</div><div class="acct-sub-detail">Active subscription</div><button class="acct-upgrade-btn" onclick="closeDashboard();document.getElementById(\'subscription\').scrollIntoView({behavior:\'smooth\'})">Upgrade to Gold →</button></div>';
+    subHtml='<div class="acct-sub-card active-basic">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+      +'<div class="acct-sub-name">Basic Managed</div>'
+      +'<span style="font-size:.65rem;font-weight:700;background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.3);color:#22d3ee;padding:2px 9px;border-radius:999px;letter-spacing:.3px">ACTIVE</span>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+      +'<div style="background:rgba(255,255,255,.03);border-radius:8px;padding:8px 10px"><div style="font-size:.62rem;color:var(--dim);font-weight:600;margin-bottom:2px">Billing</div><div style="font-size:.82rem;font-weight:700;color:var(--text)">$49 / mo</div></div>'
+      +'<div style="background:rgba(255,255,255,.03);border-radius:8px;padding:8px 10px"><div style="font-size:.62rem;color:var(--dim);font-weight:600;margin-bottom:2px">Cycle</div><div style="font-size:.82rem;font-weight:700;color:var(--text)">'+escHtml(billing==='annual'?'Annual':'Monthly')+'</div></div>'
+      +'</div>'
+      +'<div class="acct-sub-detail" style="margin-bottom:10px">✓ Monthly updates &nbsp;·&nbsp; ✓ Uptime monitoring &nbsp;·&nbsp; ✓ Priority support</div>'
+      +'<button class="acct-upgrade-btn" onclick="closeDashboard();document.getElementById(\'subscription\').scrollIntoView({behavior:\'smooth\'})">Upgrade to Gold — $149/mo →</button>'
+      +'</div>';
   } else {
-    subHtml='<div class="acct-sub-card active-gold"><div class="acct-sub-name" style="background:linear-gradient(135deg,var(--gold2),#f97316);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Gold Managed</div><div class="acct-sub-detail">Active · Priority support</div></div>';
+    subHtml='<div class="acct-sub-card active-gold">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+      +'<div class="acct-sub-name" style="background:linear-gradient(135deg,var(--gold2),#f97316);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Gold Managed</div>'
+      +'<span style="font-size:.65rem;font-weight:700;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);color:#fbbf24;padding:2px 9px;border-radius:999px;letter-spacing:.3px">ACTIVE</span>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+      +'<div style="background:rgba(255,255,255,.03);border-radius:8px;padding:8px 10px"><div style="font-size:.62rem;color:var(--dim);font-weight:600;margin-bottom:2px">Billing</div><div style="font-size:.82rem;font-weight:700;color:var(--text)">$149 / mo</div></div>'
+      +'<div style="background:rgba(255,255,255,.03);border-radius:8px;padding:8px 10px"><div style="font-size:.62rem;color:var(--dim);font-weight:600;margin-bottom:2px">Cycle</div><div style="font-size:.82rem;font-weight:700;color:var(--text)">'+escHtml(billing==='annual'?'Annual':'Monthly')+'</div></div>'
+      +'</div>'
+      +'<div class="acct-sub-detail">✓ Weekly updates &nbsp;·&nbsp; ✓ Security monitoring &nbsp;·&nbsp; ✓ Feature requests &nbsp;·&nbsp; ✓ Emergency support</div>'
+      +'</div>';
   }
 
   /* project package card */
@@ -5302,45 +5356,43 @@ function renderDashboard(user){
       pkgFeatures=['Clean, professional starter site','Mobile-responsive layout','Basic contact form & setup','30-day launch support'];
     }
     var featHtml=pkgFeatures.map(function(f){return '<div style="display:flex;align-items:flex-start;gap:8px;font-size:.8rem;color:var(--muted);margin-bottom:5px"><span style="color:#4ade80;margin-top:1px;flex-shrink:0">✓</span>'+escHtml(f)+'</div>';}).join('');
-    pkgHtml='<div><div class="acct-section-label">Project Package</div><div class="acct-pkg-card '+pkgClass+'" id="acct-pkg-card"><div class="acct-sub-name" style="'+pkgNameStyle+'">'+pkgLabel+' Package</div><div style="margin-top:12px">'+featHtml+'</div><div id="acct-project-name" style="margin-top:12px;display:none"><div style="font-size:.68rem;font-weight:700;letter-spacing:.5px;color:var(--dim);text-transform:uppercase;margin-bottom:4px">Your Project</div><div style="font-size:.88rem;color:var(--cyan2);font-weight:600" id="acct-project-name-val"></div></div></div></div>';
+    pkgHtml='<div><div class="acct-section-label">Project Package</div><div class="acct-pkg-card '+pkgClass+'" id="acct-pkg-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div class="acct-sub-name" style="'+pkgNameStyle+'">'+pkgLabel+' Package</div><span style="font-size:.65rem;font-weight:700;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:#4ade80;padding:2px 9px;border-radius:999px">ACTIVE</span></div><div>'+featHtml+'</div><div id="acct-project-name" style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);display:none"><div style="font-size:.68rem;font-weight:700;letter-spacing:.5px;color:var(--dim);text-transform:uppercase;margin-bottom:4px">Your Project</div><div style="font-size:.9rem;color:var(--cyan2);font-weight:700" id="acct-project-name-val"></div></div></div></div>';
   }
 
-  /* request panel — hidden for owners/co-owners */
-  var reqHtml='';
-  var _isAdminUser=window._userIsAdmin||false;
-  var _isDevOnly=_isAdminUser && !window._isCoOwner && !window._adminIsOwner;
+  /* quick actions */
+  var quickHtml='<div><div class="acct-section-label">Quick Actions</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    +'<button style="padding:11px 10px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);border-radius:10px;color:var(--purple2);font-size:.78rem;font-weight:700;cursor:pointer;text-align:left;font-family:inherit;transition:all .2s" onclick="closeDashboard();document.getElementById(\'contact\').scrollIntoView({behavior:\'smooth\'})" onmouseover="this.style.background=\'rgba(124,58,237,.16)\'" onmouseout="this.style.background=\'rgba(124,58,237,.08)\'">📩 Start a New Project</button>'
+    +'<button style="padding:11px 10px;background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.15);border-radius:10px;color:#22d3ee;font-size:.78rem;font-weight:700;cursor:pointer;text-align:left;font-family:inherit;transition:all .2s" onclick="closeDashboard();document.getElementById(\'services\').scrollIntoView({behavior:\'smooth\'})" onmouseover="this.style.background=\'rgba(6,182,212,.12)\'" onmouseout="this.style.background=\'rgba(6,182,212,.06)\'">🔍 View Our Services</button>'
+    +(sub ? '<button style="padding:11px 10px;background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.15);border-radius:10px;color:#4ade80;font-size:.78rem;font-weight:700;cursor:pointer;text-align:left;font-family:inherit;transition:all .2s" onclick="closeDashboard();openReqModal(\'general\')" onmouseover="this.style.background=\'rgba(74,222,128,.12)\'" onmouseout="this.style.background=\'rgba(74,222,128,.06)\'">💬 Send a Message</button>' : '')
+    +'<button style="padding:11px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:var(--dim);font-size:.78rem;font-weight:700;cursor:pointer;text-align:left;font-family:inherit;transition:all .2s" onclick="openReportModal()" onmouseover="this.style.background=\'rgba(255,255,255,.06)\'" onmouseout="this.style.background=\'rgba(255,255,255,.03)\'">⚑ Report a Problem</button>'
+    +'</div></div>';
 
+  /* request submit panel */
+  var reqHtml='';
   if(!_isAdminUser&&!sub){
-    reqHtml='<div class="acct-req-panel"><div class="acct-section-label" style="margin-bottom:12px">Support Requests</div><p style="font-size:.84rem;color:var(--dim);line-height:1.65">Subscribe to a managed plan to submit support requests.</p></div>';
+    reqHtml='<div class="acct-req-panel"><div class="acct-section-label" style="margin-bottom:10px">Support Requests</div>'
+      +'<div style="background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.1);border-radius:10px;padding:16px;text-align:center">'
+      +'<div style="font-size:1.1rem;margin-bottom:6px">🔒</div>'
+      +'<div style="font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:4px">Managed Plan Required</div>'
+      +'<div style="font-size:.78rem;color:var(--dim);line-height:1.6;margin-bottom:12px">Subscribe to a managed plan to submit direct support requests with guaranteed response times.</div>'
+      +'<button class="acct-upgrade-btn" onclick="closeDashboard();document.getElementById(\'subscription\').scrollIntoView({behavior:\'smooth\'})">View Plans →</button>'
+      +'</div></div>';
   } else if(!_isAdminUser){
     var btns='';
-    btns+='<button class="req-btn" onclick="closeDashboard();openReqModal(\'bug-fix\')"><span class="req-icon">🐛</span>Bug Fix Request</button>';
-    btns+='<button class="req-btn" onclick="closeDashboard();openReqModal(\'security-issue\')"><span class="req-icon">🔒</span>Security Issue Report</button>';
+    btns+='<button class="req-btn" onclick="closeDashboard();openReqModal(\'bug-fix\')"><span class="req-icon">🐛</span>Bug Fix</button>';
+    btns+='<button class="req-btn" onclick="closeDashboard();openReqModal(\'security-issue\')"><span class="req-icon">🔒</span>Security Issue</button>';
     btns+='<button class="req-btn" onclick="closeDashboard();openReqModal(\'feature-request\')"><span class="req-icon">✨</span>Feature Request</button>';
-    btns+='<button class="req-btn" onclick="closeDashboard();openReqModal(\'maintenance\')"><span class="req-icon">🔧</span>Maintenance Check</button>';
+    btns+='<button class="req-btn" onclick="closeDashboard();openReqModal(\'maintenance\')"><span class="req-icon">🔧</span>Maintenance</button>';
     if(sub==='gold'){
       btns+='<button class="req-btn req-emergency" onclick="closeDashboard();openReqModal(\'emergency\')"><span class="req-icon">🚨</span>Emergency Repair</button>';
-      btns+='<button class="req-btn" onclick="closeDashboard();openReqModal(\'security-audit\')"><span class="req-icon">🛡️</span>Full Security Audit</button>';
+      btns+='<button class="req-btn" onclick="closeDashboard();openReqModal(\'security-audit\')"><span class="req-icon">🛡️</span>Security Audit</button>';
     } else {
-      btns+='<button class="req-btn req-locked" disabled><span class="req-icon">🚨</span>Emergency Repair<span style="margin-left:auto;font-size:.7rem">Gold only</span></button>';
-      btns+='<button class="req-btn req-locked" disabled><span class="req-icon">🛡️</span>Full Security Audit<span style="margin-left:auto;font-size:.7rem">Gold only</span></button>';
-      btns+='<p class="req-upgrade-tip">Need emergency access? <a onclick="closeDashboard();document.getElementById(\'subscription\').scrollIntoView({behavior:\'smooth\'})">Upgrade to Gold →</a></p>';
+      btns+='<button class="req-btn req-locked" disabled><span class="req-icon">🚨</span>Emergency Repair<span style="margin-left:auto;font-size:.7rem;opacity:.6">Gold only</span></button>';
+      btns+='<button class="req-btn req-locked" disabled><span class="req-icon">🛡️</span>Security Audit<span style="margin-left:auto;font-size:.7rem;opacity:.6">Gold only</span></button>';
+      btns+='<p class="req-upgrade-tip">Upgrade to Gold for emergency access →</p>';
     }
     var panelClass=sub==='gold'?'req-gold':'req-basic';
-    reqHtml='<div class="acct-req-panel '+panelClass+'"><div class="acct-section-label" style="margin-bottom:12px">Submit a Request</div>'+btns+'</div>';
-  }
-
-  /* dev-only view: short-circuit before building sub/pkg/progress sections */
-  if (_isDevOnly) {
-    body.innerHTML=
-      '<div class="acct-user-card">'+avHtml+'<div><div class="acct-user-name-lg">'+escHtml(user.name)+'</div><div class="acct-user-email-lg">'+escHtml(user.email)+'</div></div></div>'+
-      '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:20px 18px;text-align:center">'
-        +'<div style="font-size:1.4rem;margin-bottom:10px">🛠️</div>'
-        +'<div style="font-size:.88rem;font-weight:700;color:var(--text);margin-bottom:6px">Developer Account</div>'
-        +'<div style="font-size:.82rem;color:var(--muted);line-height:1.65">No packages or plans appear here — you\'re logged in as a developer. Use the Admin Panel to manage the site.</div>'
-      +'</div>'+
-      '<button class="acct-signout-btn" onclick="signOut()">Sign Out</button>';
-    return;
+    reqHtml='<div class="acct-req-panel '+panelClass+'"><div class="acct-section-label" style="margin-bottom:12px">Submit a Request</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+btns+'</div></div>';
   }
 
   /* project progress */
@@ -5370,15 +5422,23 @@ function renderDashboard(user){
       + '</div></div>';
   }
 
-  var memberSince = user.addedAt ? 'Member since ' + new Date(user.addedAt).toLocaleDateString('en-US',{month:'long',year:'numeric'}) : '';
+  /* assemble */
   body.innerHTML=
-    '<div class="acct-user-card">'+avHtml+'<div><div class="acct-user-name-lg">'+escHtml(user.name)+'</div><div class="acct-user-email-lg">'+escHtml(user.email)+'</div>'+(memberSince?'<div style="font-size:.72rem;color:var(--dim);margin-top:3px">'+escHtml(memberSince)+'</div>':'')+'</div></div>'+
-    '<div><div class="acct-section-label">Subscription</div>'+subHtml+'</div>'+
-    pkgHtml+
-    progressHtml+
-    reqHtml+
-    (_isAdminUser?'':'<div><div class="acct-section-label" style="margin-bottom:8px">My Requests</div><div id="client-req-list"><p style="color:var(--dim);font-size:.82rem;text-align:center;padding:16px">Loading…</p></div></div>')+
-    '<button class="acct-signout-btn" onclick="signOut()">Sign Out</button>';
+    '<div style="padding:22px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border)">'+avHtml
+      +'<div style="min-width:0"><div style="font-size:1rem;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(user.name)+'</div>'
+      +'<div style="font-size:.75rem;color:var(--dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(user.email)+'</div>'
+      +(user.addedAt?'<div style="font-size:.68rem;color:rgba(255,255,255,.28);margin-top:3px">Member since '+new Date(user.addedAt).toLocaleDateString('en-US',{month:'long',year:'numeric'})+'</div>':'')
+    +'</div></div>'
+    + statsBar
+    +'<div style="padding:0 20px;display:flex;flex-direction:column;gap:20px;padding-bottom:28px">'
+    +'<div><div class="acct-section-label">Subscription</div>'+subHtml+'</div>'
+    + pkgHtml
+    + progressHtml
+    + quickHtml
+    + reqHtml
+    +(_isAdminUser?'':'<div><div class="acct-section-label" style="margin-bottom:8px">Request History</div><div id="client-req-list"><p style="color:var(--dim);font-size:.82rem;text-align:center;padding:16px">Loading…</p></div></div>')
+    +'<button class="acct-signout-btn" onclick="signOut()">Sign Out</button>'
+    +'</div>';
 
   if(!_isAdminUser) {
     loadClientRequests(user.email);
