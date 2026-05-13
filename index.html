@@ -5702,8 +5702,18 @@ function adminLoadData() {
       }
       if (!_isPrimary) coOwnerLoadMyMessages();
       if (_isPrimary) adminLoadCoMessages();
-      // On reload: co-owner with no active memory override — check KV for a persisted override
-      if (_rawIsCO && !_overrideActive) _checkKVOverride(_myEml);
+      // On reload: co-owner with no active memory override — check sessionStorage first (instant), then KV
+      if (_rawIsCO && !_overrideActive) {
+        var _storedOv = null;
+        try { _storedOv = JSON.parse(sessionStorage.getItem('_ovReload') || 'null'); } catch(e) {}
+        if (_storedOv && _storedOv.expiresAt && Date.now() < _storedOv.expiresAt) {
+          sessionStorage.removeItem('_ovReload');
+          _activateOverride(_storedOv.expiresAt);
+        } else {
+          sessionStorage.removeItem('_ovReload');
+          _checkKVOverride(_myEml);
+        }
+      }
       adminRenderTable(d.clients);
       adminLoadRequests();
       adminLoadReports();
@@ -6416,6 +6426,7 @@ function _showOverrideReloadToast() {
     + '<div style="font-size:.82rem;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:16px">The page will automatically reload to<br>apply your new permissions.</div>'
     + '<div id="ov-reload-count" style="font-size:1.6rem;font-weight:900;color:#4ade80;letter-spacing:2px">3</div>';
   document.body.appendChild(toast);
+  try { sessionStorage.setItem('_ovReload', JSON.stringify({ expiresAt: window._emergencyOverrideExpiry })); } catch(e) {}
   var n = 3;
   var tid = setInterval(function() {
     n--;
@@ -6434,6 +6445,8 @@ function _activateOverride(expiresAt, fromPoll) {
   window._isCoOwner = false;
   var overlay = document.getElementById('admin-overlay');
   if (overlay) overlay.classList.remove('co-theme');
+  var _navBtn = document.getElementById('nav-admin-btn');
+  if (_navBtn) _navBtn.innerHTML = '<i class="ph-bold ph-shield-star" style="font-size:.85rem"></i> <span style="color:#f87171;font-weight:800">Temporary Owner</span>';
   // Update subtitle immediately before async adminLoadData returns
   var _sub = document.getElementById('admin-panel-subtitle');
   if (_sub) _sub.textContent = '— Temporary Owner';
@@ -6468,6 +6481,8 @@ function _activateOverride(expiresAt, fromPoll) {
       if (_ovActiveEl) _ovActiveEl.style.display = 'none';
       if (_ovModal) _ovModal.style.display = 'none';
       if (sb) { sb.textContent = '⚡ Emergency Override'; sb.style.borderColor='rgba(239,68,68,.25)'; sb.style.color='#f87171'; }
+      var _nb = document.getElementById('nav-admin-btn');
+      if (_nb) _nb.innerHTML = '<i class="ph-bold ph-shield-star" style="font-size:.85rem"></i> Co-Owner';
     }
   }, 1000);
 }

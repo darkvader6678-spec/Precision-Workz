@@ -147,6 +147,19 @@ const GMAIL_USER = process.env.GMAIL_USER || '';
 const GMAIL_PASS = process.env.GMAIL_PASS || '';
 const SITE_URL   = process.env.SITE_URL   || 'https://precisionworkz.net';
 
+// Singleton transporter — reuses the SMTP connection pool instead of new TLS handshake per email
+let _transporter = null;
+function getTransporter() {
+  if (!_transporter && nodemailer && GMAIL_USER && GMAIL_PASS) {
+    _transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com', port: 587, secure: false,
+      auth: { user: GMAIL_USER, pass: GMAIL_PASS },
+      pool: true, maxConnections: 3,
+    });
+  }
+  return _transporter;
+}
+
 const MIME = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript',
   '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml',
@@ -410,11 +423,8 @@ function emailBtn(href, label) {
 }
 
 function sendVerificationEmail(toEmail, token) {
-  if (!nodemailer || !GMAIL_USER || !GMAIL_PASS) {
-    console.warn('[Email] GMAIL_USER/GMAIL_PASS not set — cannot send verification email');
-    return Promise.resolve();
-  }
-  const transporter = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: GMAIL_USER, pass: GMAIL_PASS } });
+  const transporter = getTransporter();
+  if (!transporter) { console.warn('[Email] GMAIL_USER/GMAIL_PASS not set — cannot send verification email'); return Promise.resolve(); }
   const link = SITE_URL + '/verify-email?token=' + token;
   return transporter.sendMail({
     from: '"Precision Workz" <' + GMAIL_USER + '>',
@@ -439,9 +449,9 @@ function sendVerificationEmail(toEmail, token) {
 }
 
 function sendWelcomeEmail(toEmail, name) {
-  if (!nodemailer || !GMAIL_USER || !GMAIL_PASS) return Promise.resolve();
+  const transporter = getTransporter();
+  if (!transporter) return Promise.resolve();
   const firstName = (name || toEmail.split('@')[0]).split(' ')[0];
-  const transporter = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: GMAIL_USER, pass: GMAIL_PASS } });
   return transporter.sendMail({
     from: '"Precision Workz" <' + GMAIL_USER + '>',
     to: toEmail,
@@ -477,9 +487,9 @@ function sendWelcomeEmail(toEmail, name) {
 }
 
 function sendPasswordResetEmail(toEmail, token) {
-  if (!nodemailer || !GMAIL_USER || !GMAIL_PASS) return Promise.resolve();
+  const transporter = getTransporter();
+  if (!transporter) return Promise.resolve();
   const link = SITE_URL + '/reset-password?token=' + token;
-  const transporter = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: GMAIL_USER, pass: GMAIL_PASS } });
   return transporter.sendMail({
     from: '"Precision Workz" <' + GMAIL_USER + '>',
     to: toEmail,
@@ -517,11 +527,8 @@ function buildMaintenancePage(opts) {
 }
 
 async function sendEmail(to, subject, html) {
-  if (!nodemailer || !GMAIL_USER || !GMAIL_PASS) {
-    console.warn('[Email] Skipped — GMAIL_USER or GMAIL_PASS not configured');
-    return;
-  }
-  const transporter = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: GMAIL_USER, pass: GMAIL_PASS } });
+  const transporter = getTransporter();
+  if (!transporter) { console.warn('[Email] Skipped — GMAIL_USER or GMAIL_PASS not configured'); return; }
   const recipients = Array.isArray(to) ? to.filter(Boolean).join(',') : to;
   try {
     await transporter.sendMail({ from: '"Precision Workz" <' + GMAIL_USER + '>', to: recipients, subject, html });
