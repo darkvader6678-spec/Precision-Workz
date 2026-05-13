@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -3553,6 +3553,51 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
       </div>
     </div>
 
+    <!-- Override Controls — primary admin only -->
+    <div class="admin-section" id="adm-override-controls" style="display:none">
+      <div class="admin-section-title">Override Controls</div>
+
+      <div style="margin-bottom:20px">
+        <div style="font-size:.72rem;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.45);margin-bottom:10px;text-transform:uppercase">Co-Owner Override</div>
+        <div id="adm-co-ov-none" style="font-size:.82rem;color:var(--dim)">No active override.</div>
+        <div id="adm-co-ov-active" style="display:none">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;flex-wrap:wrap">
+            <span style="font-size:.82rem;color:rgba(255,255,255,.55)">Active — expires in</span>
+            <span id="adm-co-ov-timer" style="font-family:'Orbitron',monospace;font-size:1rem;font-weight:900;color:#f87171;letter-spacing:2px">--:--</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button onclick="ownerExtendOverride(10)" class="admin-btn ghost" style="font-size:.75rem;padding:5px 12px;color:#4ade80;border-color:rgba(74,222,128,.3)">+10 min</button>
+            <button onclick="ownerExtendOverride(20)" class="admin-btn ghost" style="font-size:.75rem;padding:5px 12px;color:#4ade80;border-color:rgba(74,222,128,.3)">+20 min</button>
+            <button onclick="ownerExtendOverride(30)" class="admin-btn ghost" style="font-size:.75rem;padding:5px 12px;color:#4ade80;border-color:rgba(74,222,128,.3)">+30 min</button>
+            <button onclick="ownerRevokeOverride()" class="admin-btn danger" style="font-size:.75rem;padding:5px 12px">Revoke</button>
+            <span id="adm-co-ov-msg" style="font-size:.74rem;min-height:14px"></span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding-top:16px;border-top:1px solid rgba(255,255,255,.06)">
+        <div style="font-size:.72rem;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.45);margin-bottom:10px;text-transform:uppercase">Grant Emergency Owner to Max Dev</div>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+          <div>
+            <div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Max Dev</div>
+            <select class="admin-input" id="adm-grant-dev-sel" style="max-width:230px">
+              <option value="">— no max devs —</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:.68rem;color:var(--dim);margin-bottom:4px;font-weight:600">Duration</div>
+            <select class="admin-input" id="adm-grant-dev-dur" style="max-width:130px">
+              <option value="10">10 minutes</option>
+              <option value="20" selected>20 minutes</option>
+              <option value="30">30 minutes</option>
+            </select>
+          </div>
+          <button onclick="ownerGrantDevOverride()" class="admin-btn primary" style="font-size:.8rem;padding:9px 16px">Grant Temp. Owner</button>
+        </div>
+        <div id="adm-grant-dev-msg" style="font-size:.74rem;margin-top:8px;min-height:14px"></div>
+      </div>
+    </div>
+
     <div class="admin-section">
       <div class="admin-section-title">All Clients</div>
       <div class="admin-search-row">
@@ -5729,6 +5774,38 @@ function adminLoadData() {
           _checkKVOverride(_myEml);
         }
       }
+      // Store co-owner email for owner extend calls
+      if (d.coOwner) window._coOwnerEmailForPanel = d.coOwner;
+      // Primary: load override status + populate max-dev grant dropdown
+      if (_rawIsPrimary) {
+        ownerLoadOverrideStatus();
+        var levels = d.adminLevels || {};
+        var maxDevs = (d.admins || []).filter(function(e) {
+          return e.toLowerCase() !== d.primaryAdmin.toLowerCase() && levels[e.toLowerCase()] === 'max';
+        });
+        var sel = document.getElementById('adm-grant-dev-sel');
+        if (sel) sel.innerHTML = maxDevs.length
+          ? '<option value="">— select dev —</option>' + maxDevs.map(function(e){ return '<option value="'+escHtml(e)+'">'+escHtml(e)+'</option>'; }).join('')
+          : '<option value="">— no max devs —</option>';
+      }
+      // Max dev: check sessionStorage for granted access (instant on reload), then poll KV
+      if (window._myLevel === 'max' && !_overrideActive) {
+        var _storedDev = null;
+        try { _storedDev = JSON.parse(sessionStorage.getItem('_devOvReload') || 'null'); } catch(e) {}
+        if (_storedDev && _storedDev.expiresAt && Date.now() < _storedDev.expiresAt) {
+          sessionStorage.removeItem('_devOvReload');
+          // Activate silently — same flow as co-owner override on reload
+          window._emergencyOverrideExpiry = _storedDev.expiresAt;
+          window._savedLevel = window._myLevel;
+          window._myLevel = 'primary';
+          window._isCoOwner = false;
+          adminApplyLevelRestrictions();
+          adminLoadData();
+        } else {
+          sessionStorage.removeItem('_devOvReload');
+          _checkDevGrant(_myEml);
+        }
+      }
       adminRenderTable(d.clients);
       adminLoadRequests();
       adminLoadReports();
@@ -6477,7 +6554,22 @@ function _activateOverride(expiresAt, fromPoll) {
   var _banner = document.getElementById('ov-panel-banner');
   if (_banner) _banner.style.display = 'flex';
   if (_ovCountdownTimer) clearInterval(_ovCountdownTimer);
+  var _ovKvTick = 0;
   _ovCountdownTimer = setInterval(function() {
+    // Every 10s sync with KV so owner revoke/extend takes effect quickly
+    _ovKvTick++;
+    if (_ovKvTick % 10 === 0) {
+      fetch('/api/override/status?email=' + encodeURIComponent(adminGetEmail()))
+        .then(function(r){ return r.json(); })
+        .then(function(d) {
+          if (d.status === 'approved' && d.expiresAt) {
+            window._emergencyOverrideExpiry = d.expiresAt;
+            try { sessionStorage.setItem('_ovReload', JSON.stringify({ expiresAt: d.expiresAt })); } catch(e) {}
+          } else if (d.status !== 'approved') {
+            window._emergencyOverrideExpiry = 0;
+          }
+        }).catch(function(){});
+    }
     var remaining = Math.max(0, window._emergencyOverrideExpiry - Date.now());
     var m = Math.floor(remaining/60000), s = Math.floor(remaining%60000/1000);
     var ts = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
@@ -6505,6 +6597,122 @@ function _activateOverride(expiresAt, fromPoll) {
       var _nb = document.getElementById('nav-admin-btn');
       if (_nb) _nb.innerHTML = '<i class="ph-bold ph-shield-star" style="font-size:.85rem"></i> Co-Owner';
     }
+  }, 1000);
+}
+
+/* ── OWNER OVERRIDE CONTROLS ─────────────────────────────── */
+var _ownerOvTimer = null;
+var _ownerOvExpiry = 0;
+
+function ownerLoadOverrideStatus() {
+  var email = adminGetEmail();
+  if (!email) return;
+  fetch('/api/override/owner-view?adminEmail=' + encodeURIComponent(email))
+    .then(function(r){ return r.json(); })
+    .then(function(d) {
+      var noneEl  = document.getElementById('adm-co-ov-none');
+      var actEl   = document.getElementById('adm-co-ov-active');
+      if (d.status === 'approved' && d.expiresAt && Date.now() < d.expiresAt) {
+        if (noneEl) noneEl.style.display = 'none';
+        if (actEl)  actEl.style.display  = '';
+        _ownerOvExpiry = d.expiresAt;
+        _startOwnerOvTimer();
+      } else {
+        if (noneEl) noneEl.style.display = '';
+        if (actEl)  actEl.style.display  = 'none';
+        _ownerOvExpiry = 0;
+        if (_ownerOvTimer) { clearInterval(_ownerOvTimer); _ownerOvTimer = null; }
+      }
+    }).catch(function(){});
+}
+
+function _startOwnerOvTimer() {
+  if (_ownerOvTimer) clearInterval(_ownerOvTimer);
+  _ownerOvTimer = setInterval(function() {
+    var remaining = Math.max(0, _ownerOvExpiry - Date.now());
+    var m = Math.floor(remaining/60000), s = Math.floor(remaining%60000/1000);
+    var el = document.getElementById('adm-co-ov-timer');
+    if (el) el.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    if (remaining <= 0) {
+      clearInterval(_ownerOvTimer); _ownerOvTimer = null;
+      ownerLoadOverrideStatus();
+    }
+  }, 1000);
+}
+
+function ownerExtendOverride(mins) {
+  var email = adminGetEmail();
+  var coEmail = window._coOwnerEmailForPanel || '';
+  fetch('/api/override/extend', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ coOwnerEmail: coEmail, minutes: mins })
+  }).then(function(r){ return r.json(); }).then(function(d) {
+    var msg = document.getElementById('adm-co-ov-msg');
+    if (d.ok) {
+      _ownerOvExpiry = d.expiresAt;
+      if (msg) { msg.style.color = '#4ade80'; msg.textContent = '+' + mins + ' min added'; setTimeout(function(){ msg.textContent = ''; }, 3000); }
+    } else {
+      if (msg) { msg.style.color = '#f87171'; msg.textContent = d.error || 'Failed'; setTimeout(function(){ msg.textContent = ''; }, 3000); }
+    }
+  }).catch(function(){});
+}
+
+function ownerRevokeOverride() {
+  if (!confirm('Revoke the co-owner\'s temporary access now?')) return;
+  fetch('/api/override/revoke', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminEmail: adminGetEmail() })
+  }).then(function(r){ return r.json(); }).then(function(d) {
+    if (d.ok) ownerLoadOverrideStatus();
+  }).catch(function(){});
+}
+
+function ownerGrantDevOverride() {
+  var devEmail = (document.getElementById('adm-grant-dev-sel') || {}).value || '';
+  var mins = parseInt((document.getElementById('adm-grant-dev-dur') || {}).value) || 20;
+  var msg = document.getElementById('adm-grant-dev-msg');
+  if (!devEmail) { if (msg) { msg.style.color = '#f87171'; msg.textContent = 'Select a dev first.'; } return; }
+  fetch('/api/override/grant-dev', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminEmail: adminGetEmail(), devEmail: devEmail, minutes: mins })
+  }).then(function(r){ return r.json(); }).then(function(d) {
+    if (msg) {
+      if (d.ok) { msg.style.color = '#4ade80'; msg.textContent = 'Granted! They will be notified automatically.'; }
+      else { msg.style.color = '#f87171'; msg.textContent = d.error || 'Failed.'; }
+      setTimeout(function(){ msg.textContent = ''; }, 4000);
+    }
+  }).catch(function(){});
+}
+
+/* ── MAX DEV GRANT POLLING ───────────────────────────────── */
+function _checkDevGrant(email) {
+  fetch('/api/override/dev-status?email=' + encodeURIComponent(email))
+    .then(function(r){ return r.json(); })
+    .then(function(d) {
+      if (d.status === 'granted' && d.expiresAt && Date.now() < d.expiresAt) {
+        _activateDevOverride(d.expiresAt);
+      }
+    }).catch(function(){});
+}
+
+function _activateDevOverride(expiresAt) {
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:300000;background:rgba(10,10,20,.97);border:1px solid rgba(245,158,11,.45);border-radius:16px;padding:28px 36px;text-align:center;min-width:300px;box-shadow:0 0 60px rgba(245,158,11,.15)';
+  toast.innerHTML = '<div style="font-size:1.6rem;margin-bottom:10px">🔓</div>'
+    + '<div style="font-weight:800;font-size:1rem;color:#fbbf24;margin-bottom:8px">Owner Granted You Temporary Access</div>'
+    + '<div style="font-size:.82rem;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:16px">The page will reload to apply full owner permissions.</div>'
+    + '<div id="dev-ov-reload-count" style="font-size:1.6rem;font-weight:900;color:#fbbf24;letter-spacing:2px">3</div>';
+  document.body.appendChild(toast);
+  try { sessionStorage.setItem('_devOvReload', JSON.stringify({ expiresAt: expiresAt })); } catch(e) {}
+  var n = 3;
+  var tid = setInterval(function() {
+    n--;
+    var el = document.getElementById('dev-ov-reload-count');
+    if (el) el.textContent = n;
+    if (n <= 0) { clearInterval(tid); location.reload(); }
   }, 1000);
 }
 
@@ -6580,6 +6788,10 @@ function adminApplyLevelRestrictions() {
   // Add-project section: medium+ only
   var addProjSec = document.getElementById('adm-add-project-section');
   if (addProjSec) addProjSec.style.display = isMed ? '' : 'none';
+
+  // Override controls: primary only
+  var ovCtrl = document.getElementById('adm-override-controls');
+  if (ovCtrl) ovCtrl.style.display = isPrimary ? '' : 'none';
 
   // Dev management row: primary only
   var devRow = document.getElementById('adm-add-dev-row');

@@ -345,6 +345,11 @@ async function readOverride() {
   return (raw && typeof raw === 'object') ? raw : null;
 }
 const writeOverride = (v) => kvWrite('emergency-override', v);
+async function readDevOverride() {
+  const raw = _parseKV(await kvRead('dev-override', null), null);
+  return (raw && typeof raw === 'object') ? raw : null;
+}
+const writeDevOverride = (v) => kvWrite('dev-override', v);
 async function readProjects() {
   const raw = _parseKV(await kvRead('projects', {}), {});
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
@@ -1443,6 +1448,53 @@ async function handleAPI(req, res, urlPath) {
         + '</div>'
       ).catch(function(){});
       return json(res, 200, { ok: true, expiresAt: newExpiry });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/override/revoke' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      if ((body.adminEmail || '').toLowerCase().trim() !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Primary admin only.' });
+      await writeOverride(null);
+      return json(res, 200, { ok: true });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/override/owner-view' && req.method === 'GET') {
+    try {
+      const qs = new URL('https://x' + req.url).searchParams;
+      if ((qs.get('adminEmail') || '').toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Primary admin only.' });
+      const override = await readOverride();
+      if (!override || override.status !== 'approved') return json(res, 200, { status: 'none' });
+      if (Date.now() > override.expiresAt) { await writeOverride(null); return json(res, 200, { status: 'none' }); }
+      return json(res, 200, { status: 'approved', expiresAt: override.expiresAt, requestedBy: override.requestedBy });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/override/grant-dev' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      if ((body.adminEmail || '').toLowerCase().trim() !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Primary admin only.' });
+      const devEmail = ((body.devEmail) || '').toLowerCase().trim();
+      const mins = parseInt(body.minutes) || 20;
+      if (!devEmail) return json(res, 400, { error: 'Dev email required.' });
+      if (![10, 20, 30].includes(mins)) return json(res, 400, { error: 'Invalid duration.' });
+      const level = await getAdminLevel(devEmail);
+      if (level !== 'max') return json(res, 400, { error: 'Dev must have Max access level.' });
+      const expiresAt = Date.now() + mins * 60 * 1000;
+      await writeDevOverride({ grantedTo: devEmail, grantedBy: PRIMARY_ADMIN, grantedAt: Date.now(), expiresAt });
+      return json(res, 200, { ok: true, expiresAt });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/override/dev-status' && req.method === 'GET') {
+    try {
+      const email = (new URL('https://x' + req.url).searchParams.get('email') || '').toLowerCase().trim();
+      if (!email) return json(res, 400, { error: 'Email required.' });
+      const dov = await readDevOverride();
+      if (!dov || dov.grantedTo !== email) return json(res, 200, { status: 'none' });
+      if (Date.now() > dov.expiresAt) { await writeDevOverride(null); return json(res, 200, { status: 'expired' }); }
+      return json(res, 200, { status: 'granted', expiresAt: dov.expiresAt });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
