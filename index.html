@@ -7457,6 +7457,33 @@ function checkAdminBtn(user) {
     .catch(function() { window._userIsAdmin = false; window._isCoOwner = false; adminBtn.style.display = 'none'; });
 }
 
+/* ── CLIENT DATA LIVE SYNC ───────────────────────────────── */
+var _clientPollId = null;
+function _startClientPoll(email) {
+  if (_clientPollId) clearInterval(_clientPollId);
+  _clientPollId = setInterval(function() {
+    if (!getUserData()) { clearInterval(_clientPollId); _clientPollId = null; return; }
+    if (window._userIsAdmin) return;
+    fetch('/api/client-status?email=' + encodeURIComponent(email))
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var ts = (d.client && d.client.updatedAt) || '';
+        if (!ts || !window._clientDataTs || ts === window._clientDataTs) return;
+        window._clientDataTs = ts;
+        var drawer = document.getElementById('acct-drawer');
+        if (drawer && drawer.classList.contains('open')) {
+          openDashboard();
+        } else {
+          var toast = document.createElement('div');
+          toast.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:999999;background:rgba(10,10,20,.97);border:1px solid rgba(74,222,128,.35);border-radius:12px;padding:14px 24px;font-size:.88rem;color:#4ade80;font-weight:700;box-shadow:0 4px 32px rgba(0,0,0,.5);white-space:nowrap';
+          toast.textContent = '✓ Your account was updated — reloading…';
+          document.body.appendChild(toast);
+          setTimeout(function() { location.reload(); }, 1800);
+        }
+      }).catch(function(){});
+  }, 25000);
+}
+
 /* ── INIT ON LOAD ─────────────────────────────────────────── */
 (function(){
   /* dev portal session from maintenance page bypass */
@@ -7486,6 +7513,8 @@ function checkAdminBtn(user) {
           setUserData(user);
           updateAuthUI(user);
         }
+        window._clientDataTs = (d.client && d.client.updatedAt) || '';
+        _startClientPoll(user.email);
       }).catch(function(){});
   }
 
