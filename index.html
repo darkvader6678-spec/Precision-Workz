@@ -1488,7 +1488,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <div class="stat-label">In Business <span class="stat-click-hint">↑</span></div>
     <div class="stat-note" id="age-note">
       <button class="stat-note-close" onclick="event.stopPropagation();toggleStatNote('age-note')">×</button>
-      <s`trong style="display:block;margin-bottom:6px;color:var(--text);font-size:.85rem">Early Access. Full Commitment.</strong>
+      <s`1trong style="display:block;margin-bottom:6px;color:var(--text);font-size:.85rem">Early Access. Full Commitment.</strong>
       Precision Workz has been delivering full-stack platforms for <span id="age-note-days">over a year</span> — and we charge a fraction of what agencies do for the same quality. You get our full focus, not the divided attention of a shop juggling hundreds of accounts.
     </div>
   </div>
@@ -1735,7 +1735,7 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     </div>
 
     <div class="work-item fade-up">
-      <div class="work-visual" data-cta="Start a Project →">
+      <div class="work-visual" data-cta="Start a Project →" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">
         <div class="work-visual-inner" style="background:linear-gradient(145deg,#070410,#0e0618,#130820)">
           <div style="position:absolute;inset:0;background:radial-gradient(circle at 40% 55%,rgba(236,72,153,.1),transparent 50%),radial-gradient(circle at 70% 30%,rgba(124,58,237,.12),transparent 50%)"></div>
           <div class="wv-terminal-window">
@@ -5132,6 +5132,8 @@ function renderDashboard(user){
   /* request panel — hidden for owners/co-owners */
   var reqHtml='';
   var _isAdminUser=window._userIsAdmin||false;
+  var _isDevOnly=_isAdminUser && !window._isCoOwner && !window._adminIsOwner;
+
   if(!_isAdminUser&&!sub){
     reqHtml='<div class="acct-req-panel"><div class="acct-section-label" style="margin-bottom:12px">Support Requests</div><p style="font-size:.84rem;color:var(--dim);line-height:1.65">Subscribe to a managed plan to submit support requests.</p></div>';
   } else if(!_isAdminUser){
@@ -5150,6 +5152,19 @@ function renderDashboard(user){
     }
     var panelClass=sub==='gold'?'req-gold':'req-basic';
     reqHtml='<div class="acct-req-panel '+panelClass+'"><div class="acct-section-label" style="margin-bottom:12px">Submit a Request</div>'+btns+'</div>';
+  }
+
+  /* dev-only view: short-circuit before building sub/pkg/progress sections */
+  if (_isDevOnly) {
+    body.innerHTML=
+      '<div class="acct-user-card">'+avHtml+'<div><div class="acct-user-name-lg">'+escHtml(user.name)+'</div><div class="acct-user-email-lg">'+escHtml(user.email)+'</div></div></div>'+
+      '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:20px 18px;text-align:center">'
+        +'<div style="font-size:1.4rem;margin-bottom:10px">🛠️</div>'
+        +'<div style="font-size:.88rem;font-weight:700;color:var(--text);margin-bottom:6px">Developer Account</div>'
+        +'<div style="font-size:.82rem;color:var(--muted);line-height:1.65">No packages or plans appear here — you\'re logged in as a developer. Use the Admin Panel to manage the site.</div>'
+      +'</div>'+
+      '<button class="acct-signout-btn" onclick="signOut()">Sign Out</button>';
+    return;
   }
 
   /* project progress */
@@ -5645,18 +5660,23 @@ function adminLoadData() {
       window._adminClients = d.clients;
       window._adminProjects = d.projects || {};
       var _myEml = adminGetEmail().toLowerCase();
-      var _isCO = !!(d.coOwner && _myEml === d.coOwner.toLowerCase());
-      window._isCoOwner = _isCO;
+      var _rawIsCO = !!(d.coOwner && _myEml === d.coOwner.toLowerCase());
+      var _rawIsPrimary = _myEml === (d.primaryAdmin||'').toLowerCase();
+      var _overrideActive = !!(window._emergencyOverrideExpiry && Date.now() < window._emergencyOverrideExpiry);
+      if (!_overrideActive) {
+        window._isCoOwner = _rawIsCO;
+        window._myLevel = d.myLevel || (_rawIsPrimary ? 'primary' : _rawIsCO ? 'co-owner' : 'low');
+      }
+      var _isCO = window._isCoOwner;
+      var _isPrimary = window._myLevel === 'primary';
       var _cleanBtn = document.querySelector('[onclick="adminCleanDB()"]');
-      if (_cleanBtn) _cleanBtn.style.display = _isCO ? 'none' : '';
-      var _isPrimary = _myEml === (d.primaryAdmin||'').toLowerCase();
-      window._myLevel = d.myLevel || (_isPrimary ? 'primary' : _isCO ? 'co-owner' : 'low');
-      if (_isPrimary) adminCheckKV();
+      if (_cleanBtn) _cleanBtn.style.display = (_isCO && !_overrideActive) ? 'none' : '';
+      if (_rawIsPrimary && !_overrideActive) adminCheckKV();
       adminApplyLevelRestrictions();
-      // Apply / remove co-owner theme
+      // Apply / remove co-owner theme (suppressed during override)
       var overlay = document.getElementById('admin-overlay');
-      if (overlay) overlay.classList.toggle('co-theme', _isCO);
-      // Show inbox for primary, compose for all non-primary admins
+      if (overlay) overlay.classList.toggle('co-theme', _isCO && !_overrideActive);
+      // Show inbox for primary (and override), compose for all non-primary
       var inboxEl = document.getElementById('co-inbox-section');
       var composeEl = document.getElementById('co-compose-section');
       if (inboxEl) inboxEl.style.display = _isPrimary ? '' : 'none';
@@ -5667,12 +5687,13 @@ function adminLoadData() {
       var _myName = (d.adminNames || {})[_myEml] || (d.adminNames || {})[adminGetEmail()] || '';
       var _subtitle = document.getElementById('admin-panel-subtitle');
       if (_subtitle) {
-        if (_isCO) _subtitle.textContent = '— Co-Owner Panel';
+        if (_overrideActive) _subtitle.textContent = '— Temporary Owner';
+        else if (_isCO) _subtitle.textContent = '— Co-Owner Panel';
         else if (_myName && !_isPrimary) _subtitle.textContent = '— Welcome, ' + _myName.split(' ')[0];
         else _subtitle.textContent = '— Control Panel';
       }
-      // Populate remove-dev dropdown for co-owner
-      if (_isCO) {
+      // Populate remove-dev dropdown for co-owner only (not during override — full owner view)
+      if (_isCO && !_overrideActive) {
         var remSel = document.getElementById('co-dev-remove-select');
         if (remSel) {
           var devs = (d.admins||[]).filter(function(e){ return e.toLowerCase() !== d.coOwner.toLowerCase() && e.toLowerCase() !== d.primaryAdmin.toLowerCase(); });
@@ -5681,6 +5702,8 @@ function adminLoadData() {
       }
       if (!_isPrimary) coOwnerLoadMyMessages();
       if (_isPrimary) adminLoadCoMessages();
+      // On reload: co-owner with no active memory override — check KV for a persisted override
+      if (_rawIsCO && !_overrideActive) _checkKVOverride(_myEml);
       adminRenderTable(d.clients);
       adminLoadRequests();
       adminLoadReports();
@@ -5702,7 +5725,7 @@ function adminRenderStats(clients) {
 function adminRenderDevs(admins, primary, coOwner, levels, names) {
   var list = document.getElementById('adm-devs-list');
   var myEmail = adminGetEmail().toLowerCase();
-  var isPrimary = myEmail === (primary || '').toLowerCase();
+  var isPrimary = myEmail === (primary || '').toLowerCase() || window._myLevel === 'primary';
   var addRow = document.getElementById('adm-add-dev-row');
   if (addRow) addRow.style.display = isPrimary ? 'flex' : 'none';
 
@@ -6371,7 +6394,7 @@ function _startOverridePoll() {
         if (waitEl) waitEl.textContent = 'Expires in ' + m + ':' + String(s).padStart(2,'0');
         if (d.status === 'approved') {
           clearInterval(_ovPollTimer); _ovPollTimer = null;
-          _activateOverride(d.expiresAt);
+          _activateOverride(d.expiresAt, true);
         } else if (d.status === 'expired' || d.status === 'none') {
           clearInterval(_ovPollTimer); _ovPollTimer = null;
           document.getElementById('co-ov-step-wait').style.display = 'none';
@@ -6382,21 +6405,47 @@ function _startOverridePoll() {
       }).catch(function(){});
   }, 5000);
 }
-function _activateOverride(expiresAt) {
+function _showOverrideReloadToast() {
+  var existing = document.getElementById('ov-reload-toast');
+  if (existing) existing.remove();
+  var toast = document.createElement('div');
+  toast.id = 'ov-reload-toast';
+  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:300000;background:rgba(10,10,20,.97);border:1px solid rgba(74,222,128,.35);border-radius:16px;padding:28px 36px;text-align:center;min-width:300px;box-shadow:0 0 60px rgba(74,222,128,.15)';
+  toast.innerHTML = '<div style="font-size:1.6rem;margin-bottom:10px">✅</div>'
+    + '<div style="font-weight:800;font-size:1rem;color:#4ade80;margin-bottom:8px">Override Approved</div>'
+    + '<div style="font-size:.82rem;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:16px">The page will automatically reload to<br>apply your new permissions.</div>'
+    + '<div id="ov-reload-count" style="font-size:1.6rem;font-weight:900;color:#4ade80;letter-spacing:2px">3</div>';
+  document.body.appendChild(toast);
+  var n = 3;
+  var tid = setInterval(function() {
+    n--;
+    var el = document.getElementById('ov-reload-count');
+    if (el) el.textContent = n;
+    if (n <= 0) { clearInterval(tid); location.reload(); }
+  }, 1000);
+}
+
+function _activateOverride(expiresAt, fromPoll) {
   window._emergencyOverrideExpiry = expiresAt;
+  if (fromPoll) { _showOverrideReloadToast(); return; }
   window._savedLevel = window._myLevel;
   window._savedIsCoOwner = window._isCoOwner;
   window._myLevel = 'primary';
   window._isCoOwner = false;
   var overlay = document.getElementById('admin-overlay');
   if (overlay) overlay.classList.remove('co-theme');
+  // Update subtitle immediately before async adminLoadData returns
+  var _sub = document.getElementById('admin-panel-subtitle');
+  if (_sub) _sub.textContent = '— Temporary Owner';
   adminApplyLevelRestrictions();
-  adminLoadData();
-  document.getElementById('co-ov-step-wait').style.display = 'none';
-  document.getElementById('co-ov-step-active').style.display = 'block';
-  document.getElementById('co-override-status').textContent = '';
+  adminLoadData();  // _overrideActive guard inside adminLoadData preserves primary level
+  // Update modal UI
+  var _ovWait = document.getElementById('co-ov-step-wait');
+  var _ovActive = document.getElementById('co-ov-step-active');
+  if (_ovWait) _ovWait.style.display = 'none';
+  if (_ovActive) _ovActive.style.display = 'block';
   var statusDiv = document.getElementById('co-override-status');
-  if (statusDiv) statusDiv.style.color = '#4ade80';
+  if (statusDiv) { statusDiv.textContent = ''; statusDiv.style.color = '#4ade80'; }
   if (_ovCountdownTimer) clearInterval(_ovCountdownTimer);
   _ovCountdownTimer = setInterval(function() {
     var remaining = Math.max(0, expiresAt - Date.now());
@@ -6407,17 +6456,33 @@ function _activateOverride(expiresAt) {
     if (sb) sb.textContent = '🔓 Override Active — ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
     if (remaining <= 0) {
       clearInterval(_ovCountdownTimer); _ovCountdownTimer = null;
+      window._emergencyOverrideExpiry = null;
       window._myLevel = window._savedLevel || 'co-owner';
       window._isCoOwner = true;
       var ov = document.getElementById('admin-overlay');
       if (ov) ov.classList.add('co-theme');
       adminApplyLevelRestrictions();
       adminLoadData();
-      document.getElementById('co-ov-step-active').style.display = 'none';
-      document.getElementById('co-override-modal').style.display = 'none';
+      var _ovActiveEl = document.getElementById('co-ov-step-active');
+      var _ovModal = document.getElementById('co-override-modal');
+      if (_ovActiveEl) _ovActiveEl.style.display = 'none';
+      if (_ovModal) _ovModal.style.display = 'none';
       if (sb) { sb.textContent = '⚡ Emergency Override'; sb.style.borderColor='rgba(239,68,68,.25)'; sb.style.color='#f87171'; }
     }
   }, 1000);
+}
+
+function _checkKVOverride(coOwnerEmail) {
+  fetch('/api/override/status?email=' + encodeURIComponent(coOwnerEmail))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.status === 'approved' && d.expiresAt && Date.now() < d.expiresAt) {
+        _activateOverride(d.expiresAt);
+      } else if (d.status === 'pending') {
+        // Override was submitted before page reload — restart the poll so approval is detected automatically
+        _startOverridePoll();
+      }
+    }).catch(function(){});
 }
 
 /* ── ADMIN TABS + MONITOR ─────────────────────────────── */
@@ -6432,10 +6497,11 @@ function adminApplyLevelRestrictions() {
   var isCoOwner = level === 'co-owner';
 
   // Admin badge — level-specific label
+  var _overrideNow = !!(window._emergencyOverrideExpiry && Date.now() < window._emergencyOverrideExpiry);
   var badge = document.querySelector('.admin-badge');
   if (badge && !isCoOwner) {
-    var badgeLabels = { low: 'Low Privileges Admin', medium: 'Admin', max: 'Senior Admin', primary: 'Owner' };
-    var badgeColors = { low: 'linear-gradient(135deg,#15803d,#16a34a)', medium: 'linear-gradient(135deg,var(--purple),var(--cyan))', max: 'linear-gradient(135deg,#b91c1c,#dc2626)', primary: 'linear-gradient(135deg,var(--purple),var(--cyan))' };
+    var badgeLabels = { low: 'Low Privileges Admin', medium: 'Admin', max: 'Senior Admin', primary: _overrideNow ? 'Temp. Owner' : 'Owner' };
+    var badgeColors = { low: 'linear-gradient(135deg,#15803d,#16a34a)', medium: 'linear-gradient(135deg,var(--purple),var(--cyan))', max: 'linear-gradient(135deg,#b91c1c,#dc2626)', primary: _overrideNow ? 'linear-gradient(135deg,#dc2626,#f59e0b)' : 'linear-gradient(135deg,var(--purple),var(--cyan))' };
     badge.textContent = badgeLabels[level] || 'Admin';
     badge.style.background = badgeColors[level] || 'linear-gradient(135deg,var(--purple),var(--cyan))';
   }
@@ -7301,7 +7367,7 @@ function adminDeleteReport(id) {
 function checkAdminBtn(user) {
   var adminBtn = document.getElementById('nav-admin-btn');
   if (!adminBtn) return;
-  if (!user) { window._userIsAdmin = false; adminBtn.style.display = 'none'; return; }
+  if (!user) { window._userIsAdmin = false; window._adminIsOwner = false; adminBtn.style.display = 'none'; return; }
   fetch('/api/admin/data?adminEmail=' + encodeURIComponent(user.email))
     .then(function(r) { return r.json(); })
     .then(function(d) {
@@ -7314,6 +7380,7 @@ function checkAdminBtn(user) {
         var isCO = !!(d.coOwner && user.email.toLowerCase() === d.coOwner.toLowerCase());
         var isPrimaryOwner = !!(d.primaryAdmin && user.email.toLowerCase() === d.primaryAdmin.toLowerCase());
         window._isCoOwner = isCO;
+        window._adminIsOwner = isPrimaryOwner;
         if (isCO) adminBtn.innerHTML = '<i class="ph-bold ph-shield-star" style="font-size:.85rem"></i> Co-Owner';
         // Hide marketing elements for all devs except the owner
         if (!isPrimaryOwner) {
