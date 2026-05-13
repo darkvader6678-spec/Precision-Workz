@@ -3972,6 +3972,15 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
         <div id="mon-site-ctrl-msg" style="margin-top:10px;font-size:.8rem"></div>
       </div>
 
+      <!-- Security Logs -->
+      <div class="mon-card" style="margin-top:12px;border-color:rgba(239,68,68,.18)" id="adm-sec-logs-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="mon-card-title" style="color:#f87171">Security Logs</div>
+          <button class="admin-btn ghost" style="padding:4px 10px;font-size:.7rem" onclick="adminLoadSecurityLogs()">↻ Refresh</button>
+        </div>
+        <div id="adm-sec-logs-body"><div style="color:var(--dim);font-size:.8rem">Loading…</div></div>
+      </div>
+
       </div><!-- end mon-content -->
     </div>
 
@@ -6870,6 +6879,7 @@ function adminTab(tab) {
     } else {
       monRefresh();
       monRefreshActivity();
+      adminLoadSecurityLogs();
       if (!_monTimer) _monTimer = setInterval(monRefresh, 5000);
     }
   } else {
@@ -7133,6 +7143,7 @@ function monUnlock() {
     if (content) content.style.display = '';
     monRefresh();
     monRefreshActivity();
+    adminLoadSecurityLogs();
     if (!_monTimer) _monTimer = setInterval(monRefresh, 5000);
   } else {
     var err = document.getElementById('mon-gate-err');
@@ -7186,6 +7197,48 @@ function monRefreshActivity() {
       }).join('');
     }
   }
+}
+
+function adminLoadSecurityLogs() {
+  var email = adminGetEmail();
+  if (!email || !_monUnlocked) return;
+  var el = document.getElementById('adm-sec-logs-body');
+  if (!el) return;
+  el.innerHTML = '<div style="color:var(--dim);font-size:.8rem">Loading…</div>';
+  fetch('/api/admin/security-logs?adminEmail=' + encodeURIComponent(email))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var logs = d.logs || [];
+      if (!logs.length) { el.innerHTML = '<div style="color:var(--dim);font-size:.8rem;padding:8px 0">No security events logged yet.</div>'; return; }
+      var typeColors = { recaptcha:'#a78bfa', admin_login:'#22d3ee', admin_login_fail:'#f87171', client_login:'#4ade80', client_login_fail:'#f87171', client_added:'#4ade80', client_updated:'#94a3b8', dev_blocked:'#fb923c', dev_added:'#22d3ee', dev_removed:'#f87171', override_approved:'#fbbf24', override_extended:'#fbbf24', override_revoked:'#f87171', dev_override_granted:'#fbbf24' };
+      var typeLabels = { recaptcha:'reCAPTCHA', admin_login:'Admin Login', admin_login_fail:'Admin Login Fail', client_login:'Client Login', client_login_fail:'Client Login Fail', client_added:'Client Added', client_updated:'Client Updated', dev_blocked:'Dev Block', dev_added:'Dev Added', dev_removed:'Dev Removed', override_approved:'Override Approved', override_extended:'Override Extended', override_revoked:'Override Revoked', dev_override_granted:'Dev Override' };
+      el.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.75rem">'
+        + '<thead><tr style="color:var(--dim);text-align:left">'
+        + '<th style="padding:5px 8px;font-weight:700;letter-spacing:.3px">Time</th>'
+        + '<th style="padding:5px 8px;font-weight:700;letter-spacing:.3px">Event</th>'
+        + '<th style="padding:5px 8px;font-weight:700;letter-spacing:.3px">Actor</th>'
+        + '<th style="padding:5px 8px;font-weight:700;letter-spacing:.3px">Target</th>'
+        + '<th style="padding:5px 8px;font-weight:700;letter-spacing:.3px">Detail</th>'
+        + '<th style="padding:5px 8px;font-weight:700;letter-spacing:.3px">IP</th>'
+        + '</tr></thead><tbody>'
+        + logs.slice(0, 100).map(function(log){
+          var ago = Math.floor((Date.now() - log.ts) / 1000);
+          var agoStr = ago < 60 ? ago + 's ago' : ago < 3600 ? Math.floor(ago/60) + 'm ago' : ago < 86400 ? Math.floor(ago/3600) + 'h ago' : Math.floor(ago/86400) + 'd ago';
+          var color = typeColors[log.type] || 'var(--text)';
+          var label = typeLabels[log.type] || log.type;
+          return '<tr style="border-top:1px solid rgba(255,255,255,.05)">'
+            + '<td style="padding:6px 8px;color:var(--dim);white-space:nowrap">' + agoStr + '</td>'
+            + '<td style="padding:6px 8px;white-space:nowrap"><span style="background:rgba(255,255,255,.06);border-radius:999px;padding:1px 8px;color:'+color+';font-weight:700">' + label + '</span></td>'
+            + '<td style="padding:6px 8px;color:var(--text);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(log.actor||'—') + '</td>'
+            + '<td style="padding:6px 8px;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(log.target||'—') + '</td>'
+            + '<td style="padding:6px 8px;color:var(--dim);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(log.detail||'') + '</td>'
+            + '<td style="padding:6px 8px;color:var(--dim);font-family:monospace;white-space:nowrap">' + escHtml(log.ip||'—') + '</td>'
+            + '</tr>';
+        }).join('')
+        + '</tbody></table></div>';
+    }).catch(function(){
+      if (el) el.innerHTML = '<div style="color:#f87171;font-size:.8rem">Failed to load logs.</div>';
+    });
 }
 
 function monRender(d) {

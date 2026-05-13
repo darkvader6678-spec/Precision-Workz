@@ -355,6 +355,20 @@ async function readProjects() {
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
 }
 const writeProjects = (v) => kvWrite('projects', v);
+
+function getReqIP(req) {
+  return ((req.headers['x-forwarded-for'] || '').split(',')[0].trim()) || (req.socket && req.socket.remoteAddress) || '';
+}
+async function appendSecurityLog(type, actor, target, detail, ip) {
+  try {
+    const raw = _parseKV(await kvRead('security-logs', []), []);
+    const arr = Array.isArray(raw) ? raw : [];
+    arr.unshift({ ts: Date.now(), type, actor: actor||'', target: target||'', detail: detail||'', ip: ip||'' });
+    if (arr.length > 400) arr.length = 400;
+    await kvWrite('security-logs', arr);
+  } catch(e) { console.warn('[SecLog]', e.message); }
+}
+
 async function readAnalytics() {
   const raw = _parseKV(await kvRead('analytics', {}), {});
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
@@ -580,6 +594,7 @@ async function handleAPI(req, res, urlPath) {
     try {
       const body = await parseBody(req);
       const passed = await verifyRecaptchaToken(body.token);
+      appendSecurityLog('recaptcha', body.email || 'anonymous', '', passed ? 'passed' : 'failed', getReqIP(req)).catch(function(){});
       return json(res, 200, { ok: passed });
     } catch(e) {
       return json(res, 200, { ok: true }); // fail open
@@ -959,10 +974,19 @@ async function handleAPI(req, res, urlPath) {
         if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
         const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRe.test(targetEmail.trim())) return json(res, 400, { error: 'Invalid email address' });
+        const key = targetEmail.toLowerCase().trim();
+        // Block adding dev emails as clients (primary admin exempt)
+        if (key !== PRIMARY_ADMIN.toLowerCase()) {
+          const tgtLevel = await getAdminLevel(key);
+          if (tgtLevel && body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) {
+            appendSecurityLog('dev_blocked', body.adminEmail, key, 'Attempted to assign client record to a dev account', getReqIP(req));
+            return json(res, 403, { error: 'That email belongs to a developer account and cannot be added as a client. Only the owner can do this.' });
+          }
+        }
         let clients = await readClients();
         if (!clients || typeof clients !== 'object' || Array.isArray(clients)) clients = {};
-        const key = targetEmail.toLowerCase().trim();
         const existing = clients[key] || {};
+        const isNew = !existing.addedAt;
         clients[key] = {
           name:        name        || existing.name || '',
           email:       key,
@@ -975,6 +999,8 @@ async function handleAPI(req, res, urlPath) {
         };
         if (existing.progress) clients[key].progress = existing.progress;
         await writeClients(clients);
+        const changes = [sub!==undefined?'sub:'+sub:'', packageType!==undefined?'pkg:'+packageType:''].filter(Boolean).join(', ') || 'updated';
+        appendSecurityLog(isNew?'client_added':'client_updated', body.adminEmail, key, changes, getReqIP(req));
         return json(res, 200, { ok: true, client: clients[key] });
       } catch(e) {
         console.error('[set-client]', e.message);
@@ -1044,6 +1070,7 @@ async function handleAPI(req, res, urlPath) {
           names[key] = body.name.trim().slice(0, 60);
           await writeAdminNames(names);
         }
+        appendSecurityLog('dev_added', body.adminEmail, key, 'Level: ' + (level || 'low'), getReqIP(req)).catch(function(){});
         return json(res, 200, { ok: true, admins });
       } catch(e) { return json(res, 500, { error: e.message }); }
     }
@@ -1063,6 +1090,7 @@ async function handleAPI(req, res, urlPath) {
         const names = await readAdminNames();
         delete names[key];
         await writeAdminNames(names);
+        appendSecurityLog('dev_removed', body.adminEmail, key, 'Developer removed', getReqIP(req)).catch(function(){});
         return json(res, 200, { ok: true, admins });
       } catch(e) { return json(res, 500, { error: e.message }); }
     }
@@ -1340,7 +1368,11 @@ async function handleAPI(req, res, urlPath) {
       const user = users[key];
       if (!user || !user.verified || !user.password) return json(res, 401, { error: 'Invalid email or password' });
       const ok = await verifyPassword(password, user.password);
-      if (!ok) return json(res, 401, { error: 'Invalid email or password' });
+      if (!ok) {
+        appendSecurityLog('client_login_fail', key, '', 'Incorrect password', getReqIP(req)).catch(function(){});
+        return json(res, 401, { error: 'Invalid email or password' });
+      }
+      appendSecurityLog('client_login', key, '', 'Client logged in', getReqIP(req)).catch(function(){});
       return json(res, 200, { ok: true, user: { email: key, name: key.split('@')[0] } });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
@@ -1356,13 +1388,17 @@ async function handleAPI(req, res, urlPath) {
       const user = users[key];
       if (!user || !user.password) return json(res, 403, { error: 'No account found for this email.' });
       const ok = await verifyPassword(password, user.password);
-      if (!ok) return json(res, 401, { error: 'Incorrect password.' });
+      if (!ok) {
+        appendSecurityLog('admin_login_fail', key, '', 'Incorrect password', getReqIP(req)).catch(function(){});
+        return json(res, 401, { error: 'Incorrect password.' });
+      }
       const level = adminLevels[key] || 'low';
       const siteStatus = await readSiteStatus();
       const isCoOwner = !!(siteStatus.coOwner && siteStatus.coOwner.toLowerCase() === key);
       const isPrimOwner = key === PRIMARY_ADMIN.toLowerCase();
       const canBypass = isPrimOwner || isCoOwner || level === 'max';
       if (canBypass) res.setHeader('Set-Cookie', 'devAccess=1; HttpOnly; Max-Age=7200; Path=/; SameSite=Strict');
+      appendSecurityLog('admin_login', key, '', 'Level: ' + level, getReqIP(req)).catch(function(){});
       return json(res, 200, { ok: true, level, canBypass });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
@@ -1404,6 +1440,7 @@ async function handleAPI(req, res, urlPath) {
       if (Date.now() > override.acceptExpiry) { await writeOverride(null); res.writeHead(200,{'Content-Type':'text/html'}); res.end(html('Request Expired','#f87171','This request has expired. The co-owner can submit a new request if needed.')); return; }
       const now = Date.now();
       await writeOverride(Object.assign({}, override, { status: 'approved', approvedAt: now, expiresAt: now + 20 * 60 * 1000 }));
+      appendSecurityLog('override_approved', PRIMARY_ADMIN, override.requestedBy, 'Emergency override approved for 20 min', getReqIP(req)).catch(function(){});
       res.writeHead(200, {'Content-Type': 'text/html'});
       res.end(html('Access Approved','#4ade80','Done. Your co-owner now has temporary owner access for 20 minutes — it expires automatically. You can close this tab.'));
       return;
@@ -1439,6 +1476,7 @@ async function handleAPI(req, res, urlPath) {
       if (Date.now() > override.expiresAt) return json(res, 400, { error: 'Override has already expired.' });
       const newExpiry = override.expiresAt + mins * 60 * 1000;
       await writeOverride(Object.assign({}, override, { expiresAt: newExpiry }));
+      appendSecurityLog('override_extended', email, '', '+' + mins + ' min extended', getReqIP(req)).catch(function(){});
       sendEmail(PRIMARY_ADMIN, 'Override Extended +' + mins + ' min — Precision Workz',
         '<div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;background:#04040d;color:#f1f5f9;padding:32px;border-radius:14px;border:1px solid rgba(255,255,255,.07)">'
         + '<div style="font-weight:900;letter-spacing:2px;font-size:.75rem;color:#f59e0b;margin-bottom:16px">PRECISION WORKZ</div>'
@@ -1455,7 +1493,9 @@ async function handleAPI(req, res, urlPath) {
     try {
       const body = await parseBody(req);
       if ((body.adminEmail || '').toLowerCase().trim() !== PRIMARY_ADMIN.toLowerCase()) return json(res, 403, { error: 'Primary admin only.' });
+      const _ovBefore = await readOverride();
       await writeOverride(null);
+      appendSecurityLog('override_revoked', PRIMARY_ADMIN, _ovBefore && _ovBefore.requestedBy || '', 'Override revoked by owner', getReqIP(req)).catch(function(){});
       return json(res, 200, { ok: true });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
@@ -1483,6 +1523,7 @@ async function handleAPI(req, res, urlPath) {
       if (level !== 'max') return json(res, 400, { error: 'Dev must have Max access level.' });
       const expiresAt = Date.now() + mins * 60 * 1000;
       await writeDevOverride({ grantedTo: devEmail, grantedBy: PRIMARY_ADMIN, grantedAt: Date.now(), expiresAt });
+      appendSecurityLog('dev_override_granted', PRIMARY_ADMIN, devEmail, 'Dev granted owner access for ' + mins + ' min', getReqIP(req)).catch(function(){});
       return json(res, 200, { ok: true, expiresAt });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
@@ -1554,6 +1595,18 @@ async function handleAPI(req, res, urlPath) {
       users[key].resetExpiry = null;
       await writeUsers(users);
       return json(res, 200, { ok: true });
+    } catch(e) { return json(res, 500, { error: e.message }); }
+  }
+
+  if (urlPath === '/api/admin/security-logs' && req.method === 'GET') {
+    try {
+      const qs = new URL('https://x' + req.url).searchParams;
+      const email = (qs.get('adminEmail') || '').toLowerCase().trim();
+      if (!email) return json(res, 400, { error: 'adminEmail required.' });
+      const level = await getAdminLevel(email);
+      if (email !== PRIMARY_ADMIN.toLowerCase() && !levelAtLeast(level, 'max')) return json(res, 403, { error: 'Owner or max-level access required.' });
+      const raw = _parseKV(await kvRead('security-logs', []), []);
+      return json(res, 200, { logs: Array.isArray(raw) ? raw : [] });
     } catch(e) { return json(res, 500, { error: e.message }); }
   }
 
