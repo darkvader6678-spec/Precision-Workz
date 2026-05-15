@@ -1181,10 +1181,17 @@ async function handleAPI(req, res, urlPath) {
         const key = (body.targetEmail || '').toLowerCase().trim();
         if (!key) return json(res, 400, { error: 'targetEmail required' });
         const locks = await readRoleLocks();
-        locks[key] = !locks[key];
+        const isCurrentlyLocked = !!(locks[key]);
+        if (isCurrentlyLocked) {
+          delete locks[key];
+        } else {
+          const actorIsPrimary = (body.adminEmail || '').toLowerCase().trim() === PRIMARY_ADMIN.toLowerCase();
+          locks[key] = { locked: true, by: actorIsPrimary ? 'owner' : 'lead-dev', byEmail: (body.adminEmail || '').toLowerCase().trim() };
+        }
         await writeRoleLocks(locks);
-        appendSecurityLog('site_control', body.adminEmail, key, locks[key] ? 'Role locked' : 'Role unlocked', getReqIP(req)).catch(function(){});
-        return json(res, 200, { ok: true, locked: locks[key] });
+        const nowLocked = !!locks[key];
+        appendSecurityLog('site_control', body.adminEmail, key, nowLocked ? 'Role locked by ' + (body.adminEmail||'') : 'Role unlocked', getReqIP(req)).catch(function(){});
+        return json(res, 200, { ok: true, locked: nowLocked, lockInfo: locks[key] || null });
       } catch(e) { return json(res, 500, { error: e.message }); }
     }
 
