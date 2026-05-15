@@ -402,7 +402,7 @@ async function getAdminLevel(email) {
   const lvls = await readAdminLevels();
   return lvls[e] || 'low';
 }
-const _LVL = { low: 0, medium: 1, max: 2, 'co-owner': 1, primary: 99 };
+const _LVL = { low: 0, medium: 1, max: 2, 'co-owner': 3, primary: 99 };
 function levelAtLeast(userLevel, minLevel) {
   return (_LVL[userLevel] || 0) >= (_LVL[minLevel] || 0);
 }
@@ -1029,7 +1029,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/set-client' && req.method === 'POST') {
-      if (!isCoOwnerOrPrimary(body.adminEmail)) { appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Insufficient level (needs co-owner)', getReqIP(req)).catch(function(){}); return json(res, 403, { error: 'Co-owner or primary admin access required', permissionDenied: true }); }
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'max')) { appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Insufficient level (needs max)', getReqIP(req)).catch(function(){}); return json(res, 403, { error: 'Max access or higher required', permissionDenied: true }); }
       try {
         const { targetEmail, name, sub, billing, packageType, notes } = body;
         if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
@@ -1070,7 +1070,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/set-progress' && req.method === 'POST') {
-      if (!isCoOwnerOrPrimary(body.adminEmail)) { appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Insufficient level (needs co-owner)', getReqIP(req)).catch(function(){}); return json(res, 403, { error: 'Co-owner or primary admin access required', permissionDenied: true }); }
+      if (!levelAtLeast(await getAdminLevel(body.adminEmail), 'max')) { appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Insufficient level (needs max)', getReqIP(req)).catch(function(){}); return json(res, 403, { error: 'Max access or higher required', permissionDenied: true }); }
       try {
         const { targetEmail, stages, currentTask } = body;
         if (!targetEmail) return json(res, 400, { error: 'targetEmail required' });
