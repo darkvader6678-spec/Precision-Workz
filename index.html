@@ -6555,7 +6555,26 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
     }
   }
 
-  list.innerHTML = admins.map(function(email) {
+  var _LVL_MGMT = { primary: true, 'lead-dev': true, 'co-owner': true };
+  function _isMgmtDev(eml) {
+    var ek = eml.toLowerCase();
+    if (ek === (primary||'').toLowerCase()) return true;
+    if (coOwner && ek === coOwner.toLowerCase()) return true;
+    var lv = (levels && (levels[ek] || levels[eml])) || 'low';
+    return !!_LVL_MGMT[lv];
+  }
+  var mgmtDevs   = admins.filter(function(e){ return _isMgmtDev(e); });
+  var normalDevs = admins.filter(function(e){ return !_isMgmtDev(e); });
+  var _devSep = normalDevs.length && mgmtDevs.length
+    ? '<div style="display:flex;align-items:center;gap:8px;margin:6px 0 2px">'
+      + '<div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.12),transparent)"></div>'
+      + '<span style="font-size:.6rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.3)">Developers</span>'
+      + '<div style="flex:1;height:1px;background:linear-gradient(270deg,rgba(255,255,255,.12),transparent)"></div>'
+      + '</div>'
+    : '';
+  list.innerHTML = mgmtDevs.concat(normalDevs).map(function(email, _idx) {
+    var _isSepPoint = _idx === mgmtDevs.length && normalDevs.length && mgmtDevs.length;
+    var _sepHtml = _isSepPoint ? _devSep : '';
     var eKey = email.toLowerCase();
     var isP = eKey === (primary || '').toLowerCase();
     var isCO = coOwner && eKey === coOwner.toLowerCase();
@@ -6605,7 +6624,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
       : (isPrimary || window._isCoOwner) ? email : (isMe ? email + ' <span style="font-size:.65rem;color:var(--cyan2)">(you)</span>' : maskEmail(email));
     var nameTag = devName ? '<span style="font-size:.75rem;color:var(--cyan2);font-weight:600;margin-left:2px">' + escHtml(devName) + '</span>' : '';
     var coProtect = isCO ? '<span title="Role protected" style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;font-size:.68rem;font-weight:700;border-radius:6px;margin-left:4px;border:1px solid rgba(6,182,212,.4);background:rgba(6,182,212,.08);color:#22d3ee"><i class="ph-bold ph-lock" style="font-size:.72rem;vertical-align:middle"></i>Protected</span>' : '';
-    return '<div class="admin-dev-row">'
+    return _sepHtml + '<div class="admin-dev-row">'
       + '<div style="display:flex;flex-direction:column;gap:2px;flex:1">'
       + '<span class="admin-dev-email">' + displayEmail + '</span>'
       + (nameTag ? nameTag : '')
