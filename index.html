@@ -5602,17 +5602,21 @@ function renderDashboard(user){
   var _isDevAccount = window._adminIsOwner || window._isCoOwner;
   var devTestHtml = '';
   if (_isDevAccount) {
-    var _curSub = sub || 'none';
+    var _curPkg = pkg || 'none';
     var _btnBase = 'cursor:pointer;padding:5px 14px;font-size:.75rem;font-weight:700;border-radius:7px;font-family:inherit;transition:all .18s;';
-    var _btnBasic = _btnBase + 'border:1px solid rgba(6,182,212,'+ (_curSub==='basic'?'.6':'.25') +');background:rgba(6,182,212,'+ (_curSub==='basic'?'.18':'.06') +');color:#22d3ee';
-    var _btnGold  = _btnBase + 'border:1px solid rgba(245,158,11,'+ (_curSub==='gold'?'.6':'.25') +');background:rgba(245,158,11,'+ (_curSub==='gold'?'.18':'.06') +');color:#fbbf24';
-    var _btnNone  = _btnBase + 'border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--dim)';
+    function _pkgBtn(val, label, r, g, b) {
+      var active = _curPkg === val;
+      return '<button style="'+_btnBase+'border:1px solid rgba('+r+','+g+','+b+','+(active?'.6':'.25')+');background:rgba('+r+','+g+','+b+','+(active?'.2':'.06')+');color:rgb('+r+','+g+','+b+')" onclick="devAssignPackage(\''+val+'\')">'+label+'</button>';
+    }
+    var _btnClear = '<button style="'+_btnBase+'border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--dim)" onclick="devAssignPackage(null)">Clear</button>';
     devTestHtml = '<div style="margin:0;padding:14px 16px;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);border-radius:12px">'
       + '<div style="font-size:.65rem;font-weight:800;letter-spacing:1.5px;color:var(--purple2);text-transform:uppercase;margin-bottom:10px">🛠️ Dev — Test Package</div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'
-      + '<button style="'+_btnBasic+'" onclick="devAssignPackage(\'basic\')">Basic</button>'
-      + '<button style="'+_btnGold+'" onclick="devAssignPackage(\'gold\')">Gold</button>'
-      + '<button style="'+_btnNone+'" onclick="devAssignPackage(null)">Clear</button>'
+      + _pkgBtn('starter',  'Starter',  99,  102, 241)
+      + _pkgBtn('premium',  'Premium',  124, 58,  237)
+      + _pkgBtn('diamond',  'Diamond',  6,   182, 212)
+      + _pkgBtn('titanium', 'Titanium', 203, 213, 225)
+      + _btnClear
       + '</div>'
       + '<div id="dev-pkg-msg" style="font-size:.72rem;color:var(--dim)"></div>'
       + '</div>';
@@ -5645,7 +5649,7 @@ function renderDashboard(user){
   }
 }
 
-function devAssignPackage(sub) {
+function devAssignPackage(packageType) {
   var user = getUserData();
   if (!user) return;
   var msgEl = document.getElementById('dev-pkg-msg');
@@ -5653,7 +5657,7 @@ function devAssignPackage(sub) {
   fetch('/api/admin/set-client', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ adminEmail: user.email, targetEmail: user.email, name: user.name || '', sub: sub, packageType: sub || null })
+    body: JSON.stringify({ adminEmail: user.email, targetEmail: user.email, name: user.name || '', packageType: packageType || null })
   }).then(function(r){ return r.json(); }).then(function(d){
     if (d.error) { if (msgEl) msgEl.textContent = 'Error: ' + d.error; return; }
     openDashboard();
