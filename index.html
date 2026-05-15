@@ -3626,7 +3626,7 @@ select{color-scheme:dark}
           <button class="admin-btn primary" style="align-self:flex-end" onclick="adminAddDev()">Add Developer</button>
         </div>
         <div class="admin-msg" id="adm-dev-msg"></div>
-        <details style="margin-top:4px">
+        <details open style="margin-top:4px">
           <summary style="font-size:.72rem;color:var(--dim);cursor:pointer;user-select:none;font-weight:600;letter-spacing:.3px">Access Level Guide ›</summary>
           <div id="adm-access-guide-cards" style="margin-top:12px;display:flex;flex-direction:column;gap:8px;font-size:.78rem">
 
@@ -4179,7 +4179,7 @@ select{color-scheme:dark}
       </div>
 
       <!-- Site Controls -->
-      <div class="mon-card" style="margin-top:12px;border-color:rgba(239,68,68,.18)">
+      <div id="mon-site-controls-card" class="mon-card" style="margin-top:12px;border-color:rgba(239,68,68,.18)">
         <div class="mon-card-title" style="color:#f87171">Site Controls</div>
 
         <!-- Current status row -->
@@ -6171,6 +6171,13 @@ function adminLoadData() {
       if (_cleanBtn) _cleanBtn.style.display = (_isCO && !_overrideActive) ? 'none' : '';
       if (_rawIsPrimary && !_overrideActive) adminCheckKV();
       adminApplyLevelRestrictions();
+      // Site controls + override controls: actual primary email only
+      // (level-assigned primary devs cannot grant emergency owner or control maintenance)
+      var _siteCtrlCard = document.getElementById('mon-site-controls-card');
+      if (_siteCtrlCard) _siteCtrlCard.style.display = _rawIsPrimary ? '' : 'none';
+      var _ovCtrl2 = document.getElementById('adm-override-controls');
+      var _isLeadDevOverride = _overrideActive && _rawIsCO;
+      if (_ovCtrl2) _ovCtrl2.style.display = (_rawIsPrimary || _isLeadDevOverride) ? '' : 'none';
       // Apply / remove co-owner theme (suppressed during override)
       var overlay = document.getElementById('admin-overlay');
       if (overlay) overlay.classList.toggle('co-theme', _isCO && !_overrideActive);
@@ -8008,9 +8015,10 @@ function adminLoadSecurityLogs() {
       if (d.error) { el.innerHTML = '<div style="color:#f87171;font-size:.8rem">'+escHtml(d.error)+'</div>'; return; }
       var logs = d.logs || [];
       if (!logs.length) { el.innerHTML = '<div style="color:var(--dim);font-size:.8rem;padding:8px 0">No security events logged yet.</div>'; return; }
-      var typeColors = { recaptcha:'#a78bfa', admin_login:'#22d3ee', admin_login_fail:'#f87171', client_login:'#4ade80', client_login_fail:'#f87171', client_added:'#4ade80', client_updated:'#94a3b8', client_removed:'#f87171', dev_blocked:'#fb923c', dev_added:'#22d3ee', dev_removed:'#f87171', level_changed:'#fbbf24', override_approved:'#fbbf24', override_extended:'#fbbf24', override_revoked:'#f87171', dev_override_granted:'#fbbf24', devtools_detected:'#f97316', plan_change_req:'#818cf8', access_denied:'#ef4444', promo_added:'#4ade80', promo_removed:'#fb923c', site_control:'#a78bfa', project_deleted:'#f87171' };
-      var typeLabels = { recaptcha:'reCAPTCHA', admin_login:'Admin Login', admin_login_fail:'Login Fail', client_login:'Client Login', client_login_fail:'Client Fail', client_added:'Client Added', client_updated:'Client Updated', client_removed:'Client Removed', dev_blocked:'Dev Block', dev_added:'Dev Added', dev_removed:'Dev Removed', level_changed:'Level Changed', override_approved:'Override OK', override_extended:'Override Ext.', override_revoked:'Override Revoked', dev_override_granted:'Dev Override', devtools_detected:'DevTools Open', plan_change_req:'Plan Change', access_denied:'Access Denied', promo_added:'Promo Added', promo_removed:'Promo Removed', site_control:'Site Control', project_deleted:'Project Deleted' };
-      var lvlColors = { owner:'#a78bfa', 'co-owner':'#22d3ee', max:'#f87171', medium:'#fb923c', low:'#4ade80', dev:'#94a3b8' };
+      var typeColors = { recaptcha:'#a78bfa', admin_login:'#22d3ee', admin_login_fail:'#f87171', client_login:'#4ade80', client_login_fail:'#f87171', client_added:'#4ade80', client_updated:'#94a3b8', client_removed:'#f87171', dev_blocked:'#fb923c', dev_added:'#22d3ee', dev_removed:'#f87171', level_changed:'#fbbf24', override_approved:'#fbbf24', override_extended:'#fbbf24', override_revoked:'#f87171', dev_override_granted:'#fbbf24', devtools_detected:'#f97316', dt_detection_toggled:'#f97316', plan_change_req:'#818cf8', access_denied:'#ef4444', promo_added:'#4ade80', promo_removed:'#fb923c', site_control:'#a78bfa', project_deleted:'#f87171' };
+      var typeLabels = { recaptcha:'reCAPTCHA', admin_login:'Admin Login', admin_login_fail:'Login Fail', client_login:'Client Login', client_login_fail:'Client Fail', client_added:'Client Added', client_updated:'Client Updated', client_removed:'Client Removed', dev_blocked:'Dev Block', dev_added:'Dev Added', dev_removed:'Dev Removed', level_changed:'Level Changed', override_approved:'Override OK', override_extended:'Override Ext.', override_revoked:'Override Revoked', dev_override_granted:'Dev Override', devtools_detected:'DevTools Open', dt_detection_toggled:'DT Toggle', plan_change_req:'Plan Change', access_denied:'Access Denied', promo_added:'Promo Added', promo_removed:'Promo Removed', site_control:'Site Control', project_deleted:'Project Deleted' };
+      var lvlColors = { 'protected-owner':'#f59e0b', owner:'#a78bfa', 'lead-dev':'#22d3ee', 'co-owner':'#818cf8', max:'#f87171', medium:'#fb923c', low:'#4ade80', dev:'#94a3b8' };
+      var lvlLabels = { 'protected-owner':'Protected Owner', owner:'Owner', 'lead-dev':'Lead Dev', 'co-owner':'Co-Owner', max:'Max', medium:'Medium', low:'Low', dev:'Dev' };
       el.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.75rem">'
         + '<thead><tr style="color:var(--dim);text-align:left">'
         + '<th style="padding:5px 8px;font-weight:700">Time</th>'
@@ -8028,7 +8036,8 @@ function adminLoadSecurityLogs() {
           var actorDisplay = escHtml(log.actor || '—');
           if (log.actorName) actorDisplay = '<span style="font-weight:700">' + escHtml(log.actorName) + '</span> <span style="color:var(--dim);font-size:.7rem">(' + escHtml(log.actor) + ')</span>';
           var lvlClr = log.actorLevel ? (lvlColors[log.actorLevel] || '#94a3b8') : '';
-          var lvlBadge = log.actorLevel ? ' <span style="font-size:.65rem;font-weight:700;color:'+lvlClr+'">'+log.actorLevel+'</span>' : '';
+          var lvlTxt = log.actorLevel ? (lvlLabels[log.actorLevel] || log.actorLevel) : '';
+          var lvlBadge = lvlTxt ? ' <span style="font-size:.65rem;font-weight:700;color:'+lvlClr+'">'+escHtml(lvlTxt)+'</span>' : '';
           return '<tr style="border-top:1px solid rgba(255,255,255,.05)">'
             + '<td style="padding:6px 8px;color:var(--dim);white-space:nowrap">' + agoStr + '</td>'
             + '<td style="padding:6px 8px;white-space:nowrap"><span style="background:rgba(255,255,255,.06);border-radius:999px;padding:1px 8px;color:'+color+';font-weight:700">' + label + '</span></td>'

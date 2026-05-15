@@ -1365,13 +1365,13 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/analytics-reset' && req.method === 'POST') {
-      if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Co-owner or primary admin access required' });
+      if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Owner protected role required' });
       await writeAnalytics({});
       return json(res, 200, { ok: true });
     }
 
     if (urlPath === '/api/admin/site-control' && req.method === 'POST') {
-      if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Owner or Co-Owner access required' });
+      if ((body.adminEmail || '').toLowerCase().trim() !== PRIMARY_ADMIN.toLowerCase().trim()) return json(res, 403, { error: 'Owner protected role required' });
       const { maintenance, message, scheduledStart, scheduledDuration, clearSchedule } = body;
       const current = await readSiteStatus();
       const updated = Object.assign({}, current, {
@@ -1392,7 +1392,7 @@ async function handleAPI(req, res, urlPath) {
 
     if (urlPath === '/api/admin/promo-list' && req.method === 'GET') {
       try {
-        if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Owner or co-owner only.' });
+        if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Owner protected role required' });
         const promos = await readPromoCodes();
         return json(res, 200, { promos });
       } catch(e) { return json(res, 500, { error: e.message }); }
@@ -1401,7 +1401,7 @@ async function handleAPI(req, res, urlPath) {
     if (urlPath === '/api/admin/promo-add' && req.method === 'POST') {
       try {
         const reqEmail = (body.adminEmail || '').toLowerCase().trim();
-        if (!isCoOwnerOrPrimary(reqEmail)) return json(res, 403, { error: 'Owner or co-owner only.' });
+        if (!isCoOwnerOrPrimary(reqEmail)) return json(res, 403, { error: 'Owner protected role required' });
         const code = (body.code || '').toUpperCase().trim().replace(/\s+/g, '');
         if (!code || code.length < 2 || code.length > 20) return json(res, 400, { error: 'Code must be 2–20 characters.' });
         const discount = parseFloat(body.discount);
@@ -1423,7 +1423,7 @@ async function handleAPI(req, res, urlPath) {
     if (urlPath === '/api/admin/promo-remove' && req.method === 'POST') {
       try {
         const reqEmail = (body.adminEmail || '').toLowerCase().trim();
-        if (!isCoOwnerOrPrimary(reqEmail)) return json(res, 403, { error: 'Owner or co-owner only.' });
+        if (!isCoOwnerOrPrimary(reqEmail)) return json(res, 403, { error: 'Owner protected role required' });
         const code = (body.code || '').toUpperCase().trim();
         if (!code) return json(res, 400, { error: 'Code required.' });
         const promos = await readPromoCodes();
@@ -1438,7 +1438,7 @@ async function handleAPI(req, res, urlPath) {
       try {
         const email = (body.adminEmail || '').toLowerCase().trim();
         if (!email) return json(res, 400, { error: 'adminEmail required.' });
-        if (!isCoOwnerOrPrimary(email)) return json(res, 403, { error: 'Owner or co-owner access required.' });
+        if (!isCoOwnerOrPrimary(email)) return json(res, 403, { error: 'Owner protected role required' });
         const raw = _parseKV(await kvRead('security-logs', []), []);
         const logs = Array.isArray(raw) ? raw : [];
         const names = await readAdminNames();
@@ -1446,8 +1446,10 @@ async function handleAPI(req, res, urlPath) {
         const enriched = logs.map(function(l) {
           const actorLow = (l.actor || '').toLowerCase();
           const actorName = names[actorLow] || names[l.actor] || '';
-          const actorLevel = actorLow === PRIMARY_ADMIN.toLowerCase() ? 'owner'
-            : actorLow === (CO_OWNER_EMAIL || '').toLowerCase() ? 'co-owner'
+          const actorLevel = actorLow === PRIMARY_ADMIN.toLowerCase() ? 'protected-owner'
+            : actorLow === (CO_OWNER_EMAIL || '').toLowerCase() ? 'lead-dev'
+            : levels[actorLow] === 'primary' ? 'owner'
+            : levels[actorLow] === 'co-owner' ? 'co-owner'
             : levels[actorLow] || 'dev';
           return Object.assign({}, l, { actorName, actorLevel });
         });
@@ -1457,14 +1459,14 @@ async function handleAPI(req, res, urlPath) {
 
     if (urlPath === '/api/admin/dev-applications' && req.method === 'GET') {
       try {
-        if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Co-owner or owner only.' });
+        if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Owner protected role required' });
         return json(res, 200, { applications: await readDevApps() });
       } catch(e) { return json(res, 500, { error: e.message }); }
     }
 
     if (urlPath === '/api/admin/dev-application-action' && req.method === 'POST') {
       try {
-        if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Co-owner or owner only.' });
+        if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Owner protected role required' });
         const { id, action } = body;
         const apps = await readDevApps();
         if (!apps[id]) return json(res, 404, { error: 'Application not found.' });
@@ -1487,7 +1489,7 @@ async function handleAPI(req, res, urlPath) {
     if (urlPath === '/api/admin/dt-toggle' && req.method === 'POST') {
       try {
         const email = (body.adminEmail || '').toLowerCase().trim();
-        if (!isCoOwnerOrPrimary(email)) return json(res, 403, { error: 'Co-owner or owner only.' });
+        if (!isCoOwnerOrPrimary(email)) return json(res, 403, { error: 'Owner protected role required' });
         const cfg = await readDTConfig();
         const newEnabled = body.enabled !== undefined ? !!body.enabled : !cfg.enabled;
         await writeDTConfig({ enabled: newEnabled });
@@ -1499,14 +1501,14 @@ async function handleAPI(req, res, urlPath) {
 
     if (urlPath === '/api/admin/receipts' && req.method === 'GET') {
       try {
-        if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Co-owner or owner only.' });
+        if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Owner protected role required' });
         return json(res, 200, { receipts: await readReceipts() });
       } catch(e) { return json(res, 500, { error: e.message }); }
     }
 
     if (urlPath === '/api/admin/receipt-add' && req.method === 'POST') {
       try {
-        if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Co-owner or owner only.' });
+        if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Owner protected role required' });
         const { clientEmail, clientName, address, phone, serviceType, subType, paymentMethod, amount, currency, date, notes } = body;
         if (!clientEmail || !serviceType) return json(res, 400, { error: 'Client email and service type are required.' });
         const id = 'rcpt_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
@@ -1534,7 +1536,7 @@ async function handleAPI(req, res, urlPath) {
 
     if (urlPath === '/api/admin/receipt-delete' && req.method === 'POST') {
       try {
-        if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Co-owner or owner only.' });
+        if (!isCoOwnerOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Owner protected role required' });
         const { id } = body;
         if (!id) return json(res, 400, { error: 'id required.' });
         const receipts = await readReceipts();
