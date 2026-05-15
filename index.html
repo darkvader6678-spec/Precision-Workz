@@ -3628,14 +3628,14 @@ select{color-scheme:dark}
         <div class="admin-msg" id="adm-dev-msg"></div>
         <details style="margin-top:4px">
           <summary style="font-size:.72rem;color:var(--dim);cursor:pointer;user-select:none;font-weight:600;letter-spacing:.3px">Access Level Guide ›</summary>
-          <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;font-size:.78rem">
+          <div id="adm-access-guide-cards" style="margin-top:12px;display:flex;flex-direction:column;gap:8px;font-size:.78rem">
 
             <!-- LOW -->
-            <div style="padding:12px 16px;background:rgba(74,222,128,.04);border:1px solid rgba(74,222,128,.18);border-radius:10px;position:relative;overflow:hidden">
+            <div id="guide-card-low" style="padding:12px 16px;background:rgba(74,222,128,.04);border:1px solid rgba(74,222,128,.18);border-radius:10px;position:relative;overflow:hidden">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
                 <i class="ph-bold ph-eye" style="color:#4ade80;font-size:1rem"></i>
                 <span style="color:#4ade80;font-weight:800;font-size:.8rem;letter-spacing:.5px">LOW ACCESS</span>
-                <span style="margin-left:auto;display:flex;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#4ade80"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span></span>
+                <span style="margin-left:auto;display:flex;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#4ade80"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span></span>
               </div>
               <div style="color:var(--muted);line-height:1.7">
                 <span style="color:#4ade80">✓</span> View client list (emails masked)<br>
@@ -3644,24 +3644,24 @@ select{color-scheme:dark}
             </div>
 
             <!-- MEDIUM -->
-            <div style="padding:12px 16px;background:rgba(251,146,60,.05);border:1px solid rgba(251,146,60,.22);border-radius:10px;box-shadow:0 0 14px rgba(251,146,60,.08);position:relative;overflow:hidden">
+            <div id="guide-card-medium" style="padding:12px 16px;background:rgba(251,146,60,.05);border:1px solid rgba(251,146,60,.22);border-radius:10px;box-shadow:0 0 14px rgba(251,146,60,.08);position:relative;overflow:hidden">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
                 <i class="ph-bold ph-shield" style="color:#fb923c;font-size:1rem"></i>
                 <span style="color:#fb923c;font-weight:800;font-size:.8rem;letter-spacing:.5px">MEDIUM ACCESS</span>
-                <span style="margin-left:auto;display:flex;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#4ade80"></span><span style="width:8px;height:8px;border-radius:50%;background:#fb923c"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span></span>
+                <span style="margin-left:auto;display:flex;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#4ade80"></span><span style="width:8px;height:8px;border-radius:50%;background:#fb923c"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span></span>
               </div>
               <div style="color:var(--muted);line-height:1.7">
-                <span style="color:#4ade80">✓</span> Everything in Low &nbsp;·&nbsp; <span style="color:#4ade80">✓</span> Reports tab &nbsp;·&nbsp; <span style="color:#4ade80">✓</span> Monitor tab (password-gated) &nbsp;·&nbsp; <span style="color:#4ade80">✓</span> Projects tab &nbsp;·&nbsp; <span style="color:#4ade80">✓</span> Edit clients &nbsp;·&nbsp; <span style="color:#4ade80">✓</span> Add projects<br>
+                <span style="color:#4ade80">✓</span> Everything in Low &nbsp;·&nbsp; <span style="color:#4ade80">✓</span> Reports tab &nbsp;·&nbsp; <span style="color:#4ade80">✓</span> Monitor tab &nbsp;·&nbsp; <span style="color:#4ade80">✓</span> Projects tab &nbsp;·&nbsp; <span style="color:#4ade80">✓</span> Edit clients &nbsp;·&nbsp; <span style="color:#4ade80">✓</span> Add projects<br>
                 <span style="color:rgba(239,68,68,.6)">✗</span> Delete / add clients &nbsp;·&nbsp; <span style="color:rgba(239,68,68,.6)">✗</span> Progress &nbsp;·&nbsp; <span style="color:rgba(239,68,68,.6)">✗</span> Security logs &nbsp;·&nbsp; <span style="color:rgba(239,68,68,.6)">✗</span> Promo codes
               </div>
             </div>
 
             <!-- MAX -->
-            <div style="padding:12px 16px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.28);border-radius:10px;box-shadow:0 0 22px rgba(239,68,68,.14);position:relative;overflow:hidden">
+            <div id="guide-card-max" style="padding:12px 16px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.28);border-radius:10px;box-shadow:0 0 22px rgba(239,68,68,.14);position:relative;overflow:hidden">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
                 <i class="ph-bold ph-lightning" style="color:#f87171;font-size:1rem"></i>
                 <span style="color:#f87171;font-weight:800;font-size:.8rem;letter-spacing:.5px">MAX ACCESS</span>
-                <span style="margin-left:auto;display:flex;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#4ade80"></span><span style="width:8px;height:8px;border-radius:50%;background:#fb923c"></span><span style="width:8px;height:8px;border-radius:50%;background:#f87171"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span></span>
+                <span style="margin-left:auto;display:flex;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#4ade80"></span><span style="width:8px;height:8px;border-radius:50%;background:#fb923c"></span><span style="width:8px;height:8px;border-radius:50%;background:#f87171"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span></span>
               </div>
               <div style="color:var(--muted);line-height:1.7">
                 <span style="color:#4ade80">✓</span> Everything in Medium &nbsp;·&nbsp; <span style="color:#4ade80">✓</span> Add / delete clients &nbsp;·&nbsp; <span style="color:#4ade80">✓</span> Progress tab &nbsp;·&nbsp; <span style="color:#4ade80">✓</span> Security logs<br>
@@ -3670,12 +3670,12 @@ select{color-scheme:dark}
               </div>
             </div>
 
-            <!-- CO-OWNER -->
-            <div style="padding:12px 16px;background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.32);border-radius:10px;box-shadow:0 0 28px rgba(6,182,212,.18),0 0 55px rgba(6,182,212,.06);position:relative;overflow:hidden">
+            <!-- CO-OWNER (normal) -->
+            <div id="guide-card-coowner" style="padding:12px 16px;background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.32);border-radius:10px;box-shadow:0 0 28px rgba(6,182,212,.18),0 0 55px rgba(6,182,212,.06);position:relative;overflow:hidden">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
                 <i class="ph-bold ph-diamond" style="font-size:1rem;background:linear-gradient(135deg,#22d3ee,#a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent"></i>
                 <span style="font-weight:800;font-size:.8rem;letter-spacing:.5px;background:linear-gradient(90deg,#22d3ee,#818cf8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">CO-OWNER</span>
-                <span style="margin-left:auto;display:flex;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#4ade80"></span><span style="width:8px;height:8px;border-radius:50%;background:#fb923c"></span><span style="width:8px;height:8px;border-radius:50%;background:#f87171"></span><span style="width:8px;height:8px;border-radius:50%;background:#22d3ee"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span></span>
+                <span style="margin-left:auto;display:flex;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#4ade80"></span><span style="width:8px;height:8px;border-radius:50%;background:#fb923c"></span><span style="width:8px;height:8px;border-radius:50%;background:#f87171"></span><span style="width:8px;height:8px;border-radius:50%;background:#22d3ee"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span></span>
               </div>
               <div style="color:var(--muted);line-height:1.7">
                 <span style="color:#4ade80">✓</span> Everything in Max &nbsp;·&nbsp; <span style="color:#4ade80">✓</span> Promo codes (add &amp; remove) &nbsp;·&nbsp; <span style="color:#4ade80">✓</span> Dev applications &nbsp;·&nbsp; <span style="color:#4ade80">✓</span> Receipts<br>
@@ -3684,17 +3684,32 @@ select{color-scheme:dark}
               </div>
             </div>
 
+            <!-- LEAD DEV -->
+            <div id="guide-card-leaddev" style="padding:12px 16px;background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(124,58,237,.06));border:1px solid rgba(6,182,212,.45);border-radius:10px;box-shadow:0 0 32px rgba(6,182,212,.22),0 0 60px rgba(124,58,237,.1);position:relative;overflow:hidden">
+              <div style="position:absolute;top:-18px;right:-18px;width:70px;height:70px;background:radial-gradient(circle,rgba(6,182,212,.18),transparent 70%);pointer-events:none"></div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <i class="ph-bold ph-shield-star" style="font-size:1rem;background:linear-gradient(135deg,#22d3ee,#a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent"></i>
+                <span style="font-weight:800;font-size:.8rem;letter-spacing:.5px;background:linear-gradient(90deg,#22d3ee,#a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">LEAD DEV</span>
+                <span style="margin-left:auto;display:flex;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#4ade80"></span><span style="width:8px;height:8px;border-radius:50%;background:#fb923c"></span><span style="width:8px;height:8px;border-radius:50%;background:#f87171"></span><span style="width:8px;height:8px;border-radius:50%;background:#22d3ee"></span><span style="width:8px;height:8px;border-radius:50%;background:#a78bfa"></span><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08)"></span></span>
+              </div>
+              <div style="color:var(--muted);line-height:1.7">
+                <span style="color:#22d3ee">✓</span> Everything in Co-Owner &nbsp;·&nbsp; <span style="color:#22d3ee">✓</span> Add / remove developers &nbsp;·&nbsp; <span style="color:#22d3ee">✓</span> Assign up to Lead Dev level<br>
+                <span style="color:#22d3ee">✓</span> Override controls panel &nbsp;·&nbsp; <span style="color:#22d3ee">✓</span> Team inbox (send messages to Owner)<br>
+                <span style="color:rgba(239,68,68,.6)">✗</span> Role protection &nbsp;·&nbsp; <span style="color:rgba(239,68,68,.6)">✗</span> Assign Owner level &nbsp;·&nbsp; <span style="color:rgba(239,68,68,.6)">✗</span> Site controls
+              </div>
+            </div>
+
             <!-- OWNER -->
-            <div style="padding:12px 16px;background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(6,182,212,.05));border:1px solid rgba(124,58,237,.35);border-radius:10px;box-shadow:0 0 36px rgba(124,58,237,.22),0 0 70px rgba(6,182,212,.1),inset 0 0 30px rgba(124,58,237,.04);position:relative;overflow:hidden">
+            <div id="guide-card-owner" style="padding:12px 16px;background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(6,182,212,.05));border:1px solid rgba(124,58,237,.35);border-radius:10px;box-shadow:0 0 36px rgba(124,58,237,.22),0 0 70px rgba(6,182,212,.1),inset 0 0 30px rgba(124,58,237,.04);position:relative;overflow:hidden">
               <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(124,58,237,.15),transparent 70%);pointer-events:none"></div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
                 <i class="ph-bold ph-crown" style="font-size:1rem;background:linear-gradient(135deg,#a78bfa,#22d3ee,#f59e0b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent"></i>
                 <span style="font-weight:800;font-size:.8rem;letter-spacing:1px;background:linear-gradient(90deg,#a78bfa,#22d3ee,#f59e0b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">OWNER — FULL ACCESS</span>
-                <span style="margin-left:auto;display:flex;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#4ade80"></span><span style="width:8px;height:8px;border-radius:50%;background:#fb923c"></span><span style="width:8px;height:8px;border-radius:50%;background:#f87171"></span><span style="width:8px;height:8px;border-radius:50%;background:#22d3ee"></span><span style="width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#f59e0b)"></span></span>
+                <span style="margin-left:auto;display:flex;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#4ade80"></span><span style="width:8px;height:8px;border-radius:50%;background:#fb923c"></span><span style="width:8px;height:8px;border-radius:50%;background:#f87171"></span><span style="width:8px;height:8px;border-radius:50%;background:#22d3ee"></span><span style="width:8px;height:8px;border-radius:50%;background:#a78bfa"></span><span style="width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#f59e0b)"></span></span>
               </div>
               <div style="color:var(--muted);line-height:1.7">
                 <span style="color:#a78bfa">✓</span> Full access to everything &nbsp;·&nbsp; <span style="color:#a78bfa">✓</span> Add / remove developers &nbsp;·&nbsp; <span style="color:#a78bfa">✓</span> Override controls &nbsp;·&nbsp; <span style="color:#a78bfa">✓</span> Team inbox<br>
-                <span style="color:#a78bfa">✓</span> Approve / extend / revoke Co-Owner emergency override &nbsp;·&nbsp; <span style="color:#a78bfa">✓</span> Grant temp. Owner access to Max-level devs<br>
+                <span style="color:#a78bfa">✓</span> Role protection &nbsp;·&nbsp; <span style="color:#a78bfa">✓</span> Assign Lead Dev level (exclusively) &nbsp;·&nbsp; <span style="color:#a78bfa">✓</span> Approve / revoke emergency overrides<br>
                 <span style="color:#a78bfa">✓</span> Security logs &nbsp;·&nbsp; <span style="color:#a78bfa">✓</span> Site controls (maintenance mode, scheduled shutdowns)
               </div>
             </div>
@@ -5598,7 +5613,7 @@ function renderDashboard(user){
   }
 
   /* dev test package picker for owner / co-owner */
-  var _isDevAccount = window._adminIsOwner || window._isCoOwner;
+  var _isDevAccount = window._adminIsOwner || window._isCoOwnerLevel;
   var devTestHtml = '';
   if (_isDevAccount) {
     var _curPkg = pkg || 'none';
@@ -6148,6 +6163,7 @@ function adminLoadData() {
       if (!_overrideActive) {
         window._isCoOwner = _rawIsCO;
         window._myLevel = d.myLevel || (_rawIsPrimary ? 'primary' : _rawIsCO ? 'co-owner' : 'low');
+        window._isCoOwnerLevel = _rawIsCO || window._myLevel === 'co-owner';
       }
       var _isCO = window._isCoOwner;
       var _isPrimary = window._myLevel === 'primary';
@@ -6165,6 +6181,22 @@ function adminLoadData() {
       if (composeEl) composeEl.style.display = !_isPrimary ? '' : 'none';
       adminRenderStats(d.clients);
       adminRenderDevs(d.admins, d.primaryAdmin, d.coOwner, d.adminLevels || {}, d.adminNames || {}, d.roleLocks || {});
+      // Access guide: show cards based on viewer's actual level
+      (function() {
+        var _guideCards = ['guide-card-low','guide-card-medium','guide-card-max','guide-card-coowner','guide-card-leaddev','guide-card-owner'];
+        var _showUpTo;
+        if (_rawIsPrimary) _showUpTo = 5;
+        else if (_isCO) _showUpTo = 4;
+        else if (window._isCoOwnerLevel) _showUpTo = 3;
+        else if (_isPrimary) _showUpTo = 2;
+        else if (window._myLevel === 'max') _showUpTo = 2;
+        else if (window._myLevel === 'medium') _showUpTo = 1;
+        else _showUpTo = 0;
+        _guideCards.forEach(function(id, idx) {
+          var el = document.getElementById(id);
+          if (el) el.style.display = idx <= _showUpTo ? '' : 'none';
+        });
+      })();
       // Show greeting with dev's name if one is set
       var _myName = (d.adminNames || {})[_myEml] || (d.adminNames || {})[adminGetEmail()] || '';
       var _subtitle = document.getElementById('admin-panel-subtitle');
@@ -7566,12 +7598,12 @@ function adminApplyLevelRestrictions() {
     if (isCoOwnerPlus) adminLoadReceipts();
   }
 
-  // Dev management row: primary only
+  // Dev management row: primary and Lead Dev
   var devRow = document.getElementById('adm-add-dev-row');
-  if (devRow) devRow.style.display = isPrimary ? 'flex' : 'none';
+  if (devRow) devRow.style.display = (isPrimary || window._isCoOwner) ? 'flex' : 'none';
   // Also clear the password error msg so it never bleeds into other views
   var devMsg = document.getElementById('adm-dev-msg');
-  if (devMsg && !isPrimary) devMsg.textContent = '';
+  if (devMsg && !isPrimary && !window._isCoOwner) devMsg.textContent = '';
 
   // Hide public-facing CTAs for non-primary devs
   if (!isPrimary) {
@@ -8500,12 +8532,14 @@ function checkAdminBtn(user) {
       var ctaBanner = document.querySelector('.cta-banner');
       if (ctaBanner) ctaBanner.style.display = isAdmin ? 'none' : '';
       if (isAdmin) {
-        var isCO = !!(d.coOwner && user.email.toLowerCase() === d.coOwner.toLowerCase()) || d.level === 'co-owner';
+        var isLeadDev = !!(d.coOwner && user.email.toLowerCase() === d.coOwner.toLowerCase());
+        var isCoOwnerLevel = isLeadDev || d.level === 'co-owner';
         var isPrimaryOwner = !!(d.primaryAdmin && user.email.toLowerCase() === d.primaryAdmin.toLowerCase()) || d.level === 'primary';
-        window._isCoOwner = isCO;
+        window._isCoOwner = isLeadDev;
+        window._isCoOwnerLevel = isCoOwnerLevel;
         window._adminIsOwner = isPrimaryOwner;
         window._myLevel = window._myLevel || d.level || 'low';
-        if (isCO) adminBtn.innerHTML = '<i class="ph-bold ph-shield-star" style="font-size:.85rem"></i> Lead Dev';
+        if (isLeadDev) adminBtn.innerHTML = '<i class="ph-bold ph-shield-star" style="font-size:.85rem"></i> Lead Dev';
         // Hide marketing elements for all devs except the owner
         if (!isPrimaryOwner) {
           var _navCta = document.getElementById('nav-cta-btn');
