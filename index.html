@@ -3620,7 +3620,7 @@ select{color-scheme:dark}
               <option value="low">Low Access</option>
               <option value="medium">Medium Access</option>
               <option value="max">Max Access</option>
-              <option value="co-owner">Co-Owner</option>
+
               <option value="primary">Owner</option>
             </select>
           </div>
@@ -6513,7 +6513,6 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
         + '<option value="low"'+(lvl==='low'?' selected':'')+'>Low</option>'
         + '<option value="medium"'+(lvl==='medium'?' selected':'')+'>Medium</option>'
         + '<option value="max"'+(lvl==='max'?' selected':'')+'>Max</option>'
-        + (isPrimary ? '<option value="co-owner"'+(lvl==='co-owner'?' selected':'')+'>Lead Dev (co-owner)</option>' : '')
         + (isPrimary ? '<option value="primary"'+(lvl==='primary'?' selected':'')+'>Owner</option>' : '')
         + '</select>'
         + (!isRoleLocked ? '<button class="admin-btn ghost" style="padding:3px 10px;font-size:.7rem;margin-left:4px" onclick="adminUpdateDevLevel(\''+email.replace(/'/g,"\\'")+'\',' + '\''+eKey.replace(/[@.]/g,'_').replace(/'/g,"\\'")+'\')" >Set</button>' : '')
