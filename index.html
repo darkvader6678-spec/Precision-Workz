@@ -6095,7 +6095,7 @@ function adminLoadData() {
       if (inboxEl) inboxEl.style.display = _isPrimary ? '' : 'none';
       if (composeEl) composeEl.style.display = !_isPrimary ? '' : 'none';
       adminRenderStats(d.clients);
-      adminRenderDevs(d.admins, d.primaryAdmin, d.coOwner, d.adminLevels || {}, d.adminNames || {});
+      adminRenderDevs(d.admins, d.primaryAdmin, d.coOwner, d.adminLevels || {}, d.adminNames || {}, d.roleLocks || {});
       // Show greeting with dev's name if one is set
       var _myName = (d.adminNames || {})[_myEml] || (d.adminNames || {})[adminGetEmail()] || '';
       var _subtitle = document.getElementById('admin-panel-subtitle');
@@ -6426,7 +6426,7 @@ function adminRenderStats(clients) {
   document.getElementById('adm-stat-pkgs').textContent  = pkgs;
 }
 
-function adminRenderDevs(admins, primary, coOwner, levels, names) {
+function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
   var list = document.getElementById('adm-devs-list');
   var myEmail = adminGetEmail().toLowerCase();
   var isPrimary = myEmail === (primary || '').toLowerCase() || window._myLevel === 'primary';
@@ -6441,9 +6441,6 @@ function adminRenderDevs(admins, primary, coOwner, levels, names) {
     var devName = (names && (names[eKey] || names[email])) || '';
     var removeBtn = (!isP && !isCO && isPrimary && !isMe)
       ? '<button class="admin-btn danger" style="padding:5px 12px;font-size:.75rem" onclick="adminRemoveDev(\''+email+'\')">Remove</button>'
-      : '';
-    var leaveBtn = (isMe && !isP)
-      ? '<button style="padding:5px 14px;font-size:.75rem;font-weight:700;cursor:pointer;border-radius:7px;border:1px solid rgba(239,68,68,.5);background:rgba(239,68,68,.12);color:#fca5a5;font-family:inherit;transition:all .2s" onmouseover="this.style.background=\'rgba(239,68,68,.25)\';this.style.borderColor=\'rgba(239,68,68,.8)\'" onmouseout="this.style.background=\'rgba(239,68,68,.12)\';this.style.borderColor=\'rgba(239,68,68,.5)\'" onclick="adminRemoveSelf()">Leave</button>'
       : '';
     var badge = isP
       ? '<span class="admin-primary-badge"><span class="admin-primary-badge-inner"><i class="ph-bold ph-crown" style="font-size:.8rem;margin-right:4px;vertical-align:middle"></i>Owner-Protected</span></span>'
@@ -6461,15 +6458,18 @@ function adminRenderDevs(admins, primary, coOwner, levels, names) {
       var lvlBorder = lvl === 'primary' ? 'rgba(245,158,11,.4)' : lvl === 'co-owner' ? 'rgba(6,182,212,.3)' : lvl === 'max' ? 'rgba(239,68,68,.35)' : lvl === 'medium' ? 'rgba(251,146,60,.35)' : 'rgba(74,222,128,.25)';
       lvlBadge = '<span style="display:inline-flex;align-items:center;font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:6px;background:'+lvlBg+';color:'+lvlClr+';text-transform:uppercase;letter-spacing:.5px;margin-left:4px;border:1px solid '+lvlBorder+'">'+lvlIcon+lvlTxt+'</span>';
     }
-    var levelChanger = (isPrimary && !isP && !isCO)
-      ? ' <select id="dlvl-'+eKey.replace(/[@.]/g,'_')+'" style="font-size:.7rem;background:#0d0d18;border:1px solid rgba(255,255,255,.12);border-radius:5px;color:#f1f5f9;padding:2px 6px;cursor:pointer;margin-left:6px;color-scheme:dark">'
+    var isOwnerOrCo = isPrimary || window._isCoOwner;
+    var isRoleLocked = roleLocks && roleLocks[eKey];
+    var levelChanger = (isOwnerOrCo && !isP && !isCO)
+      ? ' <select id="dlvl-'+eKey.replace(/[@.]/g,'_')+'" style="font-size:.7rem;background:#0d0d18;border:1px solid rgba(255,255,255,.12);border-radius:5px;color:#f1f5f9;padding:2px 6px;cursor:pointer;margin-left:6px;color-scheme:dark"'+(isRoleLocked?' disabled':'')+' >'
         + '<option value="low"'+(lvl==='low'?' selected':'')+'>Low</option>'
         + '<option value="medium"'+(lvl==='medium'?' selected':'')+'>Medium</option>'
         + '<option value="max"'+(lvl==='max'?' selected':'')+'>Max</option>'
         + '<option value="co-owner"'+(lvl==='co-owner'?' selected':'')+'>Co-Owner</option>'
         + '<option value="primary"'+(lvl==='primary'?' selected':'')+'>Owner</option>'
         + '</select>'
-        + '<button class="admin-btn ghost" style="padding:3px 10px;font-size:.7rem;margin-left:4px" onclick="adminUpdateDevLevel(\''+email.replace(/'/g,"\\'")+'\',' + '\''+eKey.replace(/[@.]/g,'_').replace(/'/g,"\\'")+'\')" >Set</button>'
+        + (!isRoleLocked ? '<button class="admin-btn ghost" style="padding:3px 10px;font-size:.7rem;margin-left:4px" onclick="adminUpdateDevLevel(\''+email.replace(/'/g,"\\'")+'\',' + '\''+eKey.replace(/[@.]/g,'_').replace(/'/g,"\\'")+'\')" >Set</button>' : '')
+        + '<button title="'+(isRoleLocked?'Unlock role':'Protect role')+'" onclick="adminToggleRoleLock(\''+email.replace(/'/g,"\\'")+'\',this)" style="padding:3px 8px;font-size:.78rem;cursor:pointer;border-radius:6px;margin-left:4px;border:1px solid '+(isRoleLocked?'rgba(245,158,11,.6)':'rgba(255,255,255,.15)')+';background:'+(isRoleLocked?'rgba(245,158,11,.15)':'transparent')+';color:'+(isRoleLocked?'#fbbf24':'var(--dim)')+';transition:all .2s"><i class="ph-bold '+(isRoleLocked?'ph-lock':'ph-lock-open')+'" style="font-size:.78rem;vertical-align:middle"></i></button>'
       : '';
     var displayEmail = isP
       ? '<span style="font-size:.78rem;font-weight:700;color:#f59e0b;letter-spacing:.3px"><i class="ph-bold ph-lock-key" style="font-size:.8rem;margin-right:4px;vertical-align:middle"></i>owner-protected</span>'
@@ -6484,7 +6484,6 @@ function adminRenderDevs(admins, primary, coOwner, levels, names) {
       + lvlBadge
       + levelChanger
       + removeBtn
-      + leaveBtn
       + '</div>';
   }).join('');
 }
@@ -6695,19 +6694,15 @@ function adminRemoveDev(email) {
   });
 }
 
-function adminRemoveSelf() {
-  if (!confirm('Remove your own admin access? You will be signed out immediately.')) return;
-  var email = adminGetEmail();
-  fetch('/api/admin/remove-admin', {
+function adminToggleRoleLock(targetEmail, btn) {
+  var adminEmail = adminGetEmail();
+  fetch('/api/admin/toggle-role-lock', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ adminEmail: email, targetEmail: email })
+    body: JSON.stringify({ adminEmail: adminEmail, targetEmail: targetEmail })
   }).then(function(r){ return r.json(); }).then(function(d){
     if (d.error) { alert('Error: ' + d.error); return; }
-    sessionStorage.removeItem('_devSess');
-    window._adminMode = false;
-    closeAdmin();
-    setTimeout(function(){ location.reload(); }, 400);
+    adminLoadData();
   }).catch(function(){ alert('Network error.'); });
 }
 

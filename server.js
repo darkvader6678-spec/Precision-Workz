@@ -330,6 +330,11 @@ async function readAdminLevels() {
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
 }
 const writeAdminLevels = (v) => kvWrite('admin-levels', v);
+async function readRoleLocks() {
+  const raw = _parseKV(await kvRead('admin-role-locks', {}), {});
+  return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+}
+const writeRoleLocks = (v) => kvWrite('admin-role-locks', v);
 async function readAdminNames() {
   const raw = _parseKV(await kvRead('admin-names', {}), {});
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
@@ -853,11 +858,11 @@ async function handleAPI(req, res, urlPath) {
     if (!await isAdmin(body.adminEmail)) return json(res, 403, { error: 'Forbidden' });
 
     if (urlPath === '/api/admin/data') {
-      const [clients, admins, adminLevels, adminNames, projects] = await Promise.all([readClients(), readAdmins(), readAdminLevels(), readAdminNames(), readProjects()]);
+      const [clients, admins, adminLevels, adminNames, projects, roleLocks] = await Promise.all([readClients(), readAdmins(), readAdminLevels(), readAdminNames(), readProjects(), readRoleLocks()]);
       const coLow = (CO_OWNER_EMAIL || '').toLowerCase();
       const allAdmins = [...new Set([PRIMARY_ADMIN, ...(CO_OWNER_EMAIL ? [CO_OWNER_EMAIL] : []), ...admins.filter(a => a.toLowerCase() !== PRIMARY_ADMIN.toLowerCase() && a.toLowerCase() !== coLow)])];
       const myLevel = await getAdminLevel(body.adminEmail);
-      return json(res, 200, { clients, admins: allAdmins, primaryAdmin: PRIMARY_ADMIN, coOwner: CO_OWNER_EMAIL || null, adminLevels, adminNames, myLevel, projects });
+      return json(res, 200, { clients, admins: allAdmins, primaryAdmin: PRIMARY_ADMIN, coOwner: CO_OWNER_EMAIL || null, adminLevels, adminNames, myLevel, projects, roleLocks });
     }
 
     if (urlPath === '/api/admin/requests') {
@@ -1121,6 +1126,13 @@ async function handleAPI(req, res, urlPath) {
         const admins = await readAdmins();
         const key = newEmail.toLowerCase().trim();
         const isNewDev = !admins.map(e => e.toLowerCase()).includes(key);
+        if (!isNewDev && level) {
+          const locks = await readRoleLocks();
+          if (locks[key]) {
+            appendSecurityLog('access_denied', body.adminEmail, key, 'Level change blocked — role is protected', getReqIP(req)).catch(function(){});
+            return json(res, 403, { error: 'This role is protected. Unlock it first before changing the level.' });
+          }
+        }
         if (isNewDev) {
           admins.push(newEmail.trim());
           await writeAdmins(admins);
@@ -1137,6 +1149,24 @@ async function handleAPI(req, res, urlPath) {
         }
         appendSecurityLog(isNewDev ? 'dev_added' : 'level_changed', body.adminEmail, key, 'Level: ' + (level || 'low'), getReqIP(req)).catch(function(){});
         return json(res, 200, { ok: true, admins });
+      } catch(e) { return json(res, 500, { error: e.message }); }
+    }
+
+    if (urlPath === '/api/admin/toggle-role-lock' && req.method === 'POST') {
+      try {
+        const isOwnerOrCo = body.adminEmail.toLowerCase() === PRIMARY_ADMIN.toLowerCase() ||
+          (CO_OWNER_EMAIL && body.adminEmail.toLowerCase() === CO_OWNER_EMAIL.toLowerCase());
+        if (!isOwnerOrCo) {
+          appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Non-owner tried to toggle role lock', getReqIP(req)).catch(function(){});
+          return json(res, 403, { error: 'Only owner or co-owner can protect roles' });
+        }
+        const key = (body.targetEmail || '').toLowerCase().trim();
+        if (!key) return json(res, 400, { error: 'targetEmail required' });
+        const locks = await readRoleLocks();
+        locks[key] = !locks[key];
+        await writeRoleLocks(locks);
+        appendSecurityLog('site_control', body.adminEmail, key, locks[key] ? 'Role locked' : 'Role unlocked', getReqIP(req)).catch(function(){});
+        return json(res, 200, { ok: true, locked: locks[key] });
       } catch(e) { return json(res, 500, { error: e.message }); }
     }
 
