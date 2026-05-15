@@ -6446,18 +6446,20 @@ function adminRenderDevs(admins, primary, coOwner, levels, names) {
       ? '<button style="padding:5px 14px;font-size:.75rem;font-weight:700;cursor:pointer;border-radius:7px;border:1px solid rgba(239,68,68,.5);background:rgba(239,68,68,.12);color:#fca5a5;font-family:inherit;transition:all .2s" onmouseover="this.style.background=\'rgba(239,68,68,.25)\';this.style.borderColor=\'rgba(239,68,68,.8)\'" onmouseout="this.style.background=\'rgba(239,68,68,.12)\';this.style.borderColor=\'rgba(239,68,68,.5)\'" onclick="adminRemoveSelf()">Leave</button>'
       : '';
     var badge = isP
-      ? '<span class="admin-primary-badge"><span class="admin-primary-badge-inner">Owner</span></span>'
+      ? '<span class="admin-primary-badge"><span class="admin-primary-badge-inner"><i class="ph-bold ph-crown" style="font-size:.8rem;margin-right:4px;vertical-align:middle"></i>Owner-Protected</span></span>'
       : isCO
-        ? '<span class="admin-primary-badge" style="background:rgba(6,182,212,.15);color:#22d3ee;border-color:rgba(6,182,212,.3)">Co-Owner</span>'
-        : '<span style="font-size:.72rem;color:var(--dim)">Developer</span>';
+        ? '<span class="admin-primary-badge" style="background:rgba(6,182,212,.15);color:#22d3ee;border-color:rgba(6,182,212,.3)"><i class="ph-bold ph-shield-star" style="font-size:.78rem;margin-right:3px;vertical-align:middle"></i>Co-Owner</span>'
+        : '<span style="font-size:.72rem;color:var(--dim)"><i class="ph-bold ph-code" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>Developer</span>';
     var lvlBadge = '';
     var lvl = 'low';
     if (!isP && !isCO && levels) {
       lvl = levels[eKey] || levels[email] || 'low';
-      var lvlClr = lvl === 'primary' ? '#a78bfa' : lvl === 'co-owner' ? '#22d3ee' : lvl === 'max' ? '#f87171' : lvl === 'medium' ? '#fb923c' : '#4ade80';
-      var lvlBg  = lvl === 'primary' ? 'rgba(124,58,237,.12)' : lvl === 'co-owner' ? 'rgba(6,182,212,.12)' : lvl === 'max' ? 'rgba(239,68,68,.12)' : lvl === 'medium' ? 'rgba(251,146,60,.12)' : 'rgba(74,222,128,.1)';
+      var lvlClr = lvl === 'primary' ? '#fbbf24' : lvl === 'co-owner' ? '#22d3ee' : lvl === 'max' ? '#f87171' : lvl === 'medium' ? '#fb923c' : '#4ade80';
+      var lvlBg  = lvl === 'primary' ? 'rgba(245,158,11,.15)' : lvl === 'co-owner' ? 'rgba(6,182,212,.12)' : lvl === 'max' ? 'rgba(239,68,68,.12)' : lvl === 'medium' ? 'rgba(251,146,60,.12)' : 'rgba(74,222,128,.1)';
+      var lvlIcon = lvl === 'primary' ? '<i class="ph-bold ph-crown" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : lvl === 'co-owner' ? '<i class="ph-bold ph-shield-star" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : lvl === 'max' ? '<i class="ph-bold ph-fire" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : lvl === 'medium' ? '<i class="ph-bold ph-lock-open" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : '<i class="ph-bold ph-lock" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>';
       var lvlTxt = lvl === 'primary' ? 'Owner' : lvl === 'co-owner' ? 'Co-Owner' : lvl === 'max' ? 'Max Access' : lvl === 'medium' ? 'Medium' : 'Low';
-      lvlBadge = '<span style="font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:6px;background:'+lvlBg+';color:'+lvlClr+';text-transform:uppercase;letter-spacing:.5px;margin-left:4px">'+lvlTxt+'</span>';
+      var lvlBorder = lvl === 'primary' ? 'rgba(245,158,11,.4)' : lvl === 'co-owner' ? 'rgba(6,182,212,.3)' : lvl === 'max' ? 'rgba(239,68,68,.35)' : lvl === 'medium' ? 'rgba(251,146,60,.35)' : 'rgba(74,222,128,.25)';
+      lvlBadge = '<span style="display:inline-flex;align-items:center;font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:6px;background:'+lvlBg+';color:'+lvlClr+';text-transform:uppercase;letter-spacing:.5px;margin-left:4px;border:1px solid '+lvlBorder+'">'+lvlIcon+lvlTxt+'</span>';
     }
     var levelChanger = (isPrimary && !isP && !isCO)
       ? ' <select id="dlvl-'+eKey.replace(/[@.]/g,'_')+'" style="font-size:.7rem;background:#0d0d18;border:1px solid rgba(255,255,255,.12);border-radius:5px;color:#f1f5f9;padding:2px 6px;cursor:pointer;margin-left:6px;color-scheme:dark">'
@@ -6469,7 +6471,9 @@ function adminRenderDevs(admins, primary, coOwner, levels, names) {
         + '</select>'
         + '<button class="admin-btn ghost" style="padding:3px 10px;font-size:.7rem;margin-left:4px" onclick="adminUpdateDevLevel(\''+email.replace(/'/g,"\\'")+'\',' + '\''+eKey.replace(/[@.]/g,'_').replace(/'/g,"\\'")+'\')" >Set</button>'
       : '';
-    var displayEmail = isPrimary ? email : (isMe ? email + ' <span style="font-size:.65rem;color:var(--cyan2)">(you)</span>' : maskEmail(email));
+    var displayEmail = isP
+      ? '<span style="font-size:.78rem;font-weight:700;color:#f59e0b;letter-spacing:.3px"><i class="ph-bold ph-lock-key" style="font-size:.8rem;margin-right:4px;vertical-align:middle"></i>owner-protected</span>'
+      : isPrimary ? email : (isMe ? email + ' <span style="font-size:.65rem;color:var(--cyan2)">(you)</span>' : maskEmail(email));
     var nameTag = devName ? '<span style="font-size:.75rem;color:var(--cyan2);font-weight:600;margin-left:2px">' + escHtml(devName) + '</span>' : '';
     return '<div class="admin-dev-row">'
       + '<div style="display:flex;flex-direction:column;gap:2px;flex:1">'
