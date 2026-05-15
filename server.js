@@ -1117,12 +1117,19 @@ async function handleAPI(req, res, urlPath) {
 
     if (urlPath === '/api/admin/add-admin' && req.method === 'POST') {
       try {
-        if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) {
-          appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Non-owner tried to add developer', getReqIP(req)).catch(function(){});
-          return json(res, 403, { error: 'Only the primary admin can add developers' });
+        const actorKey = body.adminEmail.toLowerCase();
+        const isActorPrimary = actorKey === PRIMARY_ADMIN.toLowerCase();
+        const isActorCo = CO_OWNER_EMAIL && actorKey === CO_OWNER_EMAIL.toLowerCase();
+        if (!isActorPrimary && !isActorCo) {
+          appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Insufficient level to add developer', getReqIP(req)).catch(function(){});
+          return json(res, 403, { error: 'Only the owner or lead dev can add developers' });
         }
         const { newEmail, level } = body;
         if (!newEmail) return json(res, 400, { error: 'newEmail required' });
+        if (isActorCo && level && ['co-owner', 'primary'].includes(level)) {
+          appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Lead dev tried to assign co-owner/owner level', getReqIP(req)).catch(function(){});
+          return json(res, 403, { error: 'Lead Dev cannot assign co-owner or owner level' });
+        }
         const admins = await readAdmins();
         const key = newEmail.toLowerCase().trim();
         const isNewDev = !admins.map(e => e.toLowerCase()).includes(key);
@@ -1172,14 +1179,19 @@ async function handleAPI(req, res, urlPath) {
 
     if (urlPath === '/api/admin/remove-admin' && req.method === 'POST') {
       try {
-        const isSelf = body.adminEmail && body.targetEmail &&
-          body.adminEmail.toLowerCase() === body.targetEmail.toLowerCase();
-        if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase() && !isSelf) {
-          appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Non-owner tried to remove another developer', getReqIP(req)).catch(function(){});
-          return json(res, 403, { error: 'Only the primary admin can remove other developers' });
+        const actorKey = (body.adminEmail||'').toLowerCase();
+        const targetKey2 = (body.targetEmail||'').toLowerCase();
+        const isActorPrimary = actorKey === PRIMARY_ADMIN.toLowerCase();
+        const isActorCo = CO_OWNER_EMAIL && actorKey === CO_OWNER_EMAIL.toLowerCase();
+        if (!isActorPrimary && !isActorCo) {
+          appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Insufficient level to remove developer', getReqIP(req)).catch(function(){});
+          return json(res, 403, { error: 'Only the owner or lead dev can remove developers' });
         }
-        if ((body.targetEmail||'').toLowerCase() === PRIMARY_ADMIN.toLowerCase()) {
+        if (targetKey2 === PRIMARY_ADMIN.toLowerCase()) {
           return json(res, 403, { error: 'Cannot remove the primary admin.' });
+        }
+        if (isActorCo && CO_OWNER_EMAIL && targetKey2 === CO_OWNER_EMAIL.toLowerCase()) {
+          return json(res, 403, { error: 'Lead Dev cannot remove the co-owner.' });
         }
         const { targetEmail } = body;
         const key = (targetEmail||'').toLowerCase();
@@ -1194,7 +1206,7 @@ async function handleAPI(req, res, urlPath) {
         const levels = await readAdminLevels();
         delete levels[key];
         await writeAdminLevels(levels);
-        appendSecurityLog('dev_removed', body.adminEmail, key, isSelf ? 'Self-removed' : 'Developer removed', getReqIP(req)).catch(function(){});
+        appendSecurityLog('dev_removed', body.adminEmail, key, 'Developer removed', getReqIP(req)).catch(function(){});
         return json(res, 200, { ok: true, admins });
       } catch(e) { return json(res, 500, { error: e.message }); }
     }

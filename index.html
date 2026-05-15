@@ -6432,7 +6432,16 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
   var myEmail = adminGetEmail().toLowerCase();
   var isPrimary = myEmail === (primary || '').toLowerCase() || window._myLevel === 'primary';
   var addRow = document.getElementById('adm-add-dev-row');
-  if (addRow) addRow.style.display = isPrimary ? 'flex' : 'none';
+  if (addRow) {
+    addRow.style.display = (isPrimary || window._isCoOwner) ? 'flex' : 'none';
+    var lvlSel = document.getElementById('adm-dev-level');
+    if (lvlSel) {
+      ['co-owner','primary'].forEach(function(v) {
+        var opt = lvlSel.querySelector('option[value="'+v+'"]');
+        if (opt) opt.style.display = isPrimary ? '' : 'none';
+      });
+    }
+  }
 
   list.innerHTML = admins.map(function(email) {
     var eKey = email.toLowerCase();
@@ -6440,7 +6449,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
     var isCO = coOwner && eKey === coOwner.toLowerCase();
     var isMe = eKey === myEmail;
     var devName = (names && (names[eKey] || names[email])) || '';
-    var removeBtn = (!isP && !isCO && isPrimary && !isMe)
+    var removeBtn = (!isP && !isCO && (isPrimary || window._isCoOwner) && !isMe)
       ? '<button class="admin-btn danger" style="padding:5px 12px;font-size:.75rem" onclick="adminRemoveDev(\''+email+'\')">Remove</button>'
       : '';
     var badge = isP
@@ -6466,8 +6475,8 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
         + '<option value="low"'+(lvl==='low'?' selected':'')+'>Low</option>'
         + '<option value="medium"'+(lvl==='medium'?' selected':'')+'>Medium</option>'
         + '<option value="max"'+(lvl==='max'?' selected':'')+'>Max</option>'
-        + '<option value="co-owner"'+(lvl==='co-owner'?' selected':'')+'>Co-Owner</option>'
-        + '<option value="primary"'+(lvl==='primary'?' selected':'')+'>Owner</option>'
+        + (isPrimary ? '<option value="co-owner"'+(lvl==='co-owner'?' selected':'')+'>Lead Dev (co-owner)</option>' : '')
+        + (isPrimary ? '<option value="primary"'+(lvl==='primary'?' selected':'')+'>Owner</option>' : '')
         + '</select>'
         + (!isRoleLocked ? '<button class="admin-btn ghost" style="padding:3px 10px;font-size:.7rem;margin-left:4px" onclick="adminUpdateDevLevel(\''+email.replace(/'/g,"\\'")+'\',' + '\''+eKey.replace(/[@.]/g,'_').replace(/'/g,"\\'")+'\')" >Set</button>' : '')
         + '<button title="'+(isRoleLocked?'Unlock role':'Protect role')+'" onclick="adminToggleRoleLock(\''+email.replace(/'/g,"\\'")+'\',this)" style="padding:3px 8px;font-size:.78rem;cursor:pointer;border-radius:6px;margin-left:4px;border:1px solid '+(isRoleLocked?'rgba(245,158,11,.6)':'rgba(255,255,255,.15)')+';background:'+(isRoleLocked?'rgba(245,158,11,.15)':'transparent')+';color:'+(isRoleLocked?'#fbbf24':'var(--dim)')+';transition:all .2s"><i class="ph-bold '+(isRoleLocked?'ph-lock':'ph-lock-open')+'" style="font-size:.78rem;vertical-align:middle"></i></button>'
