@@ -1041,12 +1041,15 @@ async function handleAPI(req, res, urlPath) {
         const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRe.test(targetEmail.trim())) return json(res, 400, { error: 'Invalid email address' });
         const key = targetEmail.toLowerCase().trim();
-        // Block adding dev emails as clients (primary admin exempt)
+        // Block adding dev emails as clients unless it's self-assignment by owner/co-owner, or the primary admin
+        const actorIsPrimary = body.adminEmail.toLowerCase() === PRIMARY_ADMIN.toLowerCase();
+        const actorIsCo = CO_OWNER_EMAIL && body.adminEmail.toLowerCase() === CO_OWNER_EMAIL.toLowerCase();
+        const isSelfAssign = body.adminEmail.toLowerCase() === key;
         if (key !== PRIMARY_ADMIN.toLowerCase()) {
           const tgtLevel = await getAdminLevel(key);
-          if (tgtLevel && body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) {
+          if (tgtLevel && !actorIsPrimary && !(isSelfAssign && actorIsCo)) {
             appendSecurityLog('dev_blocked', body.adminEmail, key, 'Attempted to assign client record to a dev account', getReqIP(req));
-            return json(res, 403, { error: 'That email belongs to a developer account and cannot be added as a client. Only the owner can do this.' });
+            return json(res, 403, { error: 'That email belongs to a developer account and cannot be added as a client.' });
           }
         }
         let clients = await readClients();

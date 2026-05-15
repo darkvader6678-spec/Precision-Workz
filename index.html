@@ -5598,15 +5598,38 @@ function renderDashboard(user){
       + '</div></div>';
   }
 
+  /* dev test package picker for owner / co-owner */
+  var _isDevAccount = window._adminIsOwner || window._isCoOwner;
+  var devTestHtml = '';
+  if (_isDevAccount) {
+    var _curSub = sub || 'none';
+    var _btnBase = 'cursor:pointer;padding:5px 14px;font-size:.75rem;font-weight:700;border-radius:7px;font-family:inherit;transition:all .18s;';
+    var _btnBasic = _btnBase + 'border:1px solid rgba(6,182,212,'+ (_curSub==='basic'?'.6':'.25') +');background:rgba(6,182,212,'+ (_curSub==='basic'?'.18':'.06') +');color:#22d3ee';
+    var _btnGold  = _btnBase + 'border:1px solid rgba(245,158,11,'+ (_curSub==='gold'?'.6':'.25') +');background:rgba(245,158,11,'+ (_curSub==='gold'?'.18':'.06') +');color:#fbbf24';
+    var _btnNone  = _btnBase + 'border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--dim)';
+    devTestHtml = '<div style="margin:0;padding:14px 16px;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);border-radius:12px">'
+      + '<div style="font-size:.65rem;font-weight:800;letter-spacing:1.5px;color:var(--purple2);text-transform:uppercase;margin-bottom:10px">🛠️ Dev — Test Package</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'
+      + '<button style="'+_btnBasic+'" onclick="devAssignPackage(\'basic\')">Basic</button>'
+      + '<button style="'+_btnGold+'" onclick="devAssignPackage(\'gold\')">Gold</button>'
+      + '<button style="'+_btnNone+'" onclick="devAssignPackage(null)">Clear</button>'
+      + '</div>'
+      + '<div id="dev-pkg-msg" style="font-size:.72rem;color:var(--dim)"></div>'
+      + '</div>';
+  }
+
   /* assemble */
   body.innerHTML=
     '<div style="padding:22px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border)">'+avHtml
-      +'<div style="min-width:0"><div style="font-size:1rem;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(user.name)+'</div>'
+      +'<div style="min-width:0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div style="font-size:1rem;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(user.name)+'</div>'
+      +(_isDevAccount?'<span style="font-size:.62rem;font-weight:800;letter-spacing:1px;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);color:var(--purple2);text-transform:uppercase">Dev</span>':'')
+      +'</div>'
       +'<div style="font-size:.75rem;color:var(--dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(user.email)+'</div>'
       +(user.addedAt?'<div style="font-size:.68rem;color:rgba(255,255,255,.28);margin-top:3px">Member since '+new Date(user.addedAt).toLocaleDateString('en-US',{month:'long',year:'numeric'})+'</div>':'')
     +'</div></div>'
     + statsBar
     +'<div style="padding:0 20px;display:flex;flex-direction:column;gap:20px;padding-bottom:28px">'
+    + devTestHtml
     +'<div><div class="acct-section-label">Subscription</div>'+subHtml+'</div>'
     + pkgHtml
     + progressHtml
@@ -5620,6 +5643,21 @@ function renderDashboard(user){
     loadClientRequests(user.email);
     if(pkg) loadClientProject(user.email);
   }
+}
+
+function devAssignPackage(sub) {
+  var user = getUserData();
+  if (!user) return;
+  var msgEl = document.getElementById('dev-pkg-msg');
+  if (msgEl) msgEl.textContent = 'Saving…';
+  fetch('/api/admin/set-client', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminEmail: user.email, targetEmail: user.email, name: user.name || '', sub: sub, packageType: sub || null })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.error) { if (msgEl) msgEl.textContent = 'Error: ' + d.error; return; }
+    openDashboard();
+  }).catch(function(){ if (msgEl) msgEl.textContent = 'Network error.'; });
 }
 
 function loadClientProject(email) {
@@ -6528,8 +6566,11 @@ function adminFilterTable() {
       : '<span style="color:var(--dim);font-size:.8rem">—</span>';
     var added = c.addedAt ? new Date(c.addedAt).toLocaleDateString() : '—';
     var _showEmail = _canSeeSensitive();
+    var _devEmails = (_adminData.admins || []).map(function(e){ return e.toLowerCase(); });
+    var _isDevClient = _devEmails.indexOf(k) !== -1;
+    var _devBadge = _isDevClient ? '<span style="font-size:.58rem;font-weight:800;letter-spacing:.8px;padding:1px 6px;border-radius:4px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);color:var(--purple2);text-transform:uppercase;margin-left:5px;vertical-align:middle">DEV</span>' : '';
     return '<tr>'
-      + '<td style="color:var(--text)">' + (_showEmail ? c.email : maskEmail(c.email)) + '</td>'
+      + '<td style="color:var(--text)">' + (_showEmail ? c.email : maskEmail(c.email)) + _devBadge + '</td>'
       + '<td style="color:var(--muted)">' + (c.name || '—') + '</td>'
       + '<td>' + subPill + '</td>'
       + '<td style="color:var(--dim);font-size:.8rem">' + (c.billing || 'monthly') + '</td>'
@@ -6788,18 +6829,21 @@ function adminRenderRequests() {
     el.innerHTML = '<p style="color:var(--dim);font-size:.85rem">No requests found.</p>';
     return;
   }
+  var _reqDevEmails = (_adminData.admins || []).map(function(e){ return e.toLowerCase(); });
   el.innerHTML = list.map(function(r) {
     var isOpen = r.status === 'open';
     var date = r.createdAt ? new Date(r.createdAt).toLocaleString() : '—';
     var typeLabel = r.type==='quote'?'Quote Request':r.type ? r.type.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()}) : 'General';
     var isQuote = r.type==='quote';
-    var borderColor = isQuote?'rgba(245,158,11,.35)':isOpen?'rgba(124,58,237,.3)':'rgba(255,255,255,.06)';
+    var isDevReq = r.email && _reqDevEmails.indexOf(r.email.toLowerCase()) !== -1;
+    var borderColor = isDevReq?'rgba(124,58,237,.25)':isQuote?'rgba(245,158,11,.35)':isOpen?'rgba(124,58,237,.3)':'rgba(255,255,255,.06)';
     var typeBadge = isQuote?'<span style="font-size:.65rem;font-weight:800;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:#fbbf24;padding:2px 8px;border-radius:999px;letter-spacing:.5px">QUOTE</span>':'';
+    var devBadge = isDevReq?'<span style="font-size:.62rem;font-weight:800;letter-spacing:.8px;padding:2px 8px;border-radius:999px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);color:var(--purple2);text-transform:uppercase">DEV</span>':'';
     return '<div id="adm-req-card-'+r.id+'" style="background:'+(isQuote?'rgba(245,158,11,.03)':'rgba(255,255,255,.03)')+';border:1px solid '+borderColor+';border-radius:12px;padding:16px 18px;margin-bottom:10px;transition:box-shadow .3s">'
       + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">'
         + '<div style="flex:1;min-width:0">'
           + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">'
-            + typeBadge
+            + typeBadge + devBadge
             + '<span style="font-size:.72rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:'+(isOpen?'var(--cyan2)':'var(--dim)')+'">'+r.status+'</span>'
             + '<span style="font-size:.78rem;font-weight:600;color:var(--muted)">'+typeLabel+'</span>'
             + '<span style="font-size:.72rem;color:var(--dim)">'+date+'</span>'
