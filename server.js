@@ -407,13 +407,20 @@ async function getAdminLevel(email) {
   const lvls = await readAdminLevels();
   return lvls[e] || 'low';
 }
-const _LVL = { low: 0, medium: 1, max: 2, 'co-owner': 3, primary: 99 };
+const _LVL = { low: 0, medium: 1, max: 2, 'co-owner': 3, 'lead-dev': 4, primary: 99 };
 function levelAtLeast(userLevel, minLevel) {
   return (_LVL[userLevel] || 0) >= (_LVL[minLevel] || 0);
 }
 function isCoOwnerOrPrimary(email) {
   const e = (email || '').toLowerCase().trim();
   return e === PRIMARY_ADMIN.toLowerCase() || !!(CO_OWNER_EMAIL && e === CO_OWNER_EMAIL.toLowerCase());
+}
+async function isLeadDevOrPrimary(email) {
+  const e = (email || '').toLowerCase().trim();
+  if (e === PRIMARY_ADMIN.toLowerCase()) return true;
+  if (CO_OWNER_EMAIL && e === CO_OWNER_EMAIL.toLowerCase()) return true;
+  const lvl = await getAdminLevel(e);
+  return lvl === 'lead-dev';
 }
 
 async function isAdmin(email) {
@@ -1124,15 +1131,17 @@ async function handleAPI(req, res, urlPath) {
         const actorKey = body.adminEmail.toLowerCase();
         const isActorPrimary = actorKey === PRIMARY_ADMIN.toLowerCase();
         const isActorCo = CO_OWNER_EMAIL && actorKey === CO_OWNER_EMAIL.toLowerCase();
-        if (!isActorPrimary && !isActorCo) {
+        const actorLevel = await getAdminLevel(actorKey);
+        const isActorLeadDev = actorLevel === 'lead-dev';
+        if (!isActorPrimary && !isActorCo && !isActorLeadDev) {
           appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Insufficient level to add developer', getReqIP(req)).catch(function(){});
           return json(res, 403, { error: 'Only the owner or lead dev can add developers' });
         }
         const { newEmail, level } = body;
         if (!newEmail) return json(res, 400, { error: 'newEmail required' });
-        if (isActorCo && level === 'primary') {
-          appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Lead dev tried to assign owner level', getReqIP(req)).catch(function(){});
-          return json(res, 403, { error: 'Lead Dev cannot assign owner level' });
+        if ((isActorCo || isActorLeadDev) && (level === 'primary' || level === 'lead-dev')) {
+          appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Lead dev tried to assign lead-dev or owner level', getReqIP(req)).catch(function(){});
+          return json(res, 403, { error: 'Lead Dev can only assign up to Co-Owner level' });
         }
         const admins = await readAdmins();
         const key = newEmail.toLowerCase().trim();
@@ -1148,7 +1157,7 @@ async function handleAPI(req, res, urlPath) {
           admins.push(newEmail.trim());
           await writeAdmins(admins);
         }
-        if (level && ['low','medium','max','co-owner','primary'].includes(level)) {
+        if (level && ['low','medium','max','co-owner','lead-dev','primary'].includes(level)) {
           const levels = await readAdminLevels();
           levels[key] = level;
           await writeAdminLevels(levels);
@@ -1165,9 +1174,9 @@ async function handleAPI(req, res, urlPath) {
 
     if (urlPath === '/api/admin/toggle-role-lock' && req.method === 'POST') {
       try {
-        if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) {
+        if (!await isLeadDevOrPrimary(body.adminEmail)) {
           appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Non-owner tried to toggle role lock', getReqIP(req)).catch(function(){});
-          return json(res, 403, { error: 'Only the owner can protect roles' });
+          return json(res, 403, { error: 'Owner protected role required' });
         }
         const key = (body.targetEmail || '').toLowerCase().trim();
         if (!key) return json(res, 400, { error: 'targetEmail required' });
@@ -1185,15 +1194,22 @@ async function handleAPI(req, res, urlPath) {
         const targetKey2 = (body.targetEmail||'').toLowerCase();
         const isActorPrimary = actorKey === PRIMARY_ADMIN.toLowerCase();
         const isActorCo = CO_OWNER_EMAIL && actorKey === CO_OWNER_EMAIL.toLowerCase();
-        if (!isActorPrimary && !isActorCo) {
+        const actorLevelRm = await getAdminLevel(actorKey);
+        const isActorLeadDev = actorLevelRm === 'lead-dev';
+        if (!isActorPrimary && !isActorCo && !isActorLeadDev) {
           appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Insufficient level to remove developer', getReqIP(req)).catch(function(){});
           return json(res, 403, { error: 'Only the owner or lead dev can remove developers' });
         }
         if (targetKey2 === PRIMARY_ADMIN.toLowerCase()) {
           return json(res, 403, { error: 'Cannot remove the primary admin.' });
         }
-        if (isActorCo && CO_OWNER_EMAIL && targetKey2 === CO_OWNER_EMAIL.toLowerCase()) {
+        if ((isActorCo || isActorLeadDev) && CO_OWNER_EMAIL && targetKey2 === CO_OWNER_EMAIL.toLowerCase()) {
           return json(res, 403, { error: 'Lead Dev cannot remove the co-owner.' });
+        }
+        // Also block lead-dev from removing other lead-devs
+        const targetLvlRm = isActorLeadDev ? await getAdminLevel(targetKey2) : null;
+        if (isActorLeadDev && targetLvlRm === 'lead-dev') {
+          return json(res, 403, { error: 'Lead Dev cannot remove another Lead Dev.' });
         }
         const { targetEmail } = body;
         const key = (targetEmail||'').toLowerCase();
@@ -1371,7 +1387,7 @@ async function handleAPI(req, res, urlPath) {
     }
 
     if (urlPath === '/api/admin/site-control' && req.method === 'POST') {
-      if ((body.adminEmail || '').toLowerCase().trim() !== PRIMARY_ADMIN.toLowerCase().trim()) return json(res, 403, { error: 'Owner protected role required' });
+      if (!await isLeadDevOrPrimary(body.adminEmail)) return json(res, 403, { error: 'Owner protected role required' });
       const { maintenance, message, scheduledStart, scheduledDuration, clearSchedule } = body;
       const current = await readSiteStatus();
       const updated = Object.assign({}, current, {
