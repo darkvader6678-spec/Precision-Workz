@@ -3620,8 +3620,7 @@ select{color-scheme:dark}
               <option value="low">Low Access</option>
               <option value="medium">Medium Access</option>
               <option value="max">Max Access</option>
-
-              <option value="primary">Owner</option>
+              <option value="co-owner" style="display:none">Lead Dev</option>
             </select>
           </div>
           <button class="admin-btn primary" style="align-self:flex-end" onclick="adminAddDev()">Add Developer</button>
@@ -5609,15 +5608,29 @@ function renderDashboard(user){
       return '<button style="'+_btnBase+'border:1px solid rgba('+r+','+g+','+b+','+(active?'.6':'.25')+');background:rgba('+r+','+g+','+b+','+(active?'.2':'.06')+');color:rgb('+r+','+g+','+b+')" onclick="devAssignPackage(\''+val+'\')">'+label+'</button>';
     }
     var _btnClear = '<button style="'+_btnBase+'border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--dim)" onclick="devAssignPackage(null)">Clear</button>';
-    devTestHtml = '<div style="margin:0;padding:14px 16px;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);border-radius:12px">'
-      + '<div style="font-size:.65rem;font-weight:800;letter-spacing:1.5px;color:var(--purple2);text-transform:uppercase;margin-bottom:10px">🛠️ Dev — Test Package</div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'
+    var _curSub = sub || 'none';
+    function _subBtn(val, label, r, g, b) {
+      var active = _curSub === val;
+      return '<button style="'+_btnBase+'border:1px solid rgba('+r+','+g+','+b+','+(active?'.6':'.25')+');background:rgba('+r+','+g+','+b+','+(active?'.2':'.06')+');color:rgb('+r+','+g+','+b+')" onclick="devAssignSub(\''+val+'\')">'+label+'</button>';
+    }
+    var _btnSubNone = '<button style="'+_btnBase+'border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--dim)" onclick="devAssignSub(null)">None</button>';
+    devTestHtml = '<div style="margin:0;padding:14px 16px;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);border-radius:12px;display:flex;flex-direction:column;gap:12px">'
+      + '<div>'
+      + '<div style="font-size:.65rem;font-weight:800;letter-spacing:1.5px;color:var(--purple2);text-transform:uppercase;margin-bottom:8px">🛠️ Dev — Subscription</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      + _subBtn('basic', 'Basic',  6,   182, 212)
+      + _subBtn('gold',  'Gold',   245, 158, 11)
+      + _btnSubNone
+      + '</div></div>'
+      + '<div>'
+      + '<div style="font-size:.65rem;font-weight:800;letter-spacing:1.5px;color:var(--purple2);text-transform:uppercase;margin-bottom:8px">🛠️ Dev — Package</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
       + _pkgBtn('starter',  'Starter',  99,  102, 241)
       + _pkgBtn('premium',  'Premium',  124, 58,  237)
       + _pkgBtn('diamond',  'Diamond',  6,   182, 212)
       + _pkgBtn('titanium', 'Titanium', 203, 213, 225)
       + _btnClear
-      + '</div>'
+      + '</div></div>'
       + '<div id="dev-pkg-msg" style="font-size:.72rem;color:var(--dim)"></div>'
       + '</div>';
   }
@@ -5658,6 +5671,20 @@ function devAssignPackage(packageType) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ adminEmail: user.email, targetEmail: user.email, name: user.name || '', packageType: packageType || null })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.error) { if (msgEl) msgEl.textContent = 'Error: ' + d.error; return; }
+    openDashboard();
+  }).catch(function(){ if (msgEl) msgEl.textContent = 'Network error.'; });
+}
+function devAssignSub(sub) {
+  var user = getUserData();
+  if (!user) return;
+  var msgEl = document.getElementById('dev-pkg-msg');
+  if (msgEl) msgEl.textContent = 'Saving…';
+  fetch('/api/admin/set-client', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminEmail: user.email, targetEmail: user.email, name: user.name || '', sub: sub || null })
   }).then(function(r){ return r.json(); }).then(function(d){
     if (d.error) { if (msgEl) msgEl.textContent = 'Error: ' + d.error; return; }
     openDashboard();
@@ -6472,16 +6499,17 @@ function adminRenderStats(clients) {
 function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
   var list = document.getElementById('adm-devs-list');
   var myEmail = adminGetEmail().toLowerCase();
-  var isPrimary = myEmail === (primary || '').toLowerCase() || window._myLevel === 'primary';
+  var isPrimaryEmail = myEmail === (primary || '').toLowerCase();
+  var isPrimary = isPrimaryEmail || window._myLevel === 'primary';
   var addRow = document.getElementById('adm-add-dev-row');
   if (addRow) {
     addRow.style.display = (isPrimary || window._isCoOwner) ? 'flex' : 'none';
     var lvlSel = document.getElementById('adm-dev-level');
     if (lvlSel) {
-      ['co-owner','primary'].forEach(function(v) {
-        var opt = lvlSel.querySelector('option[value="'+v+'"]');
-        if (opt) opt.style.display = isPrimary ? '' : 'none';
-      });
+      var coOpt = lvlSel.querySelector('option[value="co-owner"]');
+      if (coOpt) coOpt.style.display = isPrimaryEmail ? '' : 'none';
+      var ownerOpt = lvlSel.querySelector('option[value="primary"]');
+      if (ownerOpt) ownerOpt.style.display = 'none';
     }
   }
 
@@ -6517,10 +6545,10 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
         + '<option value="low"'+(lvl==='low'?' selected':'')+'>Low</option>'
         + '<option value="medium"'+(lvl==='medium'?' selected':'')+'>Medium</option>'
         + '<option value="max"'+(lvl==='max'?' selected':'')+'>Max</option>'
-        + (isPrimary ? '<option value="primary"'+(lvl==='primary'?' selected':'')+'>Owner</option>' : '')
+        + (isPrimaryEmail ? '<option value="co-owner"'+(lvl==='co-owner'?' selected':'')+'>Lead Dev</option>' : '')
         + '</select>'
         + (!isRoleLocked ? '<button class="admin-btn ghost" style="padding:3px 10px;font-size:.7rem;margin-left:4px" onclick="adminUpdateDevLevel(\''+email.replace(/'/g,"\\'")+'\',' + '\''+eKey.replace(/[@.]/g,'_').replace(/'/g,"\\'")+'\')" >Set</button>' : '')
-        + '<button title="'+(isRoleLocked?'Unlock role':'Protect role')+'" onclick="adminToggleRoleLock(\''+email.replace(/'/g,"\\'")+'\',this)" style="padding:3px 8px;font-size:.78rem;cursor:pointer;border-radius:6px;margin-left:4px;border:1px solid '+(isRoleLocked?'rgba(245,158,11,.6)':'rgba(255,255,255,.15)')+';background:'+(isRoleLocked?'rgba(245,158,11,.15)':'transparent')+';color:'+(isRoleLocked?'#fbbf24':'var(--dim)')+';transition:all .2s"><i class="ph-bold '+(isRoleLocked?'ph-lock':'ph-lock-open')+'" style="font-size:.78rem;vertical-align:middle"></i></button>'
+        + (isPrimaryEmail ? '<button title="'+(isRoleLocked?'Unlock role':'Protect role')+'" onclick="adminToggleRoleLock(\''+email.replace(/'/g,"\\'")+'\',this)" style="padding:3px 8px;font-size:.78rem;cursor:pointer;border-radius:6px;margin-left:4px;border:1px solid '+(isRoleLocked?'rgba(245,158,11,.6)':'rgba(255,255,255,.15)')+';background:'+(isRoleLocked?'rgba(245,158,11,.15)':'transparent')+';color:'+(isRoleLocked?'#fbbf24':'var(--dim)')+';transition:all .2s"><i class="ph-bold '+(isRoleLocked?'ph-lock':'ph-lock-open')+'" style="font-size:.78rem;vertical-align:middle"></i></button>' : '')
       : '';
     var displayEmail = isP
       ? '<span style="font-size:.82rem;font-weight:800;background:linear-gradient(90deg,#f59e0b,#fbbf24,#d97706,#fbbf24,#f59e0b);background-size:300% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.8px;animation:gold-wave 3s ease infinite">♛ Owner-Protected</span>'

@@ -1130,9 +1130,9 @@ async function handleAPI(req, res, urlPath) {
         }
         const { newEmail, level } = body;
         if (!newEmail) return json(res, 400, { error: 'newEmail required' });
-        if (isActorCo && level && ['co-owner', 'primary'].includes(level)) {
-          appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Lead dev tried to assign co-owner/owner level', getReqIP(req)).catch(function(){});
-          return json(res, 403, { error: 'Lead Dev cannot assign co-owner or owner level' });
+        if (isActorCo && level === 'primary') {
+          appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Lead dev tried to assign owner level', getReqIP(req)).catch(function(){});
+          return json(res, 403, { error: 'Lead Dev cannot assign owner level' });
         }
         const admins = await readAdmins();
         const key = newEmail.toLowerCase().trim();
@@ -1165,11 +1165,9 @@ async function handleAPI(req, res, urlPath) {
 
     if (urlPath === '/api/admin/toggle-role-lock' && req.method === 'POST') {
       try {
-        const isOwnerOrCo = body.adminEmail.toLowerCase() === PRIMARY_ADMIN.toLowerCase() ||
-          (CO_OWNER_EMAIL && body.adminEmail.toLowerCase() === CO_OWNER_EMAIL.toLowerCase());
-        if (!isOwnerOrCo) {
+        if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) {
           appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Non-owner tried to toggle role lock', getReqIP(req)).catch(function(){});
-          return json(res, 403, { error: 'Only owner or co-owner can protect roles' });
+          return json(res, 403, { error: 'Only the owner can protect roles' });
         }
         const key = (body.targetEmail || '').toLowerCase().trim();
         if (!key) return json(res, 400, { error: 'targetEmail required' });
