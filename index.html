@@ -1023,7 +1023,13 @@ body{top:0!important}
 .admin-input{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:9px;color:var(--text);padding:9px 12px;font-size:.85rem;font-family:inherit;outline:none;width:100%;transition:border-color .2s}
 .admin-input:focus{border-color:rgba(124,58,237,.5);background:rgba(124,58,237,.04)}
 .admin-input::placeholder{color:var(--dim)}
-.admin-input option{background:#1a1a2e;color:#f1f5f9}
+.admin-input option{background:#0d0d18;color:#f1f5f9}
+select.admin-input,select.admin-input:focus{background:#0d0d18;color:#f1f5f9;color-scheme:dark}
+select.admin-input option{background:#0d0d18;color:#f1f5f9}
+/* Global dark select fix — prevents browser from overriding with white */
+select{color-scheme:dark}
+.form-group select,.demo-form select{background:#0d0d18!important;color:#f1f5f9!important;color-scheme:dark}
+.form-group select option,.demo-form select option{background:#0d0d18;color:#f1f5f9}
 .admin-btn{padding:9px 18px;border-radius:9px;font-weight:700;font-size:.84rem;border:none;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
 .admin-btn.primary{background:linear-gradient(135deg,var(--purple),var(--cyan));color:#fff;box-shadow:0 0 20px rgba(124,58,237,.25)}
 .admin-btn.primary:hover{opacity:.88;transform:translateY(-1px)}
@@ -1079,7 +1085,8 @@ body{top:0!important}
 .admin-overlay.co-theme .admin-input{background:#050505;border:1px solid #1a1a1a;color:#fff}
 .admin-overlay.co-theme .admin-input:focus{border-color:#f59e0b;background:#080808}
 .admin-overlay.co-theme .admin-input::placeholder{color:#2a2a2a}
-.admin-overlay.co-theme .admin-input option{background:#080808}
+.admin-overlay.co-theme .admin-input option{background:#080808;color:#fff}
+.admin-overlay.co-theme select.admin-input{background:#050505;color:#fff;color-scheme:dark}
 .admin-overlay.co-theme .admin-table th{color:#2a2a2a;border-bottom-color:#111}
 .admin-overlay.co-theme .admin-table td{border-bottom-color:#0d0d0d;color:#888;font-size:.82rem}
 .admin-overlay.co-theme .admin-table td b,.admin-overlay.co-theme .admin-table td [style*="color:var(--text)"]{color:#ccc}
@@ -1357,7 +1364,8 @@ body{top:0!important}
 .mon-ip-act-btn{background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--dim);border-radius:5px;padding:3px 8px;font-size:.65rem;cursor:pointer;font-family:inherit;transition:border-color .18s,color .18s}
 .mon-ip-act-btn:hover{border-color:rgba(255,255,255,.28);color:var(--text)}
 .mon-ip-act-btn.danger:hover{border-color:rgba(239,68,68,.5);color:#ef4444}
-.mon-ip-act-select{background:#0d0d0d;border:1px solid rgba(255,255,255,.1);color:var(--dim);border-radius:5px;padding:3px 6px;font-size:.65rem;cursor:pointer;font-family:inherit}
+.mon-ip-act-select{background:#0d0d0d;border:1px solid rgba(255,255,255,.1);color:#94a3b8;border-radius:5px;padding:3px 6px;font-size:.65rem;cursor:pointer;font-family:inherit;color-scheme:dark}
+.mon-ip-act-select option{background:#0d0d0d;color:#f1f5f9}
 </style>
 </head>
 <body>
@@ -6385,7 +6393,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names) {
       lvlBadge = '<span style="font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:6px;background:'+lvlBg+';color:'+lvlClr+';text-transform:uppercase;letter-spacing:.5px;margin-left:4px">'+lvlTxt+'</span>';
     }
     var levelChanger = (isPrimary && !isP && !isCO)
-      ? ' <select id="dlvl-'+eKey.replace(/[@.]/g,'_')+'" style="font-size:.7rem;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:2px 6px;cursor:pointer;margin-left:6px">'
+      ? ' <select id="dlvl-'+eKey.replace(/[@.]/g,'_')+'" style="font-size:.7rem;background:#0d0d18;border:1px solid rgba(255,255,255,.12);border-radius:5px;color:#f1f5f9;padding:2px 6px;cursor:pointer;margin-left:6px;color-scheme:dark">'
         + '<option value="low"'+(lvl==='low'?' selected':'')+'>Low</option>'
         + '<option value="medium"'+(lvl==='medium'?' selected':'')+'>Medium</option>'
         + '<option value="max"'+(lvl==='max'?' selected':'')+'>Max</option>'
