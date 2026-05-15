@@ -6211,7 +6211,7 @@ function adminLoadData() {
       if (_subtitle) {
         if (_overrideActive) _subtitle.textContent = '— Temporary Owner';
         else if (_isCO) _subtitle.textContent = '— Lead Dev';
-        else if (_isPrimary) _subtitle.innerHTML = ' <span class="admin-title-gold">♛ Owner</span>';
+        else if (_isPrimary) _subtitle.innerHTML = ' <span class="admin-title-gold">♔ Protected Owner</span>';
         else if (_myName) _subtitle.textContent = '— Welcome, ' + _myName.split(' ')[0];
         else _subtitle.textContent = '— Control Panel';
       }
@@ -6594,7 +6594,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
       ? '<button class="admin-btn danger" style="padding:5px 12px;font-size:.75rem" onclick="adminRemoveDev(\''+email+'\')">Remove</button>'
       : '';
     var badge = isP
-      ? '<span class="admin-primary-badge"><span class="admin-primary-badge-inner">♛ Owner-Protected</span></span>'
+      ? '<span class="admin-primary-badge"><span class="admin-primary-badge-inner">♔ Owner-Protected</span></span>'
       : isCO
         ? '<span class="admin-primary-badge" style="background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.3)"><span style="font-size:.78rem;font-weight:800;background:linear-gradient(90deg,#22d3ee,#a78bfa,#22d3ee);background-size:300% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:gold-wave 4s ease infinite">♛ Lead Dev</span></span>'
         : '<span style="font-size:.72rem;color:var(--dim)"><i class="ph-bold ph-code" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>Developer</span>';
@@ -6613,7 +6613,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
     var isRoleLocked = roleLocks && roleLocks[eKey];
     var lockInfo = isRoleLocked && (typeof roleLocks[eKey] === 'object') ? roleLocks[eKey] : (isRoleLocked ? { by: 'owner' } : null);
     var lockBy = lockInfo ? (lockInfo.by === 'lead-dev' ? 'lead-dev' : 'owner') : null;
-    var lockByLabel = lockBy === 'lead-dev' ? '♛ Lead Dev' : lockBy === 'co-owner' ? '◈ Co-Owner' : '♛ Owner';
+    var lockByLabel = lockBy === 'lead-dev' ? '♛ Lead Dev' : lockBy === 'co-owner' ? '◈ Co-Owner' : '♔ Owner';
     var lockByColor = lockBy === 'lead-dev' ? '#22d3ee' : lockBy === 'co-owner' ? '#818cf8' : '#f59e0b';
     if (lvlBadge && isRoleLocked) {
       var _lockTagClr = lockBy === 'owner' ? 'rgba(245,158,11,.55)' : lockBy === 'co-owner' ? 'rgba(129,140,248,.5)' : 'rgba(6,182,212,.5)';
@@ -6642,7 +6642,10 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
     var displayEmail;
     if (_isMgmtRow) {
       var _rankLabel, _rankStyle;
-      if (isP || lvl === 'primary') {
+      if (isP) {
+        _rankLabel = '♔ Owner';
+        _rankStyle = 'font-size:.86rem;font-weight:900;background:linear-gradient(90deg,#fff7ed,#fbbf24,#f97316,#fbbf24,#fff7ed);background-size:300% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:1px;animation:gold-wave 2s ease infinite';
+      } else if (lvl === 'primary') {
         _rankLabel = '♛ Owner';
         _rankStyle = 'font-size:.82rem;font-weight:800;background:linear-gradient(90deg,#f59e0b,#fbbf24,#d97706,#fbbf24,#f59e0b);background-size:300% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.8px;animation:gold-wave 3s ease infinite';
       } else if (isCO) {
@@ -6661,10 +6664,10 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
         ? ' <button onclick="(function(b){var s=document.getElementById(\''+_emailIconId+'\');if(s.style.display===\'none\'){s.style.display=\'inline\';b.querySelector(\'i\').className=\'ph-bold ph-envelope-open\';}else{s.style.display=\'none\';b.querySelector(\'i\').className=\'ph-bold ph-envelope\';}})(this)" style="background:none;border:none;cursor:pointer;padding:2px 5px;color:rgba(255,255,255,.35);vertical-align:middle;line-height:1;transition:color .2s" title="Reveal email"><i class="ph-bold ph-envelope" style="font-size:.85rem;vertical-align:middle"></i></button><span id="'+_emailIconId+'" style="display:none;font-size:.75rem;color:var(--dim);margin-left:1px">'+escHtml(email)+'</span>'
         : '';
       var _protectedTag = isP
-        ? ' <span style="font-size:.65rem;font-weight:600;color:rgba(245,158,11,.5);letter-spacing:.3px">(protected role)</span>'
+        ? ' <span style="display:inline-flex;align-items:center;font-size:.58rem;font-weight:800;padding:2px 8px;border-radius:5px;border:1px solid rgba(251,191,36,.55);background:rgba(245,158,11,.1);color:#fbbf24;letter-spacing:.8px;text-transform:uppercase;margin-left:2px;box-shadow:0 0 8px rgba(245,158,11,.2)">Protected Role</span>'
         : isCO
           ? ' <span style="font-size:.65rem;font-weight:600;color:rgba(6,182,212,.45);letter-spacing:.3px">(protected role)</span>'
-          : '';
+          : (lvl === 'primary' ? ' <span style="font-size:.65rem;font-weight:600;color:rgba(245,158,11,.4);letter-spacing:.3px">(protected role)</span>' : '');
       displayEmail = '<span style="'+_rankStyle+'">'+_rankLabel+'</span>'+_protectedTag+_emailReveal;
     } else {
       displayEmail = (isPrimary || window._isCoOwner) ? email : (isMe ? email + ' <span style="font-size:.65rem;color:var(--cyan2)">(you)</span>' : maskEmail(email));
@@ -7634,7 +7637,7 @@ function adminApplyLevelRestrictions() {
   var _overrideNow = !!(window._emergencyOverrideExpiry && Date.now() < window._emergencyOverrideExpiry);
   var badge = document.querySelector('.admin-badge');
   if (badge && !isCoOwner) {
-    var badgeLabels = { low: '◦ Low Access', medium: '◈ Admin', max: '⚡ Senior Admin', primary: _overrideNow ? '⚠ Temp. Owner' : '♛ Owner' };
+    var badgeLabels = { low: '◦ Low Access', medium: '◈ Admin', max: '⚡ Senior Admin', primary: _overrideNow ? '⚠ Temp. Owner' : '♔ Protected Owner' };
     var badgeColors = { low: 'linear-gradient(135deg,#15803d,#16a34a)', medium: 'linear-gradient(135deg,#92400e,#d97706)', max: 'linear-gradient(135deg,#991b1b,#ef4444)', primary: _overrideNow ? 'linear-gradient(135deg,#dc2626,#f59e0b)' : 'linear-gradient(135deg,#6d28d9,#22d3ee,#a78bfa)' };
     badge.textContent = badgeLabels[level] || 'Admin';
     badge.style.background = badgeColors[level] || 'linear-gradient(135deg,var(--purple),var(--cyan))';
