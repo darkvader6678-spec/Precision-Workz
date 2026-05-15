@@ -6598,7 +6598,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
     var displayEmail = isP
       ? '<span style="font-size:.82rem;font-weight:800;background:linear-gradient(90deg,#f59e0b,#fbbf24,#d97706,#fbbf24,#f59e0b);background-size:300% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.8px;animation:gold-wave 3s ease infinite">♛ Owner-Protected</span>'
       : isCO ? '<span style="font-size:.82rem;font-weight:800;background:linear-gradient(90deg,#22d3ee,#a78bfa,#22d3ee);background-size:300% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.6px;animation:gold-wave 4s ease infinite">◈ Co-Owner</span>'
-      : isPrimary ? email : (isMe ? email + ' <span style="font-size:.65rem;color:var(--cyan2)">(you)</span>' : maskEmail(email));
+      : (isPrimary || window._isCoOwner) ? email : (isMe ? email + ' <span style="font-size:.65rem;color:var(--cyan2)">(you)</span>' : maskEmail(email));
     var nameTag = devName ? '<span style="font-size:.75rem;color:var(--cyan2);font-weight:600;margin-left:2px">' + escHtml(devName) + '</span>' : '';
     var coProtect = isCO ? '<span title="Role protected" style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;font-size:.68rem;font-weight:700;border-radius:6px;margin-left:4px;border:1px solid rgba(6,182,212,.4);background:rgba(6,182,212,.08);color:#22d3ee"><i class="ph-bold ph-lock" style="font-size:.72rem;vertical-align:middle"></i>Protected</span>' : '';
     return '<div class="admin-dev-row">'
