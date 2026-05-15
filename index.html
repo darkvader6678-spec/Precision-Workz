@@ -6376,13 +6376,24 @@ function adminRenderDevs(admins, primary, coOwner, levels, names) {
         ? '<span class="admin-primary-badge" style="background:rgba(6,182,212,.15);color:#22d3ee;border-color:rgba(6,182,212,.3)">Co-Owner</span>'
         : '<span style="font-size:.72rem;color:var(--dim)">Developer</span>';
     var lvlBadge = '';
+    var lvl = 'low';
     if (!isP && !isCO && levels) {
-      var lvl = (levels[eKey] || levels[email] || 'low');
-      var lvlClr = lvl === 'max' ? '#f87171' : lvl === 'medium' ? '#fb923c' : '#4ade80';
-      var lvlBg  = lvl === 'max' ? 'rgba(239,68,68,.12)' : lvl === 'medium' ? 'rgba(251,146,60,.12)' : 'rgba(74,222,128,.1)';
-      var lvlTxt = lvl === 'max' ? 'Max Access' : lvl === 'medium' ? 'Medium' : 'Low';
+      lvl = levels[eKey] || levels[email] || 'low';
+      var lvlClr = lvl === 'primary' ? '#a78bfa' : lvl === 'co-owner' ? '#22d3ee' : lvl === 'max' ? '#f87171' : lvl === 'medium' ? '#fb923c' : '#4ade80';
+      var lvlBg  = lvl === 'primary' ? 'rgba(124,58,237,.12)' : lvl === 'co-owner' ? 'rgba(6,182,212,.12)' : lvl === 'max' ? 'rgba(239,68,68,.12)' : lvl === 'medium' ? 'rgba(251,146,60,.12)' : 'rgba(74,222,128,.1)';
+      var lvlTxt = lvl === 'primary' ? 'Owner' : lvl === 'co-owner' ? 'Co-Owner' : lvl === 'max' ? 'Max Access' : lvl === 'medium' ? 'Medium' : 'Low';
       lvlBadge = '<span style="font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:6px;background:'+lvlBg+';color:'+lvlClr+';text-transform:uppercase;letter-spacing:.5px;margin-left:4px">'+lvlTxt+'</span>';
     }
+    var levelChanger = (isPrimary && !isP && !isCO)
+      ? ' <select id="dlvl-'+eKey.replace(/[@.]/g,'_')+'" style="font-size:.7rem;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:2px 6px;cursor:pointer;margin-left:6px">'
+        + '<option value="low"'+(lvl==='low'?' selected':'')+'>Low</option>'
+        + '<option value="medium"'+(lvl==='medium'?' selected':'')+'>Medium</option>'
+        + '<option value="max"'+(lvl==='max'?' selected':'')+'>Max</option>'
+        + '<option value="co-owner"'+(lvl==='co-owner'?' selected':'')+'>Co-Owner</option>'
+        + '<option value="primary"'+(lvl==='primary'?' selected':'')+'>Owner</option>'
+        + '</select>'
+        + '<button class="admin-btn ghost" style="padding:3px 10px;font-size:.7rem;margin-left:4px" onclick="adminUpdateDevLevel(\''+email.replace(/'/g,"\\'")+'\',' + '\''+eKey.replace(/[@.]/g,'_').replace(/'/g,"\\'")+'\')" >Set</button>'
+      : '';
     var displayEmail = isPrimary ? email : (isMe ? email + ' <span style="font-size:.65rem;color:var(--cyan2)">(you)</span>' : maskEmail(email));
     var nameTag = devName ? '<span style="font-size:.75rem;color:var(--cyan2);font-weight:600;margin-left:2px">' + escHtml(devName) + '</span>' : '';
     return '<div class="admin-dev-row">'
@@ -6392,6 +6403,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names) {
       + '</div>'
       + badge
       + lvlBadge
+      + levelChanger
       + removeBtn
       + '</div>';
   }).join('');
@@ -6601,6 +6613,26 @@ function adminRemoveDev(email) {
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (!d.error) setTimeout(adminLoadData, 700);
   });
+}
+
+function adminUpdateDevLevel(email, selId) {
+  var sel = document.getElementById('dlvl-' + selId);
+  if (!sel) return;
+  var newLevel = sel.value;
+  if (newLevel === 'max' || newLevel === 'co-owner' || newLevel === 'primary') {
+    var label = newLevel === 'primary' ? 'Owner' : newLevel === 'co-owner' ? 'Co-Owner' : 'Max Access';
+    var pw = prompt('Enter admin password to set ' + label + ':');
+    if (pw !== '2010') { alert('Incorrect password — level not changed.'); return; }
+    if (newLevel === 'primary' && !confirm('WARNING: This grants full Owner-level access. Are you sure?')) return;
+  }
+  fetch('/api/admin/add-admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminEmail: adminGetEmail(), newEmail: email, level: newLevel })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.error) { alert('Error: ' + d.error); return; }
+    setTimeout(adminLoadData, 400);
+  }).catch(function() { alert('Network error.'); });
 }
 
 /* ── ADMIN REQUESTS ─────────────────────────────────────── */
@@ -7756,8 +7788,8 @@ function adminLoadSecurityLogs() {
       if (d.error) { el.innerHTML = '<div style="color:#f87171;font-size:.8rem">'+escHtml(d.error)+'</div>'; return; }
       var logs = d.logs || [];
       if (!logs.length) { el.innerHTML = '<div style="color:var(--dim);font-size:.8rem;padding:8px 0">No security events logged yet.</div>'; return; }
-      var typeColors = { recaptcha:'#a78bfa', admin_login:'#22d3ee', admin_login_fail:'#f87171', client_login:'#4ade80', client_login_fail:'#f87171', client_added:'#4ade80', client_updated:'#94a3b8', dev_blocked:'#fb923c', dev_added:'#22d3ee', dev_removed:'#f87171', override_approved:'#fbbf24', override_extended:'#fbbf24', override_revoked:'#f87171', dev_override_granted:'#fbbf24', devtools_detected:'#f97316', plan_change_req:'#818cf8' };
-      var typeLabels = { recaptcha:'reCAPTCHA', admin_login:'Admin Login', admin_login_fail:'Login Fail', client_login:'Client Login', client_login_fail:'Client Fail', client_added:'Client Added', client_updated:'Client Updated', dev_blocked:'Dev Block', dev_added:'Dev Added', dev_removed:'Dev Removed', override_approved:'Override OK', override_extended:'Override Ext.', override_revoked:'Override Revoked', dev_override_granted:'Dev Override', devtools_detected:'DevTools Open', plan_change_req:'Plan Change' };
+      var typeColors = { recaptcha:'#a78bfa', admin_login:'#22d3ee', admin_login_fail:'#f87171', client_login:'#4ade80', client_login_fail:'#f87171', client_added:'#4ade80', client_updated:'#94a3b8', client_removed:'#f87171', dev_blocked:'#fb923c', dev_added:'#22d3ee', dev_removed:'#f87171', level_changed:'#fbbf24', override_approved:'#fbbf24', override_extended:'#fbbf24', override_revoked:'#f87171', dev_override_granted:'#fbbf24', devtools_detected:'#f97316', plan_change_req:'#818cf8', access_denied:'#ef4444', promo_added:'#4ade80', promo_removed:'#fb923c', site_control:'#a78bfa', project_deleted:'#f87171' };
+      var typeLabels = { recaptcha:'reCAPTCHA', admin_login:'Admin Login', admin_login_fail:'Login Fail', client_login:'Client Login', client_login_fail:'Client Fail', client_added:'Client Added', client_updated:'Client Updated', client_removed:'Client Removed', dev_blocked:'Dev Block', dev_added:'Dev Added', dev_removed:'Dev Removed', level_changed:'Level Changed', override_approved:'Override OK', override_extended:'Override Ext.', override_revoked:'Override Revoked', dev_override_granted:'Dev Override', devtools_detected:'DevTools Open', plan_change_req:'Plan Change', access_denied:'Access Denied', promo_added:'Promo Added', promo_removed:'Promo Removed', site_control:'Site Control', project_deleted:'Project Deleted' };
       var lvlColors = { owner:'#a78bfa', 'co-owner':'#22d3ee', max:'#f87171', medium:'#fb923c', low:'#4ade80', dev:'#94a3b8' };
       el.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.75rem">'
         + '<thead><tr style="color:var(--dim);text-align:left">'
