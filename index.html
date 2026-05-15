@@ -3620,7 +3620,8 @@ select{color-scheme:dark}
               <option value="low">Low Access</option>
               <option value="medium">Medium Access</option>
               <option value="max">Max Access</option>
-              <option value="co-owner" style="display:none">Lead Dev</option>
+              <option value="co-owner" style="display:none">Co-Owner</option>
+              <option value="primary" style="display:none">Owner</option>
             </select>
           </div>
           <button class="admin-btn primary" style="align-self:flex-end" onclick="adminAddDev()">Add Developer</button>
@@ -6548,7 +6549,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
       var coOpt = lvlSel.querySelector('option[value="co-owner"]');
       if (coOpt) coOpt.style.display = isPrimaryEmail ? '' : 'none';
       var ownerOpt = lvlSel.querySelector('option[value="primary"]');
-      if (ownerOpt) ownerOpt.style.display = 'none';
+      if (ownerOpt) ownerOpt.style.display = isPrimaryEmail ? '' : 'none';
     }
   }
 
@@ -6573,7 +6574,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
       var lvlClr = lvl === 'primary' ? '#fbbf24' : lvl === 'co-owner' ? '#22d3ee' : lvl === 'max' ? '#f87171' : lvl === 'medium' ? '#fb923c' : '#4ade80';
       var lvlBg  = lvl === 'primary' ? 'rgba(245,158,11,.15)' : lvl === 'co-owner' ? 'rgba(6,182,212,.12)' : lvl === 'max' ? 'rgba(239,68,68,.12)' : lvl === 'medium' ? 'rgba(251,146,60,.12)' : 'rgba(74,222,128,.1)';
       var lvlIcon = lvl === 'primary' ? '' : lvl === 'co-owner' ? '<i class="ph-bold ph-shield-star" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : lvl === 'max' ? '<i class="ph-bold ph-fire" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : lvl === 'medium' ? '<i class="ph-bold ph-lock-open" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : '<i class="ph-bold ph-lock" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>';
-      var lvlTxt = lvl === 'primary' ? '♛ Owner' : lvl === 'co-owner' ? 'Lead Dev' : lvl === 'max' ? 'Max Access' : lvl === 'medium' ? 'Medium' : 'Low';
+      var lvlTxt = lvl === 'primary' ? '♛ Owner' : lvl === 'co-owner' ? 'Co-Owner' : lvl === 'max' ? 'Max Access' : lvl === 'medium' ? 'Medium' : 'Low';
       var lvlBorder = lvl === 'primary' ? 'rgba(245,158,11,.4)' : lvl === 'co-owner' ? 'rgba(6,182,212,.3)' : lvl === 'max' ? 'rgba(239,68,68,.35)' : lvl === 'medium' ? 'rgba(251,146,60,.35)' : 'rgba(74,222,128,.25)';
       lvlBadge = '<span style="display:inline-flex;align-items:center;font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:6px;background:'+lvlBg+';color:'+lvlClr+';text-transform:uppercase;letter-spacing:.5px;margin-left:4px;border:1px solid '+lvlBorder+'">'+lvlIcon+lvlTxt+'</span>';
     }
@@ -6584,7 +6585,8 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
         + '<option value="low"'+(lvl==='low'?' selected':'')+'>Low</option>'
         + '<option value="medium"'+(lvl==='medium'?' selected':'')+'>Medium</option>'
         + '<option value="max"'+(lvl==='max'?' selected':'')+'>Max</option>'
-        + (isPrimaryEmail ? '<option value="co-owner"'+(lvl==='co-owner'?' selected':'')+'>Lead Dev</option>' : '')
+        + (isPrimaryEmail ? '<option value="co-owner"'+(lvl==='co-owner'?' selected':'')+'>Co-Owner</option>' : '')
+        + (isPrimaryEmail ? '<option value="primary"'+(lvl==='primary'?' selected':'')+'>Owner</option>' : '')
         + '</select>'
         + (!isRoleLocked ? '<button class="admin-btn ghost" style="padding:3px 10px;font-size:.7rem;margin-left:4px" onclick="adminUpdateDevLevel(\''+email.replace(/'/g,"\\'")+'\',' + '\''+eKey.replace(/[@.]/g,'_').replace(/'/g,"\\'")+'\')" >Set</button>' : '')
         + (isPrimaryEmail ? '<button title="'+(isRoleLocked?'Unlock role':'Protect role')+'" onclick="adminToggleRoleLock(\''+email.replace(/'/g,"\\'")+'\',this)" style="padding:3px 8px;font-size:.78rem;cursor:pointer;border-radius:6px;margin-left:4px;border:1px solid '+(isRoleLocked?'rgba(245,158,11,.6)':'rgba(255,255,255,.15)')+';background:'+(isRoleLocked?'rgba(245,158,11,.15)':'transparent')+';color:'+(isRoleLocked?'#fbbf24':'var(--dim)')+';transition:all .2s"><i class="ph-bold '+(isRoleLocked?'ph-lock':'ph-lock-open')+'" style="font-size:.78rem;vertical-align:middle"></i></button>' : '')
