@@ -6587,7 +6587,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
     var isCO = coOwner && eKey === coOwner.toLowerCase();
     var isMe = eKey === myEmail;
     var devName = (names && (names[eKey] || names[email])) || '';
-    var removeBtn = (!isP && !isCO && (isPrimary || window._isCoOwner) && !isMe)
+    var removeBtn = (!isP && !isCO && (isPrimary || window._isCoOwner) && !isMe && !(roleLocks && roleLocks[eKey]))
       ? '<button class="admin-btn danger" style="padding:5px 12px;font-size:.75rem" onclick="adminRemoveDev(\''+email+'\')">Remove</button>'
       : '';
     var badge = isP
@@ -6610,8 +6610,15 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
     var isRoleLocked = roleLocks && roleLocks[eKey];
     var lockInfo = isRoleLocked && (typeof roleLocks[eKey] === 'object') ? roleLocks[eKey] : (isRoleLocked ? { by: 'owner' } : null);
     var lockBy = lockInfo ? (lockInfo.by === 'lead-dev' ? 'lead-dev' : 'owner') : null;
-    var lockByLabel = lockBy === 'lead-dev' ? '★ Lead Dev' : '♛ Owner';
-    var lockByColor = lockBy === 'lead-dev' ? '#a78bfa' : '#f59e0b';
+    var lockByLabel = lockBy === 'lead-dev' ? '♛ Lead Dev' : '♛ Owner';
+    var lockByColor = lockBy === 'lead-dev' ? '#22d3ee' : '#f59e0b';
+    if (lvlBadge && isRoleLocked) {
+      var _lockTagClr = lockBy === 'owner' ? 'rgba(245,158,11,.55)' : 'rgba(6,182,212,.5)';
+      lvlBadge += ' <span style="font-size:.62rem;font-weight:600;color:'+_lockTagClr+';letter-spacing:.3px">(protected role)</span>';
+    }
+    var protectedNotice = (isMe && isRoleLocked)
+      ? '<span style="font-size:.63rem;font-weight:600;margin-top:1px;color:'+(lockBy==='owner'?'rgba(245,158,11,.6)':'rgba(6,182,212,.55)')+'">your role is protected by '+(lockBy==='owner'?'♛ Owner':'♛ Lead Dev')+'</span>'
+      : '';
     var levelChanger = (isOwnerOrCo && !isP && !isCO)
       ? ' <select id="dlvl-'+eKey.replace(/[@.]/g,'_')+'" style="font-size:.7rem;background:#0d0d18;border:1px solid rgba(255,255,255,.12);border-radius:5px;color:#f1f5f9;padding:2px 6px;cursor:pointer;margin-left:6px;color-scheme:dark"'+(isRoleLocked?' disabled':'')+' >'
         + '<option value="low"'+(lvl==='low'?' selected':'')+'>Low</option>'
@@ -6622,7 +6629,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
         + (isPrimaryEmail ? '<option value="primary"'+(lvl==='primary'?' selected':'')+'>Owner</option>' : '')
         + '</select>'
         + (!isRoleLocked ? '<button class="admin-btn ghost" style="padding:3px 10px;font-size:.7rem;margin-left:4px" onclick="adminUpdateDevLevel(\''+email.replace(/'/g,"\\'")+'\',' + '\''+eKey.replace(/[@.]/g,'_').replace(/'/g,"\\'")+'\')" >Set</button>' : '')
-        + ((isPrimaryEmail || window._isCoOwner) ? '<button title="'+(isRoleLocked?'Unlock role':'Protect role')+'" onclick="adminToggleRoleLock(\''+email.replace(/'/g,"\\'")+'\',this)" style="padding:3px 8px;font-size:.78rem;cursor:pointer;border-radius:6px;margin-left:4px;border:1px solid '+(isRoleLocked?'rgba(245,158,11,.6)':'rgba(255,255,255,.15)')+';background:'+(isRoleLocked?'rgba(245,158,11,.15)':'transparent')+';color:'+(isRoleLocked?'#fbbf24':'var(--dim)')+';transition:all .2s"><i class="ph-bold '+(isRoleLocked?'ph-lock':'ph-lock-open')+'" style="font-size:.78rem;vertical-align:middle"></i></button>' : '')
+        + ((isRoleLocked ? isPrimaryEmail : (isPrimaryEmail || window._isCoOwner)) ? '<button title="'+(isRoleLocked?'Unlock role':'Protect role')+'" onclick="adminToggleRoleLock(\''+email.replace(/'/g,"\\'")+'\',this)" style="padding:3px 8px;font-size:.78rem;cursor:pointer;border-radius:6px;margin-left:4px;border:1px solid '+(isRoleLocked?'rgba(245,158,11,.6)':'rgba(255,255,255,.15)')+';background:'+(isRoleLocked?'rgba(245,158,11,.15)':'transparent')+';color:'+(isRoleLocked?'#fbbf24':'var(--dim)')+';transition:all .2s"><i class="ph-bold '+(isRoleLocked?'ph-lock':'ph-lock-open')+'" style="font-size:.78rem;vertical-align:middle"></i></button>' : '')
         + (isRoleLocked ? ' <span style="font-size:.65rem;font-weight:700;color:'+lockByColor+';display:inline-flex;align-items:center;gap:3px;margin-left:2px"><i class="ph-bold ph-shield-check" style="font-size:.7rem"></i>by '+lockByLabel+'</span>' : '')
       : '';
     var _isMgmtRow = _idx < mgmtDevs.length;
@@ -6662,6 +6669,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
       + '<div style="display:flex;flex-direction:column;gap:2px;flex:1">'
       + '<span class="admin-dev-email">' + displayEmail + '</span>'
       + (nameTag ? nameTag : '')
+      + protectedNotice
       + '</div>'
       + badge
       + lvlBadge

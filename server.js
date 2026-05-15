@@ -1183,6 +1183,11 @@ async function handleAPI(req, res, urlPath) {
         const locks = await readRoleLocks();
         const isCurrentlyLocked = !!(locks[key]);
         if (isCurrentlyLocked) {
+          const actorIsPrimary = (body.adminEmail || '').toLowerCase().trim() === PRIMARY_ADMIN.toLowerCase();
+          if (!actorIsPrimary) {
+            appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Non-owner tried to unlock protected role', getReqIP(req)).catch(function(){});
+            return json(res, 403, { error: 'Owner protected role required' });
+          }
           delete locks[key];
         } else {
           const actorIsPrimary = (body.adminEmail || '').toLowerCase().trim() === PRIMARY_ADMIN.toLowerCase();
