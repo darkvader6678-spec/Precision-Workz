@@ -6593,7 +6593,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
     var badge = isP
       ? '<span class="admin-primary-badge"><span class="admin-primary-badge-inner">♛ Owner-Protected</span></span>'
       : isCO
-        ? '<span class="admin-primary-badge" style="background:rgba(6,182,212,.15);color:#22d3ee;border-color:rgba(6,182,212,.3)"><i class="ph-bold ph-shield-star" style="font-size:.78rem;margin-right:3px;vertical-align:middle"></i>Lead Dev <span style="font-size:.6rem;opacity:.5;font-weight:600">(co-owner)</span></span>'
+        ? '<span class="admin-primary-badge" style="background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.3)"><span style="font-size:.78rem;font-weight:800;background:linear-gradient(90deg,#22d3ee,#a78bfa,#22d3ee);background-size:300% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:gold-wave 4s ease infinite">♛ Lead Dev</span></span>'
         : '<span style="font-size:.72rem;color:var(--dim)"><i class="ph-bold ph-code" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>Developer</span>';
     var lvlBadge = '';
     var lvl = 'low';
@@ -6649,13 +6649,15 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
         : '';
       var _protectedTag = isP
         ? ' <span style="font-size:.65rem;font-weight:600;color:rgba(245,158,11,.5);letter-spacing:.3px">(protected role)</span>'
-        : '';
+        : isCO
+          ? ' <span style="font-size:.65rem;font-weight:600;color:rgba(6,182,212,.45);letter-spacing:.3px">(protected role)</span>'
+          : '';
       displayEmail = '<span style="'+_rankStyle+'">'+_rankLabel+'</span>'+_protectedTag+_emailReveal;
     } else {
       displayEmail = (isPrimary || window._isCoOwner) ? email : (isMe ? email + ' <span style="font-size:.65rem;color:var(--cyan2)">(you)</span>' : maskEmail(email));
     }
     var nameTag = devName ? '<span style="font-size:.75rem;color:var(--cyan2);font-weight:600;margin-left:2px">' + escHtml(devName) + '</span>' : '';
-    var coProtect = isCO ? '<span title="Role protected" style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;font-size:.68rem;font-weight:700;border-radius:6px;margin-left:4px;border:1px solid rgba(6,182,212,.4);background:rgba(6,182,212,.08);color:#22d3ee"><i class="ph-bold ph-lock" style="font-size:.72rem;vertical-align:middle"></i>Protected</span>' : '';
+    var coProtect = isCO ? '<span title="Role protected" style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;font-size:.68rem;font-weight:700;border-radius:6px;margin-left:4px;border:1px solid rgba(6,182,212,.4);background:rgba(6,182,212,.08);color:#22d3ee">♛ Owner-Protected</span>' : '';
     return _sepHtml + '<div class="admin-dev-row">'
       + '<div style="display:flex;flex-direction:column;gap:2px;flex:1">'
       + '<span class="admin-dev-email">' + displayEmail + '</span>'
