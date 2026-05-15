@@ -8472,11 +8472,12 @@ function checkAdminBtn(user) {
       var ctaBanner = document.querySelector('.cta-banner');
       if (ctaBanner) ctaBanner.style.display = isAdmin ? 'none' : '';
       if (isAdmin) {
-        var isCO = !!(d.coOwner && user.email.toLowerCase() === d.coOwner.toLowerCase());
-        var isPrimaryOwner = !!(d.primaryAdmin && user.email.toLowerCase() === d.primaryAdmin.toLowerCase());
+        var isCO = !!(d.coOwner && user.email.toLowerCase() === d.coOwner.toLowerCase()) || d.level === 'co-owner';
+        var isPrimaryOwner = !!(d.primaryAdmin && user.email.toLowerCase() === d.primaryAdmin.toLowerCase()) || d.level === 'primary';
         window._isCoOwner = isCO;
         window._adminIsOwner = isPrimaryOwner;
-        if (isCO) adminBtn.innerHTML = '<i class="ph-bold ph-shield-star" style="font-size:.85rem"></i> Co-Owner';
+        window._myLevel = window._myLevel || d.level || 'low';
+        if (isCO) adminBtn.innerHTML = '<i class="ph-bold ph-shield-star" style="font-size:.85rem"></i> Lead Dev';
         // Hide marketing elements for all devs except the owner
         if (!isPrimaryOwner) {
           var _navCta = document.getElementById('nav-cta-btn');
