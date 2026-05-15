@@ -6102,7 +6102,8 @@ function adminLoadData() {
       if (_subtitle) {
         if (_overrideActive) _subtitle.textContent = '— Temporary Owner';
         else if (_isCO) _subtitle.textContent = '— Co-Owner Panel';
-        else if (_myName && !_isPrimary) _subtitle.textContent = '— Welcome, ' + _myName.split(' ')[0];
+        else if (_isPrimary) _subtitle.innerHTML = ' <span class="admin-title-gold">♛ Owner</span>';
+        else if (_myName) _subtitle.textContent = '— Welcome, ' + _myName.split(' ')[0];
         else _subtitle.textContent = '— Control Panel';
       }
       // Populate remove-dev dropdown for co-owner only (not during override — full owner view)
@@ -6443,7 +6444,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
       ? '<button class="admin-btn danger" style="padding:5px 12px;font-size:.75rem" onclick="adminRemoveDev(\''+email+'\')">Remove</button>'
       : '';
     var badge = isP
-      ? '<span class="admin-primary-badge"><span class="admin-primary-badge-inner"><i class="ph-bold ph-crown" style="font-size:.8rem;margin-right:4px;vertical-align:middle"></i>Owner-Protected</span></span>'
+      ? '<span class="admin-primary-badge"><span class="admin-primary-badge-inner">♛ Owner-Protected</span></span>'
       : isCO
         ? '<span class="admin-primary-badge" style="background:rgba(6,182,212,.15);color:#22d3ee;border-color:rgba(6,182,212,.3)"><i class="ph-bold ph-shield-star" style="font-size:.78rem;margin-right:3px;vertical-align:middle"></i>Co-Owner</span>'
         : '<span style="font-size:.72rem;color:var(--dim)"><i class="ph-bold ph-code" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>Developer</span>';
@@ -6453,8 +6454,8 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
       lvl = levels[eKey] || levels[email] || 'low';
       var lvlClr = lvl === 'primary' ? '#fbbf24' : lvl === 'co-owner' ? '#22d3ee' : lvl === 'max' ? '#f87171' : lvl === 'medium' ? '#fb923c' : '#4ade80';
       var lvlBg  = lvl === 'primary' ? 'rgba(245,158,11,.15)' : lvl === 'co-owner' ? 'rgba(6,182,212,.12)' : lvl === 'max' ? 'rgba(239,68,68,.12)' : lvl === 'medium' ? 'rgba(251,146,60,.12)' : 'rgba(74,222,128,.1)';
-      var lvlIcon = lvl === 'primary' ? '<i class="ph-bold ph-crown" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : lvl === 'co-owner' ? '<i class="ph-bold ph-shield-star" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : lvl === 'max' ? '<i class="ph-bold ph-fire" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : lvl === 'medium' ? '<i class="ph-bold ph-lock-open" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : '<i class="ph-bold ph-lock" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>';
-      var lvlTxt = lvl === 'primary' ? 'Owner' : lvl === 'co-owner' ? 'Co-Owner' : lvl === 'max' ? 'Max Access' : lvl === 'medium' ? 'Medium' : 'Low';
+      var lvlIcon = lvl === 'primary' ? '' : lvl === 'co-owner' ? '<i class="ph-bold ph-shield-star" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : lvl === 'max' ? '<i class="ph-bold ph-fire" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : lvl === 'medium' ? '<i class="ph-bold ph-lock-open" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : '<i class="ph-bold ph-lock" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>';
+      var lvlTxt = lvl === 'primary' ? '♛ Owner' : lvl === 'co-owner' ? 'Co-Owner' : lvl === 'max' ? 'Max Access' : lvl === 'medium' ? 'Medium' : 'Low';
       var lvlBorder = lvl === 'primary' ? 'rgba(245,158,11,.4)' : lvl === 'co-owner' ? 'rgba(6,182,212,.3)' : lvl === 'max' ? 'rgba(239,68,68,.35)' : lvl === 'medium' ? 'rgba(251,146,60,.35)' : 'rgba(74,222,128,.25)';
       lvlBadge = '<span style="display:inline-flex;align-items:center;font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:6px;background:'+lvlBg+';color:'+lvlClr+';text-transform:uppercase;letter-spacing:.5px;margin-left:4px;border:1px solid '+lvlBorder+'">'+lvlIcon+lvlTxt+'</span>';
     }
@@ -6472,7 +6473,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
         + '<button title="'+(isRoleLocked?'Unlock role':'Protect role')+'" onclick="adminToggleRoleLock(\''+email.replace(/'/g,"\\'")+'\',this)" style="padding:3px 8px;font-size:.78rem;cursor:pointer;border-radius:6px;margin-left:4px;border:1px solid '+(isRoleLocked?'rgba(245,158,11,.6)':'rgba(255,255,255,.15)')+';background:'+(isRoleLocked?'rgba(245,158,11,.15)':'transparent')+';color:'+(isRoleLocked?'#fbbf24':'var(--dim)')+';transition:all .2s"><i class="ph-bold '+(isRoleLocked?'ph-lock':'ph-lock-open')+'" style="font-size:.78rem;vertical-align:middle"></i></button>'
       : '';
     var displayEmail = isP
-      ? '<span style="font-size:.78rem;font-weight:700;color:#f59e0b;letter-spacing:.3px"><i class="ph-bold ph-lock-key" style="font-size:.8rem;margin-right:4px;vertical-align:middle"></i>owner-protected</span>'
+      ? '<span style="font-size:.82rem;font-weight:800;background:linear-gradient(90deg,#f59e0b,#fbbf24,#d97706,#fbbf24,#f59e0b);background-size:300% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.8px;animation:gold-wave 3s ease infinite">♛ Owner-Protected</span>'
       : isPrimary ? email : (isMe ? email + ' <span style="font-size:.65rem;color:var(--cyan2)">(you)</span>' : maskEmail(email));
     var nameTag = devName ? '<span style="font-size:.75rem;color:var(--cyan2);font-weight:600;margin-left:2px">' + escHtml(devName) + '</span>' : '';
     return '<div class="admin-dev-row">'
