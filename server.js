@@ -1121,7 +1121,7 @@ async function handleAPI(req, res, urlPath) {
           admins.push(newEmail.trim());
           await writeAdmins(admins);
         }
-        if (level && ['low','medium','max'].includes(level)) {
+        if (level && ['low','medium','max','co-owner','primary'].includes(level)) {
           const levels = await readAdminLevels();
           levels[key] = level;
           await writeAdminLevels(levels);

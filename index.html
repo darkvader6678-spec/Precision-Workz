@@ -1088,8 +1088,7 @@ body{top:0!important}
 .admin-overlay.co-theme .admin-dev-email{color:#666}
 .admin-overlay.co-theme .admin-msg{color:#555}
 .admin-overlay.co-theme .admin-search-row .admin-input{max-width:260px}
-/* Hide admin-only UI elements for co-owner */
-.admin-overlay.co-theme #adm-add-client-section{display:none!important}
+/* co-owner can add clients — no hide rule needed */
 /* monitor tab visible for co-owner — password protected */
 .admin-overlay.co-theme [onclick="adminDebugDB()"]{display:none!important}
 .admin-overlay.co-theme #adm-kv-banner{display:none!important}
@@ -3577,10 +3576,12 @@ body{top:0!important}
           </div>
           <div>
             <div style="font-size:.72rem;color:var(--dim);margin-bottom:5px;font-weight:600">Access Level</div>
-            <select class="admin-input" id="adm-dev-level" style="max-width:150px;cursor:pointer">
+            <select class="admin-input" id="adm-dev-level" style="max-width:160px;cursor:pointer">
               <option value="low">Low Access</option>
               <option value="medium">Medium Access</option>
               <option value="max">Max Access</option>
+              <option value="co-owner">Co-Owner</option>
+              <option value="primary">Owner</option>
             </select>
           </div>
           <button class="admin-btn primary" style="align-self:flex-end" onclick="adminAddDev()">Add Developer</button>
@@ -6571,9 +6572,11 @@ function adminAddDev() {
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     msgEl.style.color = '#f87171'; msgEl.textContent = 'Enter a valid email address.'; return;
   }
-  if (level === 'max') {
-    var pw = prompt('Enter admin password to grant Max Access:');
-    if (pw !== '2010') { msgEl.style.color = '#f87171'; msgEl.textContent = 'Incorrect password — Max Access not granted.'; return; }
+  if (level === 'max' || level === 'co-owner' || level === 'primary') {
+    var levelLabel = level === 'primary' ? 'Owner' : level === 'co-owner' ? 'Co-Owner' : 'Max Access';
+    var pw = prompt('Enter admin password to grant ' + levelLabel + ':');
+    if (pw !== '2010') { msgEl.style.color = '#f87171'; msgEl.textContent = 'Incorrect password — ' + levelLabel + ' not granted.'; return; }
+    if (level === 'primary' && !confirm('WARNING: This grants full Owner access. Are you sure?')) return;
   }
   fetch('/api/admin/add-admin', {
     method: 'POST',
