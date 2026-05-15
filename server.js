@@ -1254,8 +1254,8 @@ async function handleAPI(req, res, urlPath) {
       if (!id) return json(res, 400, { error: 'Project ID required' });
       const projects = await readProjects();
       if (!projects[id]) return json(res, 404, { error: 'Project not found' });
-      if (projects[id].locked && body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) {
-        return json(res, 403, { error: 'Project is locked — only the primary admin can edit' });
+      if (projects[id].locked) {
+        return json(res, 403, { error: 'Project is protected — unlock it first before making changes' });
       }
       if (name !== undefined) projects[id].name = name.trim();
       if (clientEmail !== undefined) projects[id].clientEmail = clientEmail.trim();
