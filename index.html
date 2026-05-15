@@ -6643,10 +6643,11 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
         _rankStyle = 'font-size:.82rem;font-weight:800;background:linear-gradient(90deg,#22d3ee,#a78bfa,#22d3ee);background-size:300% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.6px;animation:gold-wave 4s ease infinite';
       }
       var _emailIconId = 'mgmt-em-' + eKey.replace(/[@.]/g,'_');
-      var _emailReveal = (isPrimary || window._isCoOwner)
+      var _canSeeEmail = isPrimaryEmail || window._isCoOwnerLevel || window._adminIsOwner;
+      var _emailReveal = _canSeeEmail
         ? ' <button onclick="(function(b){var s=document.getElementById(\''+_emailIconId+'\');if(s.style.display===\'none\'){s.style.display=\'inline\';b.querySelector(\'i\').className=\'ph-bold ph-envelope-open\';}else{s.style.display=\'none\';b.querySelector(\'i\').className=\'ph-bold ph-envelope\';}})(this)" style="background:none;border:none;cursor:pointer;padding:2px 5px;color:rgba(255,255,255,.35);vertical-align:middle;line-height:1;transition:color .2s" title="Reveal email"><i class="ph-bold ph-envelope" style="font-size:.85rem;vertical-align:middle"></i></button><span id="'+_emailIconId+'" style="display:none;font-size:.75rem;color:var(--dim);margin-left:1px">'+escHtml(email)+'</span>'
         : '';
-      var _protectedTag = (isP || lvl === 'primary')
+      var _protectedTag = isP
         ? ' <span style="font-size:.65rem;font-weight:600;color:rgba(245,158,11,.5);letter-spacing:.3px">(protected role)</span>'
         : '';
       displayEmail = '<span style="'+_rankStyle+'">'+_rankLabel+'</span>'+_protectedTag+_emailReveal;
