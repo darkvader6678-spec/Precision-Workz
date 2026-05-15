@@ -358,6 +358,16 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
 .footer-legal a{color:var(--dim);text-decoration:none;font-size:.78rem;transition:color .2s;cursor:pointer}
 .footer-legal a:hover{color:var(--muted)}
 .footer-copy{font-size:.78rem;color:var(--dim)}
+.footer-lang{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
+.footer-lang-icon{font-size:.9rem;opacity:.5}
+.lang-btn{background:none;border:none;color:var(--dim);font-family:'Inter',sans-serif;font-size:.78rem;cursor:pointer;padding:3px 8px;border-radius:5px;transition:color .2s,background .2s}
+.lang-btn:hover,.lang-btn.active{color:var(--text);background:rgba(255,255,255,.07)}
+.lang-btn.active{color:var(--cyan2)}
+/* hide dev portal button during normal browsing — only show on gate/splash */
+html:not(.sg-locked) #dev-portal-btn{display:none!important}
+/* suppress Google Translate top banner */
+.goog-te-banner-frame,.skiptranslate{display:none!important}
+body{top:0!important}
 
 /* LEGAL MODAL */
 .legal-overlay{display:none;position:fixed;inset:0;z-index:99999;background:rgba(4,4,13,.92);backdrop-filter:blur(12px);overflow-y:auto;padding:48px 5%}
@@ -3121,6 +3131,18 @@ footer{border-top:1px solid var(--border);padding:48px 5% 36px;display:flex;flex
     <a href="#" onclick="event.preventDefault();openReportModal()">Report a Problem</a>
   </div>
   <div class="footer-copy">© 2026 Precision Workz · Arizona · Web Design · Security & Development</div>
+  <div class="footer-lang">
+    <span class="footer-lang-icon">🌐</span>
+    <button class="lang-btn active" onclick="setLang('en',this)">English</button>
+    <span class="footer-sep">·</span>
+    <button class="lang-btn" onclick="setLang('es',this)">Español</button>
+    <span class="footer-sep">·</span>
+    <button class="lang-btn" onclick="setLang('fr',this)">Français</button>
+    <span class="footer-sep">·</span>
+    <button class="lang-btn" onclick="setLang('pt',this)">Português</button>
+    <span class="footer-sep">·</span>
+    <button class="lang-btn" onclick="setLang('zh-CN',this)">中文</button>
+  </div>
 </footer>
 
 
@@ -8778,6 +8800,38 @@ function cookieReject(){
     else if (cls.indexOf && cls.indexOf('work-cta') !== -1) track('click', 'Portfolio CTA');
     else if (id === 'hero-demo-btn') track('click', 'Schedule Free Demo');
   }, true);
+})();
+</script>
+
+<!-- Language switcher -->
+<script>
+function googleTranslateElementInit(){
+  new google.translate.TranslateElement({pageLanguage:'en',includedLanguages:'es,fr,pt,zh-CN',autoDisplay:false},'_gt_root');
+}
+function setLang(lang,btn){
+  document.querySelectorAll('.lang-btn').forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');
+  if(lang==='en'){
+    var c=document.cookie.match(/googtrans=([^;]+)/);
+    if(c){document.cookie='googtrans=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';document.cookie='googtrans=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.'+location.hostname;location.reload();}
+    return;
+  }
+  document.cookie='googtrans=/en/'+lang+'; path=/';
+  document.cookie='googtrans=/en/'+lang+'; path=/; domain=.'+location.hostname;
+  location.reload();
+}
+(function(){
+  var s=document.createElement('script');
+  s.src='//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+  s.async=true;document.head.appendChild(s);
+  var r=document.createElement('div');r.id='_gt_root';r.style.display='none';document.body.appendChild(r);
+  // Mark active language button based on current cookie
+  var m=document.cookie.match(/googtrans=\/en\/([^;]+)/);
+  if(m){var active=m[1];document.querySelectorAll('.lang-btn').forEach(function(b){
+    b.classList.remove('active');
+    var map={'es':'Español','fr':'Français','pt':'Português','zh-CN':'中文','en':'English'};
+    if(b.textContent.trim()===map[active])b.classList.add('active');
+  });}
 })();
 </script>
 </body>
