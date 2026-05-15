@@ -1041,13 +1041,14 @@ async function handleAPI(req, res, urlPath) {
         const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRe.test(targetEmail.trim())) return json(res, 400, { error: 'Invalid email address' });
         const key = targetEmail.toLowerCase().trim();
-        // Block adding dev emails as clients unless it's self-assignment by owner/co-owner, or the primary admin
-        const actorIsPrimary = body.adminEmail.toLowerCase() === PRIMARY_ADMIN.toLowerCase();
-        const actorIsCo = CO_OWNER_EMAIL && body.adminEmail.toLowerCase() === CO_OWNER_EMAIL.toLowerCase();
+        // Block adding dev emails as clients unless actor is owner-level or co-owner self-assigning
+        const actorLevel = await getAdminLevel(body.adminEmail);
+        const actorIsOwnerLevel = body.adminEmail.toLowerCase() === PRIMARY_ADMIN.toLowerCase() || actorLevel === 'primary';
+        const actorIsCoLevel = (CO_OWNER_EMAIL && body.adminEmail.toLowerCase() === CO_OWNER_EMAIL.toLowerCase()) || actorLevel === 'co-owner';
         const isSelfAssign = body.adminEmail.toLowerCase() === key;
         if (key !== PRIMARY_ADMIN.toLowerCase()) {
           const tgtLevel = await getAdminLevel(key);
-          if (tgtLevel && !actorIsPrimary && !(isSelfAssign && actorIsCo)) {
+          if (tgtLevel && !actorIsOwnerLevel && !(isSelfAssign && actorIsCoLevel)) {
             appendSecurityLog('dev_blocked', body.adminEmail, key, 'Attempted to assign client record to a dev account', getReqIP(req));
             return json(res, 403, { error: 'That email belongs to a developer account and cannot be added as a client.' });
           }
