@@ -1118,6 +1118,38 @@ select{color-scheme:dark}
 /* KV banner hidden */
 .admin-overlay.co-theme #adm-kv-banner{display:none!important}
 
+/* ── CO-OWNER CLARITY IMPROVEMENTS ─────────────────────── */
+.admin-overlay.co-theme .admin-body{gap:28px}
+.admin-overlay.co-theme .admin-section{padding:28px 26px}
+.admin-overlay.co-theme .admin-section-title{font-size:.76rem;color:#e5e5e5;letter-spacing:2px;padding-left:16px;border-left:3px solid #f59e0b;margin-bottom:22px}
+.admin-overlay.co-theme .admin-dev-row{padding:14px 16px;margin-bottom:10px}
+.admin-overlay.co-theme .admin-dev-email{font-size:.9rem}
+
+/* ── PER-LEVEL THEMES ───────────────────────────────────── */
+.admin-overlay.lvl-low{background:#020208}
+.admin-overlay.lvl-low .admin-topbar{background:#030309;border-bottom-color:rgba(74,222,128,.1)}
+.admin-overlay.lvl-low .admin-section{border-color:rgba(74,222,128,.1);background:rgba(74,222,128,.015)}
+.admin-overlay.lvl-low .admin-section-title{color:#4ade80;padding-left:12px;border-left:2px solid rgba(74,222,128,.4)}
+.admin-overlay.lvl-low .admin-tab-btn.active{color:#4ade80;border-bottom-color:#4ade80}
+.admin-overlay.lvl-low .admin-input:focus{border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.04)}
+.admin-overlay.lvl-low .admin-stat-num{background:linear-gradient(135deg,#4ade80,#22d3ee);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.admin-overlay.lvl-low .admin-btn.primary{background:linear-gradient(135deg,#15803d,#22c55e)}
+.admin-overlay.lvl-med .admin-topbar{border-bottom-color:rgba(251,146,60,.12)}
+.admin-overlay.lvl-med .admin-section{border-color:rgba(251,146,60,.11);background:rgba(251,146,60,.016)}
+.admin-overlay.lvl-med .admin-section-title{color:#fb923c;padding-left:12px;border-left:2px solid rgba(251,146,60,.4)}
+.admin-overlay.lvl-med .admin-tab-btn.active{color:#fb923c;border-bottom-color:#fb923c}
+.admin-overlay.lvl-med .admin-input:focus{border-color:rgba(251,146,60,.45);background:rgba(251,146,60,.04)}
+.admin-overlay.lvl-med .admin-stat-num{background:linear-gradient(135deg,#fb923c,#fbbf24);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.admin-overlay.lvl-med .admin-btn.primary{background:linear-gradient(135deg,#92400e,#d97706)}
+.admin-overlay.lvl-max{background:#040108}
+.admin-overlay.lvl-max .admin-topbar{background:#060109;border-bottom-color:rgba(239,68,68,.13)}
+.admin-overlay.lvl-max .admin-section{border-color:rgba(239,68,68,.12);background:rgba(239,68,68,.018)}
+.admin-overlay.lvl-max .admin-section-title{color:#f87171;padding-left:12px;border-left:2px solid rgba(239,68,68,.45)}
+.admin-overlay.lvl-max .admin-tab-btn.active{color:#f87171;border-bottom-color:#f87171}
+.admin-overlay.lvl-max .admin-input:focus{border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.04)}
+.admin-overlay.lvl-max .admin-stat-num{background:linear-gradient(135deg,#f87171,#fb923c);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.admin-overlay.lvl-max .admin-btn.primary{background:linear-gradient(135deg,#991b1b,#ef4444)}
+
 /* ── MONITOR PANEL ──────────────────────────────────────── */
 #adm-monitor-view{padding:20px 0 0}
 #adm-clients-view{display:flex;flex-direction:column;gap:28px;padding-top:20px}
@@ -6407,8 +6439,11 @@ function adminRenderDevs(admins, primary, coOwner, levels, names) {
     var isCO = coOwner && eKey === coOwner.toLowerCase();
     var isMe = eKey === myEmail;
     var devName = (names && (names[eKey] || names[email])) || '';
-    var removeBtn = (!isP && !isCO && isPrimary)
+    var removeBtn = (!isP && !isCO && isPrimary && !isMe)
       ? '<button class="admin-btn danger" style="padding:5px 12px;font-size:.75rem" onclick="adminRemoveDev(\''+email+'\')">Remove</button>'
+      : '';
+    var leaveBtn = (isMe && !isP)
+      ? '<button class="admin-btn danger" style="padding:5px 12px;font-size:.75rem;opacity:.75" onclick="adminRemoveSelf()">Leave</button>'
       : '';
     var badge = isP
       ? '<span class="admin-primary-badge"><span class="admin-primary-badge-inner">Owner</span></span>'
@@ -6445,6 +6480,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names) {
       + lvlBadge
       + levelChanger
       + removeBtn
+      + leaveBtn
       + '</div>';
   }).join('');
 }
@@ -6653,6 +6689,22 @@ function adminRemoveDev(email) {
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (!d.error) setTimeout(adminLoadData, 700);
   });
+}
+
+function adminRemoveSelf() {
+  if (!confirm('Remove your own admin access? You will be signed out immediately.')) return;
+  var email = adminGetEmail();
+  fetch('/api/admin/remove-admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminEmail: email, targetEmail: email })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.error) { alert('Error: ' + d.error); return; }
+    sessionStorage.removeItem('_devSess');
+    window._adminMode = false;
+    closeAdmin();
+    setTimeout(function(){ location.reload(); }, 400);
+  }).catch(function(){ alert('Network error.'); });
 }
 
 function adminUpdateDevLevel(email, selId) {
@@ -7365,6 +7417,15 @@ function adminApplyLevelRestrictions() {
   var isMax = ['max','primary'].includes(level);
   var isPrimary = level === 'primary';
   var isCoOwner = level === 'co-owner';
+
+  // Apply per-level theme class (co-owner uses co-theme set elsewhere; primary keeps default)
+  var overlay = document.getElementById('admin-overlay');
+  if (overlay) {
+    ['lvl-low','lvl-med','lvl-max'].forEach(function(c){ overlay.classList.remove(c); });
+    if (level === 'low') overlay.classList.add('lvl-low');
+    else if (level === 'medium') overlay.classList.add('lvl-med');
+    else if (level === 'max') overlay.classList.add('lvl-max');
+  }
 
   // Admin badge — level-specific label
   var _overrideNow = !!(window._emergencyOverrideExpiry && Date.now() < window._emergencyOverrideExpiry);

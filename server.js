@@ -1142,9 +1142,14 @@ async function handleAPI(req, res, urlPath) {
 
     if (urlPath === '/api/admin/remove-admin' && req.method === 'POST') {
       try {
-        if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase()) {
-          appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Non-owner tried to remove developer', getReqIP(req)).catch(function(){});
-          return json(res, 403, { error: 'Only the primary admin can remove developers' });
+        const isSelf = body.adminEmail && body.targetEmail &&
+          body.adminEmail.toLowerCase() === body.targetEmail.toLowerCase();
+        if (body.adminEmail.toLowerCase() !== PRIMARY_ADMIN.toLowerCase() && !isSelf) {
+          appendSecurityLog('access_denied', body.adminEmail||'', urlPath, 'Non-owner tried to remove another developer', getReqIP(req)).catch(function(){});
+          return json(res, 403, { error: 'Only the primary admin can remove other developers' });
+        }
+        if ((body.targetEmail||'').toLowerCase() === PRIMARY_ADMIN.toLowerCase()) {
+          return json(res, 403, { error: 'Cannot remove the primary admin.' });
         }
         const { targetEmail } = body;
         const key = (targetEmail||'').toLowerCase();
@@ -1156,7 +1161,7 @@ async function handleAPI(req, res, urlPath) {
         const names = await readAdminNames();
         delete names[key];
         await writeAdminNames(names);
-        appendSecurityLog('dev_removed', body.adminEmail, key, 'Developer removed', getReqIP(req)).catch(function(){});
+        appendSecurityLog('dev_removed', body.adminEmail, key, isSelf ? 'Self-removed' : 'Developer removed', getReqIP(req)).catch(function(){});
         return json(res, 200, { ok: true, admins });
       } catch(e) { return json(res, 500, { error: e.message }); }
     }
