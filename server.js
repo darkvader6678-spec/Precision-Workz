@@ -1161,6 +1161,9 @@ async function handleAPI(req, res, urlPath) {
         const names = await readAdminNames();
         delete names[key];
         await writeAdminNames(names);
+        const levels = await readAdminLevels();
+        delete levels[key];
+        await writeAdminLevels(levels);
         appendSecurityLog('dev_removed', body.adminEmail, key, isSelf ? 'Self-removed' : 'Developer removed', getReqIP(req)).catch(function(){});
         return json(res, 200, { ok: true, admins });
       } catch(e) { return json(res, 500, { error: e.message }); }

@@ -6443,7 +6443,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names) {
       ? '<button class="admin-btn danger" style="padding:5px 12px;font-size:.75rem" onclick="adminRemoveDev(\''+email+'\')">Remove</button>'
       : '';
     var leaveBtn = (isMe && !isP)
-      ? '<button class="admin-btn danger" style="padding:5px 12px;font-size:.75rem;opacity:.75" onclick="adminRemoveSelf()">Leave</button>'
+      ? '<button style="padding:5px 14px;font-size:.75rem;font-weight:700;cursor:pointer;border-radius:7px;border:1px solid rgba(239,68,68,.5);background:rgba(239,68,68,.12);color:#fca5a5;font-family:inherit;transition:all .2s" onmouseover="this.style.background=\'rgba(239,68,68,.25)\';this.style.borderColor=\'rgba(239,68,68,.8)\'" onmouseout="this.style.background=\'rgba(239,68,68,.12)\';this.style.borderColor=\'rgba(239,68,68,.5)\'" onclick="adminRemoveSelf()">Leave</button>'
       : '';
     var badge = isP
       ? '<span class="admin-primary-badge"><span class="admin-primary-badge-inner">Owner</span></span>'
