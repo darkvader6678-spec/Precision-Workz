@@ -3499,7 +3499,7 @@ select{color-scheme:dark}
       <div style="display:flex;align-items:center;gap:16px;padding:20px 0 4px">
         <div style="width:44px;height:44px;border-radius:12px;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">◆</div>
         <div>
-          <div style="font-size:1.25rem;font-weight:900;color:#fff;letter-spacing:-.3px">Co-Owner Dashboard</div>
+          <div style="font-size:1.25rem;font-weight:900;color:#fff;letter-spacing:-.3px">Lead Dev Dashboard <span style="font-size:.72rem;font-weight:600;opacity:.45;letter-spacing:.3px">(co-owner)</span></div>
           <div style="font-size:.78rem;color:#555;margin-top:2px">Precision Workz · Oscar Valenzuela</div>
         </div>
       </div>
@@ -6101,7 +6101,7 @@ function adminLoadData() {
       var _subtitle = document.getElementById('admin-panel-subtitle');
       if (_subtitle) {
         if (_overrideActive) _subtitle.textContent = '— Temporary Owner';
-        else if (_isCO) _subtitle.textContent = '— Co-Owner Panel';
+        else if (_isCO) _subtitle.textContent = '— Lead Dev';
         else if (_isPrimary) _subtitle.innerHTML = ' <span class="admin-title-gold">♛ Owner</span>';
         else if (_myName) _subtitle.textContent = '— Welcome, ' + _myName.split(' ')[0];
         else _subtitle.textContent = '— Control Panel';
@@ -6446,7 +6446,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
     var badge = isP
       ? '<span class="admin-primary-badge"><span class="admin-primary-badge-inner">♛ Owner-Protected</span></span>'
       : isCO
-        ? '<span class="admin-primary-badge" style="background:rgba(6,182,212,.15);color:#22d3ee;border-color:rgba(6,182,212,.3)"><i class="ph-bold ph-shield-star" style="font-size:.78rem;margin-right:3px;vertical-align:middle"></i>Co-Owner</span>'
+        ? '<span class="admin-primary-badge" style="background:rgba(6,182,212,.15);color:#22d3ee;border-color:rgba(6,182,212,.3)"><i class="ph-bold ph-shield-star" style="font-size:.78rem;margin-right:3px;vertical-align:middle"></i>Lead Dev <span style="font-size:.6rem;opacity:.5;font-weight:600">(co-owner)</span></span>'
         : '<span style="font-size:.72rem;color:var(--dim)"><i class="ph-bold ph-code" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>Developer</span>';
     var lvlBadge = '';
     var lvl = 'low';
@@ -6455,7 +6455,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
       var lvlClr = lvl === 'primary' ? '#fbbf24' : lvl === 'co-owner' ? '#22d3ee' : lvl === 'max' ? '#f87171' : lvl === 'medium' ? '#fb923c' : '#4ade80';
       var lvlBg  = lvl === 'primary' ? 'rgba(245,158,11,.15)' : lvl === 'co-owner' ? 'rgba(6,182,212,.12)' : lvl === 'max' ? 'rgba(239,68,68,.12)' : lvl === 'medium' ? 'rgba(251,146,60,.12)' : 'rgba(74,222,128,.1)';
       var lvlIcon = lvl === 'primary' ? '' : lvl === 'co-owner' ? '<i class="ph-bold ph-shield-star" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : lvl === 'max' ? '<i class="ph-bold ph-fire" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : lvl === 'medium' ? '<i class="ph-bold ph-lock-open" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>' : '<i class="ph-bold ph-lock" style="font-size:.72rem;margin-right:3px;vertical-align:middle"></i>';
-      var lvlTxt = lvl === 'primary' ? '♛ Owner' : lvl === 'co-owner' ? 'Co-Owner' : lvl === 'max' ? 'Max Access' : lvl === 'medium' ? 'Medium' : 'Low';
+      var lvlTxt = lvl === 'primary' ? '♛ Owner' : lvl === 'co-owner' ? 'Lead Dev' : lvl === 'max' ? 'Max Access' : lvl === 'medium' ? 'Medium' : 'Low';
       var lvlBorder = lvl === 'primary' ? 'rgba(245,158,11,.4)' : lvl === 'co-owner' ? 'rgba(6,182,212,.3)' : lvl === 'max' ? 'rgba(239,68,68,.35)' : lvl === 'medium' ? 'rgba(251,146,60,.35)' : 'rgba(74,222,128,.25)';
       lvlBadge = '<span style="display:inline-flex;align-items:center;font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:6px;background:'+lvlBg+';color:'+lvlClr+';text-transform:uppercase;letter-spacing:.5px;margin-left:4px;border:1px solid '+lvlBorder+'">'+lvlIcon+lvlTxt+'</span>';
     }
@@ -6476,6 +6476,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
       ? '<span style="font-size:.82rem;font-weight:800;background:linear-gradient(90deg,#f59e0b,#fbbf24,#d97706,#fbbf24,#f59e0b);background-size:300% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.8px;animation:gold-wave 3s ease infinite">♛ Owner-Protected</span>'
       : isPrimary ? email : (isMe ? email + ' <span style="font-size:.65rem;color:var(--cyan2)">(you)</span>' : maskEmail(email));
     var nameTag = devName ? '<span style="font-size:.75rem;color:var(--cyan2);font-weight:600;margin-left:2px">' + escHtml(devName) + '</span>' : '';
+    var coProtect = isCO ? '<span title="Role protected" style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;font-size:.68rem;font-weight:700;border-radius:6px;margin-left:4px;border:1px solid rgba(6,182,212,.4);background:rgba(6,182,212,.08);color:#22d3ee"><i class="ph-bold ph-lock" style="font-size:.72rem;vertical-align:middle"></i>Protected</span>' : '';
     return '<div class="admin-dev-row">'
       + '<div style="display:flex;flex-direction:column;gap:2px;flex:1">'
       + '<span class="admin-dev-email">' + displayEmail + '</span>'
@@ -6483,6 +6484,7 @@ function adminRenderDevs(admins, primary, coOwner, levels, names, roleLocks) {
       + '</div>'
       + badge
       + lvlBadge
+      + coProtect
       + levelChanger
       + removeBtn
       + '</div>';
@@ -6665,7 +6667,7 @@ function adminAddDev() {
     msgEl.style.color = '#f87171'; msgEl.textContent = 'Enter a valid email address.'; return;
   }
   if (level === 'max' || level === 'co-owner' || level === 'primary') {
-    var levelLabel = level === 'primary' ? 'Owner' : level === 'co-owner' ? 'Co-Owner' : 'Max Access';
+    var levelLabel = level === 'primary' ? 'Owner' : level === 'co-owner' ? 'Lead Dev' : 'Max Access';
     var pw = prompt('Enter admin password to grant ' + levelLabel + ':');
     if (pw !== '2010') { msgEl.style.color = '#f87171'; msgEl.textContent = 'Incorrect password — ' + levelLabel + ' not granted.'; return; }
     if (level === 'primary' && !confirm('WARNING: This grants full Owner access. Are you sure?')) return;
@@ -6712,7 +6714,7 @@ function adminUpdateDevLevel(email, selId) {
   if (!sel) return;
   var newLevel = sel.value;
   if (newLevel === 'max' || newLevel === 'co-owner' || newLevel === 'primary') {
-    var label = newLevel === 'primary' ? 'Owner' : newLevel === 'co-owner' ? 'Co-Owner' : 'Max Access';
+    var label = newLevel === 'primary' ? 'Owner' : newLevel === 'co-owner' ? 'Lead Dev' : 'Max Access';
     var pw = prompt('Enter admin password to set ' + label + ':');
     if (pw !== '2010') { alert('Incorrect password — level not changed.'); return; }
     if (newLevel === 'primary' && !confirm('WARNING: This grants full Owner-level access. Are you sure?')) return;
